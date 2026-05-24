@@ -1,0 +1,4 @@
+Gene	Raw_Counts	Normalized_TPM
+GAPDH	15000	1000.0
+ACTB	12000	1000.0
+Target_Biomarker	450	37.5

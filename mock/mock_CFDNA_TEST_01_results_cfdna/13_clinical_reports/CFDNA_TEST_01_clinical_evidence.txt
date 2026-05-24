@@ -1,0 +1,3 @@
+Biomarker_Type	Variant	Action
+Somatic SNV	KRAS:p.G12C	Sotorasib / Adagrasib (Tier 1: FDA Approved)
+Somatic SNV	TP53:p.R175H	Clinical Trial Eligible for p53 Reactivators (Tier 3 Evidence)
