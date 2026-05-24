@@ -32,23 +32,23 @@ Reference Genome: Ensure the GRCh38 Human Reference Genome is downloaded to the 
 
 
 ##  Server Connectivity
-Log into your institutional server to locate your raw FASTQ data and the pipeline scripts.
-Bash
-# Connect to the server
+
+Log into your institutional server to locate your raw FASTQ data and the pipeline scripts.Connect to the server
 ssh student@uni.edu
 
-# Verify your current directory
+Verify your current directory
 pwd
 ls
 
-# Navigate to the pipeline trial directory
+Navigate to the pipeline trial directory
 cd /path/to/2026_multiomnicpipeline/trial
 
-# Verify your raw data files are present
+Verify your raw data files are present
 ls -lh /path/to/raw_data/
 
 ##  Local Testing in Mock Mode
-Always validate your setup locally before initiating a server run. Ensure your terminal is currently inside the 2026_multiomnicpipeline/trial directory.
+
+Validate your setup locally before initiating a server run. Ensure your terminal is currently inside the 2026_multiomnicpipeline/trial directory.
 The following example tests the miRNA track. It will pull dummy data from the mock folder and successfully generate a RESULTS_MIRNA_TEST_01 folder inside the mock_results directory.
 
 Bash
