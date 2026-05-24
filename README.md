@@ -18,6 +18,7 @@ Before running the pipeline, activate your Conda environment and install the req
 
 ```bash
 conda install -c bioconda -c conda-forge cutadapt fastqc star fgbio samtools gatk4 ensembl-vep pyyaml pysam pandas numpy matplotlib seaborn -y
+
 Troubleshooting Missing Dependencies
 If the pipeline fails due to a missing tool, verify its installation and reinstall it using the following commands (replace [dependency_name] with the missing tool, e.g., fastqc):
 
@@ -25,14 +26,17 @@ Bash
 conda --version
 which [dependency_name]   
 conda install -c bioconda [dependency_name]
-2. Directory & File Preparation
+
+## 2. Directory & File Preparation
+
 Download the Pipeline: Place the 2026_multiomnicpipeline directory in an accessible location (e.g., your Desktop).
 
 Windows Users: To find your exact path, right-click the folder and select "Copy as path". It should resemble: C:\Users\YourName\Desktop\2026_multiomnicpipeline.
 
 Reference Genome: Ensure the GRCh38 Human Reference Genome is downloaded to the server. If it is already hosted centrally, obtain the direct directory path to its location.
 
-3. Server Connectivity
+## 3. Server Connectivity
+
 Log into your institutional server to locate your raw FASTQ data and the pipeline scripts.
 
 Bash
@@ -48,9 +52,10 @@ cd /path/to/2026_multiomnicpipeline/trial
 
 # Verify your raw data files are present
 ls -lh /path/to/raw_data/
-4. Local Testing (Mock Mode)
-Always validate your setup locally before initiating a server run. Ensure your terminal is currently inside the 2026_multiomnicpipeline/trial directory.
 
+## 4. Local Testing (Mock Mode)
+
+Always validate your setup locally before initiating a server run. Ensure your terminal is currently inside the 2026_multiomnicpipeline/trial directory.
 The following example tests the miRNA track. It will pull dummy data from the mock folder and successfully generate a RESULTS_MIRNA_TEST_01 folder inside the mock_results directory.
 
 Bash
@@ -62,7 +67,8 @@ python step0_main_pipeline.py \
   --mode mock
 (Note: If testing locally on Windows, ensure your --raw_data path matches your local machine, e.g., C:\Users\YourName\Desktop\2026_multiomnicpipeline\mock)
 
-5. Server Execution (Production Mode)
+## 5. Server Execution (Production Mode)
+
 Once the mock test passes, you are ready to analyze real biological data.
 
 Command-Line Arguments
@@ -78,7 +84,8 @@ Command-Line Arguments
 
 Select the command corresponding to your assay. Replace the /path/to/... placeholders with your actual server paths.
 
-cfDNA
+## cfDNA
+
 Bash
 python step0_main_pipeline.py \
   --raw_data /path/to/my_raw_data_folder \
@@ -87,7 +94,8 @@ python step0_main_pipeline.py \
   -t 16 \
   --start-at 1 \
   --mode prod
-mRNA
+
+## mRNA
 Bash
 python step0_main_pipeline.py \
   --raw_data /path/to/my_raw_data_folder \
@@ -96,7 +104,9 @@ python step0_main_pipeline.py \
   -t 16 \
   --start-at 1 \
   --mode prod
-miRNA
+
+
+## miRNA
 Bash
 python step0_main_pipeline.py \
   --raw_data /path/to/my_raw_data_folder \
