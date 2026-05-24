@@ -60,11 +60,13 @@ python step0_main_pipeline.py \
   --mode mock
 
 ## Server Execution in Production Mode
+
 Once the mock test passes, you are ready to analyze real biological data.
-•	--raw_data: The absolute path to the folder containing your raw .fastq.gz files.
-•	--sample: The designated name for your sample (e.g., TUMOR_01).
-•	-t: CPU threads to allocate. Default is 16. (Note: If the server is under heavy load, lower this to 8 or 4 to prevent crashes).
-•	--start-at: Crash recovery. If the pipeline fails, change this to the step number where it stopped to resume progress (Steps 1–4 are universal across all assays).
+
+--raw_data: The absolute path to the folder containing your raw .fastq.gz files.
+--sample: The designated name for your sample (e.g., TUMOR_01).
+-t: CPU threads to allocate. Default is 16. (Note: If the server is under heavy load, lower this to 8 or 4 to prevent crashes).
+--start-at: Crash recovery. If the pipeline fails, change this to the step number where it stopped to resume progress (Steps 1–4 are universal across all assays).
 Select the command corresponding to your assay. Replace the /path/to/... placeholders with your actual server paths.
 
 ##  cfDNA
