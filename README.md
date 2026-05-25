@@ -12,6 +12,8 @@ Production Mode: Heavy, server-side execution for biological data analysis.
 ##  Environment & Dependencies
 
 Before running the pipeline, activate your Conda environment and install the required bioinformatic tools.
+
+
 Bash
 conda install -c bioconda -c conda-forge cutadapt fastqc star fgbio samtools gatk4 ensembl-vep pyyaml pysam pandas numpy matplotlib seaborn -y
 
