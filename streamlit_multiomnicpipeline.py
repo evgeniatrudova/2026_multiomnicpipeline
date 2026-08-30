@@ -7,6 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 import io
+from scipy.stats import gaussian_kde
 
 # ==============================================================================
 # 1. API MANAGEMENT & EXTERNAL INTEGRATIONS
@@ -85,10 +86,91 @@ def generate_vaf_plot():
     """Step 9: VAF Spectrum Distribution Histogram"""
     vaf_mock = np.random.exponential(scale=0.01, size=100)
     vaf_mock = vaf_mock[vaf_mock < 0.1]
-    fig = px.histogram(x=vaf_mock * 100, nbins=30, color_discrete_sequence=["salmon"])
-    fig.add_vline(x=0.1, line_dash="dash", line_color="red", annotation_text="LOD (0.1%)")
-    fig.update_layout(title="Step 9: VAF Spectrum", template="plotly_white", xaxis_title="VAF (%)", yaxis_title="Count")
+    fig = px.histogram(x=vaf_mock * 100, nbins=30, color_discrete_sequence=["#D55E00"])
+    fig.add_vline(x=0.1, line_dash="dash", line_color="black", annotation_text="LOD (0.1%)")
+    fig.update_layout(title="Step 9: VAF Spectrum", template="simple_white", xaxis_title="VAF (%)", yaxis_title="Count")
+    fig.update_xaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
+    fig.update_yaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
     return fig
+
+def plot_academic_fragment_size(sim_sizes, assay_type):
+    """Step 6: Generates a publication-ready KDE overlay on normalized histogram."""
+    df = pd.DataFrame({'Size': sim_sizes})
+    kde = gaussian_kde(df['Size'])
+    x_range = np.linspace(df['Size'].min(), df['Size'].max(), 500)
+    y_kde = kde(x_range)
+    
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(
+        x=df['Size'], histnorm='probability density', 
+        name='Observed Fragments', marker_color='#E69F00', opacity=0.6, nbinsx=80
+    ))
+    fig.add_trace(go.Scatter(
+        x=x_range, y=y_kde, mode='lines', 
+        name='Kernel Density Estimate', line=dict(color='#0072B2', width=2.5)
+    ))
+    
+    if assay_type == "cfDNA":
+        fig.add_vline(x=145, line_dash="dash", line_color="#D55E00", annotation_text="Tumor Mode (145bp)  ", annotation_position="top left")
+        fig.add_vline(x=167, line_dash="dash", line_color="#009E73", annotation_text="  Apoptotic Mode (167bp)", annotation_position="top right")
+    
+    fig.update_layout(
+        title="<b>Fig 1.</b> High-Resolution Fragment Size Distribution",
+        xaxis_title="Insert Size / Template Length (bp)",
+        yaxis_title="Probability Density",
+        template="simple_white",
+        legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99),
+        margin=dict(l=60, r=40, t=60, b=60)
+    )
+    fig.update_xaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
+    fig.update_yaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
+    return fig
+
+def plot_academic_lollipop(vcf_df, gene_name):
+    """Step 11: Generates a true stem-and-leaf lollipop plot for somatic architecture."""
+    fig = go.Figure()
+    for _, row in vcf_df.iterrows():
+        fig.add_shape(
+            type="line",
+            x0=row['POS'], y0=0, x1=row['POS'], y1=row['VAF'] * 100,
+            line=dict(color="#56B4E9", width=2)
+        )
+    fig.add_trace(go.Scatter(
+        x=vcf_df['POS'], y=vcf_df['VAF'] * 100, mode='markers',
+        marker=dict(size=12, color='#D55E00', line=dict(width=1.5, color='black')),
+        name='Somatic Missense',
+        hovertemplate="Position: %{x}<br>VAF: %{y:.2f}%<extra></extra>"
+    ))
+    
+    fig.add_vrect(
+        x0=7577000, x1=7578500, fillcolor="#F0E442", opacity=0.3, 
+        layer="below", line_width=0, annotation_text="DNA-Binding Domain", annotation_position="top left"
+    )
+    
+    fig.update_layout(
+        title=f"<b>Fig 2.</b> Somatic Clonal Architecture: <i>{gene_name}</i>",
+        xaxis_title="Genomic Coordinate (GRCh38)",
+        yaxis_title="Variant Allele Frequency (%)",
+        template="simple_white",
+        yaxis=dict(rangemode="tozero") 
+    )
+    fig.update_xaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
+    fig.update_yaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
+    return fig
+
+def render_clinical_intelligence_table(ensembl_dict):
+    """Step 13: Parses raw JSON into a clinical actionability table."""
+    df = pd.DataFrame([ensembl_dict])
+    df['Therapeutic Indication'] = df['Gene'].apply(lambda x: "Osimertinib (Tier 1)" if x == "EGFR" else "Evaluation Required")
+    df['Guideline'] = "NCCN NSCLC v2.2024"
+    
+    st.markdown("### Molecular Actionability Profile")
+    st.dataframe(
+        df[['Gene', 'Consequence', 'Impact', 'Therapeutic Indication', 'Guideline']], 
+        use_container_width=True,
+        hide_index=True
+    )
+    st.caption("*Interpretation: Detection of EGFR sensitizing mutations indicates high probability of response to 3rd-generation TKIs.*")
 
 # ==============================================================================
 # 5. ONBOARDING UX 
@@ -137,16 +219,14 @@ else:
         fig_col1, fig_col2 = st.columns(2)
         with fig_col1:
             sim_sizes = np.concatenate([np.random.normal(167, 25, 3000), np.random.normal(145, 20, 2000)])
-            fig_kde = px.histogram(pd.DataFrame({'Size': sim_sizes}), x='Size', histnorm='probability density', color_discrete_sequence=['teal'])
-            fig_kde.add_vline(x=145, line_dash="dash", line_color="red")
-            fig_kde.add_vline(x=167, line_dash="dash", line_color="navy")
-            fig_kde.update_layout(title="Step 6: Samtools Fragment Size (KDE Plot)", template="plotly_white")
-            st.plotly_chart(fig_kde, use_container_width=True)
+            st.plotly_chart(plot_academic_fragment_size(sim_sizes, st.session_state.assay), use_container_width=True)
             
         with fig_col2:
             motif_data = {'CCCA': 4.2, 'AAAA': 3.8, 'TATA': 2.9, 'GGGG': 2.1}
-            fig_motif = px.bar(x=list(motif_data.keys()), y=list(motif_data.values()), color_discrete_sequence=["orchid"])
-            fig_motif.update_layout(title="Step 7: Sequence Bias (Motif Bar Chart)", template="plotly_white")
+            fig_motif = px.bar(x=list(motif_data.keys()), y=list(motif_data.values()), color_discrete_sequence=["#CC79A7"])
+            fig_motif.update_layout(title="<b>Fig 2.</b> 5' Terminal Sequence Bias", template="simple_white")
+            fig_motif.update_xaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
+            fig_motif.update_yaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
             st.plotly_chart(fig_motif, use_container_width=True)
 
     # --- MODULE 4: EXPRESSION & CLONAL ANALYTICS ---
@@ -160,11 +240,7 @@ else:
             
         with fig_col4:
             mock_vcf = pd.DataFrame({'POS': [7577121, 7578406, 7577538], 'VAF': [0.012, 0.005, 0.045]})
-            fig_lol = go.Figure()
-            fig_lol.add_trace(go.Scatter(x=mock_vcf['POS'], y=mock_vcf['VAF'] * 100, mode='markers+lines', marker=dict(size=12, color='crimson', symbol='diamond')))
-            fig_lol.add_vrect(x0=7577000, x1=7578500, fillcolor="skyblue", opacity=0.2, annotation_text="Binding Domain")
-            fig_lol.update_layout(title="Step 11: Maftools Visualization (Lollipop Plot)", template="plotly_white")
-            st.plotly_chart(fig_lol, use_container_width=True)
+            st.plotly_chart(plot_academic_lollipop(mock_vcf, "TP53"), use_container_width=True)
 
     # --- MODULE 5: CLINICAL INTELLIGENCE ---
     with tab4:
@@ -178,9 +254,9 @@ else:
         
         st.divider()
         st.subheader("Step 13: Ensembl-VEP Clinical Evidence Matching (Live API)")
-        annotation = fetch_ensembl_vep_live("ENST00000275493.6:c.2573T>G") 
-        c_res1, c_res2 = st.columns([1, 2])
-        with c_res1:
-            st.json(annotation)
-        with c_res2:
-            st.success("**Tier 1 Indication:** Identified actionable driver mutation mapped to standard-of-care kinase inhibitors.")
+        with st.spinner("Querying Ensembl REST API..."):
+            annotation = fetch_ensembl_vep_live("ENST00000275493.6:c.2573T>G") 
+            if "Status" not in annotation:
+                render_clinical_intelligence_table(annotation)
+            else:
+                st.error(annotation["Status"])
