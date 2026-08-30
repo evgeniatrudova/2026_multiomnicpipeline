@@ -11,11 +11,6 @@ from scipy.stats import gaussian_kde
 
 # ==============================================================================
 # 1. API MANAGEMENT & EXTERNAL INTEGRATIONS
-# ACADEMIC RATIONALE: Serverless Clinical Database Integration
-# Replaces the local Ensembl-VEP binary and 40GB+ GRCh38 cache with live calls 
-# to the Ensembl REST API. Allows real-time clinical variant annotation against 
-# the public human genome database without local cache requirements.
-# Matches original script Step 13.
 # ==============================================================================
 ENSEMBL_REST_SERVER = "https://rest.ensembl.org"
 ENSEMBL_VEP_ENDPOINT = "/vep/human/hgvs/{variant_hgvs}"
@@ -41,13 +36,8 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
 
 # ==============================================================================
 # 2. STREAMING I/O ENGINE
-# ACADEMIC RATIONALE: Streaming IO
-# Handles large uploaded FASTQ/FASTA/BAM files via chunked byte buffers. 
-# Prevents RAM overflow on serverless platforms by yielding data line-by-line 
-# rather than loading multi-gigabyte genomic files into memory simultaneously.
 # ==============================================================================
 def process_streaming_upload(uploaded_file, chunk_size=8192):
-    """Generator to process files in memory-safe chunks."""
     if uploaded_file is not None:
         buffer = io.TextIOWrapper(uploaded_file, encoding='utf-8')
         while True:
@@ -58,9 +48,6 @@ def process_streaming_upload(uploaded_file, chunk_size=8192):
 
 # ==============================================================================
 # 3. PAGE CONFIGURATION & STATE ENGINE
-# ACADEMIC RATIONALE: Stateful Pipeline Engine
-# Uses st.session_state to step through the 15 stages dynamically. 
-# Mimics the original orchestrator's '--start-at' crash recovery and resume logic.
 # ==============================================================================
 st.set_page_config(page_title="EV Cargo Pipeline", page_icon="🔬", layout="wide")
 
@@ -68,22 +55,14 @@ if 'analyzed' not in st.session_state:
     st.session_state.analyzed = False
 if 'assay' not in st.session_state:
     st.session_state.assay = "cfDNA"
-if 'pipeline_stage' not in st.session_state:
-    st.session_state.pipeline_stage = 1
 
 def reset_app():
     st.session_state.analyzed = False
-    st.session_state.pipeline_stage = 1
 
 # ==============================================================================
 # 4. INTERACTIVE UX (PLOTLY ENGINE)
-# ACADEMIC RATIONALE: Interactive UX
-# Upgrades static Matplotlib outputs to interactive Plotly graphs (Volcano, 
-# Lollipop, Fragment distribution) for clinical review. Allows zooming on specific
-# genomic coordinates or transcriptomic outliers.
 # ==============================================================================
 def generate_vaf_plot():
-    """Step 9: VAF Spectrum Distribution Histogram"""
     vaf_mock = np.random.exponential(scale=0.01, size=100)
     vaf_mock = vaf_mock[vaf_mock < 0.1]
     fig = px.histogram(x=vaf_mock * 100, nbins=30, color_discrete_sequence=["#D55E00"])
@@ -94,7 +73,6 @@ def generate_vaf_plot():
     return fig
 
 def generate_volcano_plot():
-    """Generates an RNA Differential Expression Volcano Plot."""
     n_genes = 500
     df = pd.DataFrame({
         'Gene': [f"GENE_{i}" for i in range(n_genes)],
@@ -126,21 +104,14 @@ def generate_volcano_plot():
     return fig
 
 def plot_academic_fragment_size(sim_sizes, assay_type):
-    """Step 6: Generates a publication-ready KDE overlay on normalized histogram."""
     df = pd.DataFrame({'Size': sim_sizes})
     kde = gaussian_kde(df['Size'])
     x_range = np.linspace(df['Size'].min(), df['Size'].max(), 500)
     y_kde = kde(x_range)
     
     fig = go.Figure()
-    fig.add_trace(go.Histogram(
-        x=df['Size'], histnorm='probability density', 
-        name='Observed Fragments', marker_color='#E69F00', opacity=0.6, nbinsx=80
-    ))
-    fig.add_trace(go.Scatter(
-        x=x_range, y=y_kde, mode='lines', 
-        name='Kernel Density Estimate', line=dict(color='#0072B2', width=2.5)
-    ))
+    fig.add_trace(go.Histogram(x=df['Size'], histnorm='probability density', name='Observed Fragments', marker_color='#E69F00', opacity=0.6, nbinsx=80))
+    fig.add_trace(go.Scatter(x=x_range, y=y_kde, mode='lines', name='Kernel Density Estimate', line=dict(color='#0072B2', width=2.5)))
     
     if assay_type == "cfDNA":
         fig.add_vline(x=145, line_dash="dash", line_color="#D55E00", annotation_text="Tumor Mode (145bp)  ", annotation_position="top left")
@@ -148,63 +119,28 @@ def plot_academic_fragment_size(sim_sizes, assay_type):
     elif assay_type == "miRNA":
         fig.add_vline(x=22, line_dash="dash", line_color="#0072B2", annotation_text="Mature miRNA (~22bp)  ", annotation_position="top left")
     
-    fig.update_layout(
-        title="<b>Fig 1.</b> High-Resolution Fragment Size Distribution",
-        xaxis_title="Insert Size / Template Length (bp)",
-        yaxis_title="Probability Density",
-        template="simple_white",
-        legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99),
-        margin=dict(l=60, r=40, t=60, b=60)
-    )
+    fig.update_layout(title="<b>Fig 1.</b> High-Resolution Fragment Size Distribution", xaxis_title="Insert Size / Template Length (bp)", yaxis_title="Probability Density", template="simple_white", margin=dict(l=60, r=40, t=60, b=60))
     fig.update_xaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
     fig.update_yaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
     return fig
 
 def plot_academic_lollipop(vcf_df, gene_name):
-    """Step 11: Generates a true stem-and-leaf lollipop plot for somatic architecture."""
     fig = go.Figure()
     for _, row in vcf_df.iterrows():
-        fig.add_shape(
-            type="line",
-            x0=row['POS'], y0=0, x1=row['POS'], y1=row['VAF'] * 100,
-            line=dict(color="#56B4E9", width=2)
-        )
-    fig.add_trace(go.Scatter(
-        x=vcf_df['POS'], y=vcf_df['VAF'] * 100, mode='markers',
-        marker=dict(size=12, color='#D55E00', line=dict(width=1.5, color='black')),
-        name='Somatic Missense',
-        hovertemplate="Position: %{x}<br>VAF: %{y:.2f}%<extra></extra>"
-    ))
-    
-    fig.add_vrect(
-        x0=7577000, x1=7578500, fillcolor="#F0E442", opacity=0.3, 
-        layer="below", line_width=0, annotation_text="DNA-Binding Domain", annotation_position="top left"
-    )
-    
-    fig.update_layout(
-        title=f"<b>Fig 2.</b> Somatic Clonal Architecture: <i>{gene_name}</i>",
-        xaxis_title="Genomic Coordinate (GRCh38)",
-        yaxis_title="Variant Allele Frequency (%)",
-        template="simple_white",
-        yaxis=dict(rangemode="tozero") 
-    )
+        fig.add_shape(type="line", x0=row['POS'], y0=0, x1=row['POS'], y1=row['VAF'] * 100, line=dict(color="#56B4E9", width=2))
+    fig.add_trace(go.Scatter(x=vcf_df['POS'], y=vcf_df['VAF'] * 100, mode='markers', marker=dict(size=12, color='#D55E00', line=dict(width=1.5, color='black')), name='Somatic Missense', hovertemplate="Position: %{x}<br>VAF: %{y:.2f}%<extra></extra>"))
+    fig.add_vrect(x0=7577000, x1=7578500, fillcolor="#F0E442", opacity=0.3, layer="below", line_width=0, annotation_text="DNA-Binding Domain", annotation_position="top left")
+    fig.update_layout(title=f"<b>Fig 2.</b> Somatic Clonal Architecture: <i>{gene_name}</i>", xaxis_title="Genomic Coordinate (GRCh38)", yaxis_title="Variant Allele Frequency (%)", template="simple_white", yaxis=dict(rangemode="tozero"))
     fig.update_xaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
     fig.update_yaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
     return fig
 
 def render_clinical_intelligence_table(ensembl_dict):
-    """Step 13: Parses raw JSON into a clinical actionability table."""
     df = pd.DataFrame([ensembl_dict])
     df['Therapeutic Indication'] = df['Gene'].apply(lambda x: "Osimertinib (Tier 1)" if x == "EGFR" else "Evaluation Required")
     df['Guideline'] = "NCCN NSCLC v2.2024"
-    
     st.markdown("### Molecular Actionability Profile")
-    st.dataframe(
-        df[['Gene', 'Consequence', 'Impact', 'Therapeutic Indication', 'Guideline']], 
-        use_container_width=True,
-        hide_index=True
-    )
-    st.caption("*Interpretation: Detection of EGFR sensitizing mutations indicates high probability of response to 3rd-generation TKIs.*")
+    st.dataframe(df[['Gene', 'Consequence', 'Impact', 'Therapeutic Indication', 'Guideline']], use_container_width=True, hide_index=True)
 
 # ==============================================================================
 # 5. ONBOARDING UX (THE "FRONT DOOR")
@@ -225,24 +161,13 @@ if not st.session_state.analyzed:
         st.write("")
         
         with st.container(border=True):
-            st.session_state.assay = st.radio(
-                "Select Biomaterial Extract", 
-                ["cfDNA", "mRNA", "miRNA"], 
-                horizontal=True
-            )
-            
+            st.session_state.assay = st.radio("Select Biomaterial Extract", ["cfDNA", "mRNA", "miRNA"], horizontal=True)
             st.write("") 
-            data_source = st.radio(
-                "Data Source Selection",
-                ["📤 Upload Sequence", "🧪 Run NCBI Dataset"],
-                horizontal=True,
-                label_visibility="collapsed"
-            )
+            data_source = st.radio("Data Source Selection", ["📤 Upload Sequence", "🧪 Run NCBI Dataset"], horizontal=True, label_visibility="collapsed")
             st.write("")
             
             if data_source == "📤 Upload Sequence":
                 uploaded_files = st.file_uploader(f"Drop multiplexed {st.session_state.assay} sequence streams", accept_multiple_files=True, label_visibility="collapsed")
-                
                 if st.button("🚀 Initialize Diagnostics", type="primary", use_container_width=True):
                     if not uploaded_files:
                         st.warning("Please upload files, or select the NCBI Validation Dataset to run a simulation.")
@@ -254,7 +179,6 @@ if not st.session_state.analyzed:
             else:
                 ds = NCBI_DATASETS[st.session_state.assay]
                 st.info(f"**Loaded Public SRA Validation Cohort:** [{ds['id']}](https://www.ncbi.nlm.nih.gov/sra/?term={ds['id']}) — *{ds['desc']}*")
-                
                 if st.button(f"🚀 Initialize with {ds['id']}", type="primary", use_container_width=True):
                     with st.spinner(f"Fetching {ds['id']} from public SRA and compiling pipeline..."):
                         time.sleep(1.5) 
@@ -263,11 +187,7 @@ if not st.session_state.analyzed:
 
         st.write("---")
         
-        onboard_tabs = st.tabs([
-            "🏛️ Academic Purpose", 
-            "🛡️ Privacy & Architecture", 
-            "⚙️ Assay-Specific Pipelines"
-        ])
+        onboard_tabs = st.tabs(["🏛️ Academic Purpose", "🛡️ Privacy & Architecture", "⚙️ Assay-Specific Pipelines"])
         
         with onboard_tabs[0]:
             st.markdown("""
@@ -280,7 +200,7 @@ if not st.session_state.analyzed:
             st.markdown("""
             **Stateless & Serverless Security (HIPAA/GDPR Aligned)**
             * **No Data Persistence:** This application operates entirely in memory using chunked byte-buffer streaming. **Zero genomic data, metadata, or Patient Health Information (PHI) is stored, cached, or written to disk.**
-            * **Serverless Annotations:** Clinical variant annotation dynamically queries the public Ensembl REST API on the fly, eliminating the need for local 40GB+ cache drives.
+            * **Serverless Annotations:** Clinical variant annotation dynamically queries the public Ensembl REST API on the fly.
             * **Legal Disclaimer:** This software is provided strictly for **Research Use Only (RUO)**. It is not intended for primary clinical diagnosis without CLIA/CAP certified laboratory validation.
             """)
             
@@ -289,9 +209,45 @@ if not st.session_state.analyzed:
             **Dynamic Algorithmic Routing**
             The pipeline is not monolithic; it intelligently bypasses inapplicable modules based on the biological reality of the selected extract.
             
-            * 🧬 **cfDNA Pipeline (15 Steps):** QC (1-3) → Align (4-5) → Fragmentomics (6-7) → Mutect2 SNV Calling (8) → **VAF Spectrum (9)** → **CHIP Subtraction (10)** → Lollipop Spatial Maps (11) → Multiscore (12) → VEP Match (13) → Evolution (14) → **Tumor-Informed Force Calling (15)**.
-            * 🧪 **mRNA Pipeline (13 Steps):** QC (1-3) → **Splice-Aware Align (4)** → Dedupe (5) → Struct Checks (6-7) → Mutect2 SNV (8) → *[Bypass 9]* → **Expression Normalization (10)** → **Volcano + Lollipop Plots (11)** → Multiscore (12) → **Transcriptomic KB Match (13)** → Evolution (14). *[Bypass 15]*.
-            * 🔬 **miRNA Pipeline (11 Steps):** QC (1-3) → **Strict Align (4)** → Dedupe (5) → Strict Length Checks (6-7) → *[Bypass 8-9]* → **Expression Normalization (10)** → **Volcano Plots (11)** → *[Bypass 12]* → Transcriptomic Match (13) → Evolution (14). *[Bypass 15]*.
+            **🧬 cfDNA Pipeline (15 Steps)**
+            * **Steps 1–3:** Quality Control (QC)
+            * **Steps 4–5:** Alignment
+            * **Steps 6–7:** Fragmentomics
+            * **Step 8:** Mutect2 SNV Calling
+            * **Step 9:** VAF Spectrum
+            * **Step 10:** CHIP Subtraction
+            * **Step 11:** Lollipop Spatial Maps
+            * **Step 12:** Multiscore
+            * **Step 13:** VEP Match
+            * **Step 14:** Evolution
+            * **Step 15:** Tumor-Informed Force Calling
+            
+            **🧪 mRNA Pipeline (13 Steps)**
+            * **Steps 1–3:** Quality Control (QC)
+            * **Step 4:** Splice-Aware Alignment
+            * **Step 5:** Deduplication
+            * **Steps 6–7:** Structural Checks
+            * **Step 8:** Mutect2 SNV Calling
+            * *Step 9: [Bypassed]*
+            * **Step 10:** Expression Normalization
+            * **Step 11:** Volcano & Lollipop Plots
+            * **Step 12:** Multiscore
+            * **Step 13:** Transcriptomic KB Match
+            * **Step 14:** Evolution
+            * *Step 15: [Bypassed]*
+            
+            **🔬 miRNA Pipeline (11 Steps)**
+            * **Steps 1–3:** Quality Control (QC)
+            * **Step 4:** Strict Alignment
+            * **Step 5:** Deduplication
+            * **Steps 6–7:** Strict Length Checks
+            * *Steps 8–9: [Bypassed]*
+            * **Step 10:** Expression Normalization
+            * **Step 11:** Volcano Plots
+            * *Step 12: [Bypassed]*
+            * **Step 13:** Transcriptomic Match
+            * **Step 14:** Evolution
+            * *Step 15: [Bypassed]*
             """)
 
 # ==============================================================================
@@ -300,7 +256,7 @@ if not st.session_state.analyzed:
 else:
     col_title, col_btn = st.columns([4, 1])
     col_title.title(f"Diagnostic Dashboard: {st.session_state.assay}")
-    if col_btn.button("🔄 Process New Sample"):
+    if col_btn.button("New Sample"):
         reset_app()
         st.rerun()
 
@@ -359,7 +315,6 @@ else:
         fig_col3, fig_col4 = st.columns(2)
         
         if st.session_state.assay == "cfDNA":
-            # cfDNA PATH: VAF and Lollipop
             with fig_col3:
                 st.plotly_chart(generate_vaf_plot(), use_container_width=True)
                 st.caption("Step 8, 9, 10: GATK Mutect2 executed. CHIP Noise Reduction Applied.")
@@ -368,7 +323,6 @@ else:
                 st.plotly_chart(plot_academic_lollipop(mock_vcf, "TP53"), use_container_width=True)
                 
         elif st.session_state.assay == "mRNA":
-            # mRNA PATH: Volcano (Expression) and Lollipop (Architecture)
             with fig_col3:
                 st.plotly_chart(generate_volcano_plot(), use_container_width=True)
                 st.caption("Step 10, 11: Expression abundance normalized via TPM subtraction.")
@@ -378,7 +332,6 @@ else:
                 st.caption("Step 8, 11: Allele-Specific Expression mapped to structural domains.")
                 
         elif st.session_state.assay == "miRNA":
-            # miRNA PATH: Volcano only (No variants)
             with fig_col3:
                 st.plotly_chart(generate_volcano_plot(), use_container_width=True)
                 st.caption("Step 10, 11: miRNA expression abundance normalized via TPM subtraction.")
@@ -405,7 +358,6 @@ else:
                     st.error(annotation["Status"])
                     
         else:
-            # RNA PATH
             m_col1.metric("Step 12: Transcriptomic Outlier Score", "88.1% Risk", delta="Elevated")
             m_col2.metric("Step 14: Longitudinal Evolution", "Spiking", delta="+14.2 Fold Change", delta_color="inverse")
             m_col3.metric("Step 15: Tumor-Informed Comparison", "Bypassed", help="DNA-specific tracking protocol.")
