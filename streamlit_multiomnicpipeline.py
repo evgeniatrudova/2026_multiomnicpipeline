@@ -62,7 +62,7 @@ def process_streaming_upload(uploaded_file, chunk_size=8192):
 # Uses st.session_state to step through the 15 stages dynamically. 
 # Mimics the original orchestrator's '--start-at' crash recovery and resume logic.
 # ==============================================================================
-st.set_page_config(page_title="OncoOmics Clinical Diagnostics", page_icon="🔬", layout="wide")
+st.set_page_config(page_title="EV Cargo Pipeline", page_icon="", layout="wide")
 
 if 'analyzed' not in st.session_state:
     st.session_state.analyzed = False
