@@ -173,18 +173,96 @@ def render_clinical_intelligence_table(ensembl_dict):
     st.caption("*Interpretation: Detection of EGFR sensitizing mutations indicates high probability of response to 3rd-generation TKIs.*")
 
 # ==============================================================================
-# 5. ONBOARDING UX 
+# 5. ONBOARDING UX (THE "FRONT DOOR")
 # ==============================================================================
 if not st.session_state.analyzed:
-    _, col_center, _ = st.columns([1, 2, 1])
+    # Widen the center column slightly to accommodate the text tabs below
+    _, col_center, _ = st.columns([1, 3, 1]) 
+    
     with col_center:
+        st.write("") 
         st.markdown("<h1 style='text-align: center;'>🔬 OncoOmics Orchestrator</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: gray;'>Serverless Multi-Omics Pipeline for Liquid Biopsy Diagnostics</p>", unsafe_allow_html=True)
+        st.write("")
+        
+        # Primary Action Box
         with st.container(border=True):
-            st.session_state.assay = st.radio("Assay Type", ["cfDNA", "mRNA", "miRNA"], horizontal=True)
-            uploaded_files = st.file_uploader("Drop multiplexed sequence streams", accept_multiple_files=True)
+            st.session_state.assay = st.radio(
+                "Select Target Biomaterial Extract", 
+                ["cfDNA", "mRNA", "miRNA"], 
+                horizontal=True
+            )
+            uploaded_files = st.file_uploader("Drop multiplexed sequence streams (FASTQ/FASTA/BAM)", accept_multiple_files=True)
+            
             if st.button("🚀 Initialize Diagnostics", type="primary", use_container_width=True):
-                st.session_state.analyzed = True
-                st.rerun()
+                if not uploaded_files:
+                    st.warning("Running in **Simulation Mode** (No files uploaded).")
+                with st.spinner("Compiling multi-omics pipeline..."):
+                    time.sleep(1.5) 
+                    st.session_state.analyzed = True
+                    st.rerun()
+
+        st.write("---")
+        
+        # Academic & Architectural Context Tabs
+        onboard_tabs = st.tabs([
+            "🏛️ Academic Purpose", 
+            "🛡️ Privacy & Architecture", 
+            "⚙️ 15-Step Pipeline", 
+            "🧪 NCBI Test Datasets"
+        ])
+        
+        with onboard_tabs[0]:
+            st.markdown("""
+            **Translational Multi-Omics Platform**
+            This pipeline is engineered for high-fidelity detection of **Minimal Residual Disease (MRD)** and tumor profiling from non-invasive liquid biopsies. 
+            It integrates orthogonal biological signals—genomic (somatic VAF), structural (fragmentomics), and transcriptomic (expression abundance)—into a unified diagnostic model to overcome the inherent low signal-to-noise ratio of cell-free biological extracts.
+            """)
+            
+        with onboard_tabs[1]:
+            st.markdown("""
+            **Stateless & Serverless Security (HIPAA/GDPR Aligned)**
+            * **No Data Persistence:** This application operates entirely in memory using chunked byte-buffer streaming. **Zero genomic data, metadata, or Patient Health Information (PHI) is stored, cached, or written to disk.**
+            * **Serverless Annotations:** Clinical variant annotation dynamically queries the public Ensembl REST API on the fly, eliminating the need for local 40GB+ cache drives.
+            * **Legal Disclaimer:** This software is provided strictly for **Research Use Only (RUO)**. It is not intended for primary clinical diagnosis without CLIA/CAP certified laboratory validation.
+            """)
+            
+        with onboard_tabs[2]:
+            st.markdown("""
+            **Algorithm Orchestration (15 Discrete Stages)**
+            
+            **Module 1 & 2: Pre-processing & Alignment**
+            * `01` **Cutadapt:** Asymmetric sequence trimming to preserve exact molecular barcode lengths.
+            * `02` **UMI Config:** Extracts and maps Unique Molecular Identifiers.
+            * `03` **FastQC:** In-line read quality validation.
+            * `04` **STAR:** Splice-aware or continuous genomic alignment based on assay biology.
+            * `05` **fgbio:** Bayesian error-correction collapsing PCR duplicates into ultra-high fidelity consensus reads.
+            
+            **Module 3: Structural Integrity**
+            * `06` **Samtools KDE:** Fragment size topological modeling (e.g., apoptotic 167bp vs tumor 145bp peaks).
+            * `07` **Motif Profiling:** 5' end-motif nuclease cleavage bias quantification.
+            
+            **Module 4: Clonal & Expression Analytics**
+            * `08` **GATK Mutect2:** Somatic single nucleotide variant (SNV) log-odds calling.
+            * `09` **VAF Spectrum:** Variant Allele Frequency distribution histograms.
+            * `10` **Noise Reduction:** CHIP (Clonal Hematopoiesis) subtraction and housekeeping gene normalization.
+            * `11` **Maftools/Plotly:** Spatial architecture visualization (Lollipop) and differential expression (Volcano).
+            
+            **Module 5: Clinical Intelligence**
+            * `12` **Fusion Engine:** Probabilistic multimodal scoring (DNA + RNA + Fragment signals).
+            * `13` **Ensembl-VEP:** Live API standard-of-care pharmacogenomic mapping.
+            * `14` **Evolutionary Modeling:** Longitudinal sub-clonal trajectory tracking.
+            * `15` **Tumor-Informed Calling:** High-sensitivity forced variant calling using primary tumor priors.
+            """)
+            
+        with onboard_tabs[3]:
+            st.markdown("""
+            **Public SRA Validation Datasets**
+            To validate the pipeline locally before using proprietary laboratory data, you can download public sequence streams from the NCBI Sequence Read Archive (SRA):
+            * 🧬 **cfDNA (Plasma Genomics):** [PRJNA591873](https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA591873) — *Liquid biopsy cfDNA from NSCLC patients.*
+            * 🧪 **mRNA (Extracellular Vesicles):** [PRJNA849887](https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA849887) — *Transcriptome sequencing of tumor-derived EVs.*
+            * 🔬 **miRNA (Serum Epigenetics):** [PRJNA602857](https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA602857) — *Small RNA-seq profiling for circulating microRNAs.*
+            """)
 
 # ==============================================================================
 # 6. CLINICAL DASHBOARD UX
