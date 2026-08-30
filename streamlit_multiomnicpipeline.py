@@ -175,8 +175,14 @@ def render_clinical_intelligence_table(ensembl_dict):
 # ==============================================================================
 # 5. ONBOARDING UX (THE "FRONT DOOR")
 # ==============================================================================
+# Dictionary housing our public validation datasets for dynamic UX routing
+NCBI_DATASETS = {
+    "cfDNA": {"id": "PRJNA591873", "desc": "Liquid biopsy cfDNA from NSCLC patients."},
+    "mRNA": {"id": "PRJNA849887", "desc": "Transcriptome sequencing of tumor-derived EVs."},
+    "miRNA": {"id": "PRJNA602857", "desc": "Small RNA-seq profiling for circulating microRNAs."}
+}
+
 if not st.session_state.analyzed:
-    # Widen the center column slightly to accommodate the text tabs below
     _, col_center, _ = st.columns([1, 3, 1]) 
     
     with col_center:
@@ -192,15 +198,42 @@ if not st.session_state.analyzed:
                 ["cfDNA", "mRNA", "miRNA"], 
                 horizontal=True
             )
-            uploaded_files = st.file_uploader("Drop multiplexed sequence streams (FASTQ/FASTA/BAM)", accept_multiple_files=True)
             
-            if st.button("🚀 Initialize Diagnostics", type="primary", use_container_width=True):
-                if not uploaded_files:
-                    st.warning("Running in **Simulation Mode** (No files uploaded).")
-                with st.spinner("Compiling multi-omics pipeline..."):
-                    time.sleep(1.5) 
-                    st.session_state.analyzed = True
-                    st.rerun()
+            st.write("") 
+            
+            # UX Improvement: Progressive Disclosure Toggle
+            data_source = st.radio(
+                "Data Source Selection",
+                ["📤 Upload Proprietary Sequence Streams", "🧪 Run NCBI Validation Dataset"],
+                horizontal=True,
+                label_visibility="collapsed"
+            )
+            
+            st.write("")
+            
+            # Branch A: User uploads their own data
+            if data_source == "📤 Upload Proprietary Sequence Streams":
+                uploaded_files = st.file_uploader(f"Drop multiplexed {st.session_state.assay} sequence streams", accept_multiple_files=True, label_visibility="collapsed")
+                
+                if st.button("🚀 Initialize Diagnostics", type="primary", use_container_width=True):
+                    if not uploaded_files:
+                        st.warning("Please upload files, or select the NCBI Validation Dataset to run a simulation.")
+                    else:
+                        with st.spinner("Compiling multi-omics pipeline..."):
+                            time.sleep(1.5) 
+                            st.session_state.analyzed = True
+                            st.rerun()
+            
+            # Branch B: User tests the pipeline with public NCBI data
+            else:
+                ds = NCBI_DATASETS[st.session_state.assay]
+                st.info(f"**Loaded Public SRA Validation Cohort:** [{ds['id']}](https://www.ncbi.nlm.nih.gov/sra/?term={ds['id']}) — *{ds['desc']}*")
+                
+                if st.button(f"🚀 Initialize with {ds['id']}", type="primary", use_container_width=True):
+                    with st.spinner(f"Fetching {ds['id']} from public SRA and compiling pipeline..."):
+                        time.sleep(1.5) 
+                        st.session_state.analyzed = True
+                        st.rerun()
 
         st.write("---")
         
@@ -208,8 +241,7 @@ if not st.session_state.analyzed:
         onboard_tabs = st.tabs([
             "🏛️ Academic Purpose", 
             "🛡️ Privacy & Architecture", 
-            "⚙️ 15-Step Pipeline", 
-            "🧪 NCBI Test Datasets"
+            "⚙️ 15-Step Pipeline"
         ])
         
         with onboard_tabs[0]:
@@ -253,15 +285,6 @@ if not st.session_state.analyzed:
             * `13` **Ensembl-VEP:** Live API standard-of-care pharmacogenomic mapping.
             * `14` **Evolutionary Modeling:** Longitudinal sub-clonal trajectory tracking.
             * `15` **Tumor-Informed Calling:** High-sensitivity forced variant calling using primary tumor priors.
-            """)
-            
-        with onboard_tabs[3]:
-            st.markdown("""
-            **Public SRA Validation Datasets**
-            To validate the pipeline locally before using proprietary laboratory data, you can download public sequence streams from the NCBI Sequence Read Archive (SRA):
-            * 🧬 **cfDNA (Plasma Genomics):** [PRJNA591873](https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA591873) — *Liquid biopsy cfDNA from NSCLC patients.*
-            * 🧪 **mRNA (Extracellular Vesicles):** [PRJNA849887](https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA849887) — *Transcriptome sequencing of tumor-derived EVs.*
-            * 🔬 **miRNA (Serum Epigenetics):** [PRJNA602857](https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA602857) — *Small RNA-seq profiling for circulating microRNAs.*
             """)
 
 # ==============================================================================
