@@ -187,14 +187,14 @@ if not st.session_state.analyzed:
     
     with col_center:
         st.write("") 
-        st.markdown("<h1 style='text-align: center;'>🔬 OncoOmics Orchestrator</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: gray;'>Serverless Multi-Omics Pipeline for Liquid Biopsy Diagnostics</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center;'>EV Cargo Pipeline</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: gray;'>Serverless Multi-Omics Pipeline for Liquid Biopsy Diagnostics from Extracellular Vesicles</p>", unsafe_allow_html=True)
         st.write("")
         
         # Primary Action Box
         with st.container(border=True):
             st.session_state.assay = st.radio(
-                "Select Target Biomaterial Extract", 
+                "Select Biomaterial Extract", 
                 ["cfDNA", "mRNA", "miRNA"], 
                 horizontal=True
             )
@@ -204,7 +204,7 @@ if not st.session_state.analyzed:
             # UX Improvement: Progressive Disclosure Toggle
             data_source = st.radio(
                 "Data Source Selection",
-                ["📤 Upload Proprietary Sequence Streams", "🧪 Run NCBI Validation Dataset"],
+                ["Upload", "Run NCBI Dataset"],
                 horizontal=True,
                 label_visibility="collapsed"
             )
@@ -212,10 +212,10 @@ if not st.session_state.analyzed:
             st.write("")
             
             # Branch A: User uploads their own data
-            if data_source == "📤 Upload Proprietary Sequence Streams":
+            if data_source == "Upload Sequence ":
                 uploaded_files = st.file_uploader(f"Drop multiplexed {st.session_state.assay} sequence streams", accept_multiple_files=True, label_visibility="collapsed")
                 
-                if st.button("🚀 Initialize Diagnostics", type="primary", use_container_width=True):
+                if st.button("Initialize Diagnostics", type="primary", use_container_width=True):
                     if not uploaded_files:
                         st.warning("Please upload files, or select the NCBI Validation Dataset to run a simulation.")
                     else:
@@ -229,7 +229,7 @@ if not st.session_state.analyzed:
                 ds = NCBI_DATASETS[st.session_state.assay]
                 st.info(f"**Loaded Public SRA Validation Cohort:** [{ds['id']}](https://www.ncbi.nlm.nih.gov/sra/?term={ds['id']}) — *{ds['desc']}*")
                 
-                if st.button(f"🚀 Initialize with {ds['id']}", type="primary", use_container_width=True):
+                if st.button(f"Initialize with {ds['id']}", type="primary", use_container_width=True):
                     with st.spinner(f"Fetching {ds['id']} from public SRA and compiling pipeline..."):
                         time.sleep(1.5) 
                         st.session_state.analyzed = True
@@ -261,7 +261,7 @@ if not st.session_state.analyzed:
             
         with onboard_tabs[2]:
             st.markdown("""
-            **Algorithm Orchestration (15 Discrete Stages)**
+            **Algorithm**
             
             **Module 1 & 2: Pre-processing & Alignment**
             * `01` **Cutadapt:** Asymmetric sequence trimming to preserve exact molecular barcode lengths.
@@ -293,7 +293,7 @@ if not st.session_state.analyzed:
 else:
     col_title, col_btn = st.columns([4, 1])
     col_title.title(f"Diagnostic Dashboard: {st.session_state.assay}")
-    if col_btn.button("🔄 Process New Sample"):
+    if col_btn.button("New Sample"):
         reset_app()
         st.rerun()
 
