@@ -326,7 +326,7 @@ animation: textFlow 3.6s forwards;
 0% { content: "CONVERGING RNA STRANDS"; color: #60a5fa; }
 35% { content: "FORMING DNA HELIX"; color: #3b82f6; }
 70% { content: "RESOLVING INTO FRAGMENTS"; color: #f59e0b; }
-100% { content: "PIPELINE READY"; color: #10b981; }
+100% { content: "PIPELINE RUNNING."; color: #10b981; }
 }
 </style>
 
