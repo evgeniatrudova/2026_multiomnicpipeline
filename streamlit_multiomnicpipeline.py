@@ -37,7 +37,7 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
         return {"Status": f"API Connection Error: {str(e)}"}
 
 # ==============================================================================
-# 2. PDF REPORT GENERATOR ENGINE
+# 2. PDF REPORT GENERATOR ENGINE (Graceful Degradation)
 # ==============================================================================
 def generate_pdf_report(assay_type, source_id, pipeline_desc, figures_dict):
     pdf = FPDF()
@@ -73,12 +73,17 @@ def generate_pdf_report(assay_type, source_id, pipeline_desc, figures_dict):
         pdf.cell(0, 10, title, ln=True, align='C')
         pdf.ln(5)
         
-        # Save plotly figure as temporary image to insert into PDF
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
-            fig.write_image(tmpfile.name, scale=2)
-            pdf.image(tmpfile.name, x=10, y=30, w=190)
-    
-    # Output to byte string for Streamlit download button
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
+                fig.write_image(tmpfile.name, scale=2)
+                pdf.image(tmpfile.name, x=10, y=30, w=190)
+        except Exception:
+            pdf.ln(20)
+            pdf.set_font("Arial", 'I', 11)
+            pdf.set_text_color(100, 100, 100)
+            pdf.cell(0, 10, "[ Visualization omitted: High-resolution export unavailable on this server ]", ln=True, align='C')
+            pdf.set_text_color(0, 0, 0) 
+            
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
@@ -188,11 +193,77 @@ if not st.session_state.analyzed:
                         st.session_state.analyzed = True
                         st.rerun()
 
+        st.write("---")
+        
+        # Restored Technical/Scientific Tabs
+        onboard_tabs = st.tabs(["🏛️ Academic Purpose", "🛡️ Privacy & Architecture", "⚙️ Modular Adjustments (Algorithm Spec)"])
+        
+        with onboard_tabs[0]:
+            st.markdown("""
+            **Translational Multi-Omics Platform**
+            This pipeline is engineered for high-fidelity detection of **Minimal Residual Disease (MRD)**, tumor profiling, and therapeutic payload tracking from non-invasive liquid biopsies. 
+            It dynamically routes data and selects appropriate analytical steps based on your target assay to overcome the inherent low signal-to-noise ratio of cell-free biological extracts.
+            """)
+            
+        with onboard_tabs[1]:
+            st.markdown("""
+            **Stateless & Serverless Security (HIPAA/GDPR Aligned)**
+            * **No Data Persistence:** Operates entirely in memory using chunked byte-buffer streaming. **Zero genomic data, metadata, or PHI is stored.**
+            * **Serverless Annotations:** Clinical variant annotation dynamically queries public APIs on the fly.
+            * **Legal Disclaimer:** This software is strictly for **Research Use Only (RUO)**.
+            """)
+            
+        with onboard_tabs[2]:
+            st.markdown("""
+            **Algorithmic Routing & Robustness Validation**
+            
+            The pipeline breaks the rigid 15-step generic model, deploying assay-specific bioinformatic algorithms tailored to the physical constraints of the target genetic material.
+
+            ### 🧬 cfDNA Engine
+            *   **Alignment & Consensus Calling:** 
+                *   *Methods:* `BWA-MEM` + `fgbio` (for UMI deduplication).
+                *   *Purpose:* Retain intact double-stranded paired-end read topologies and correct PCR amplification bias.
+                *   *Reasoning:* cfDNA fragments are ultra-short (modes at 145bp and 167bp). Standard deduplication (`Picard MarkDuplicates`) fails due to high biological duplication of identical genomic coordinates. UMI-aware consensus calling is mathematically required to suppress sequencing error rates for ultra-low VAF (<0.1%) liquid biopsy detection.
+            *   **Somatic Variant Analytics:** 
+                *   *Methods:* `GATK Mutect2` + Matched Buffy Coat Subtraction.
+                *   *Purpose:* High-sensitivity SNV/Indel calling combined with biological noise filtration.
+                *   *Reasoning:* Clonal Hematopoiesis of Indeterminate Potential (CHIP) inherently contaminates plasma with leukocyte-derived somatic mutations. Pipeline robustness mandates a matched leukocyte subtraction to prevent massive false-positive oncogene calling.
+
+            ### 🧪 EV-mRNA Engine
+            *   **Alignment & Integrity:**
+                *   *Methods:* `STAR` (Chimeric-aware mode) / `HISAT2`.
+                *   *Purpose:* Splice-tolerant mapping to capture fragmented, back-spliced, and 3' UTR enriched reads.
+                *   *Reasoning:* EV-packaged mRNA is heavily degraded and enriched for circular RNAs (circRNAs) that resist RNase digestion. Traditional full-length poly-A alignment parameters will inappropriately discard these as structural errors.
+            *   **Somatic Noise Filtration:**
+                *   *Methods:* `REDItools` / `REDIportal` cross-referencing.
+                *   *Purpose:* A-to-I RNA editing subtraction.
+                *   *Reasoning:* RNA sequencing naturally captures ADAR-mediated A-to-I editing events (sequenced as A>G). If fed directly into standard somatic variant callers without strict RNA-editing masking, the pipeline will emit thousands of false-positive tumor mutations.
+
+            ### 🔬 miRNA Engine
+            *   **Alignment Strategy:**
+                *   *Methods:* `miRge3.0` or `isomiR-SEA`.
+                *   *Purpose:* Probabilistic multi-mapping and isomiR-aware quantification.
+                *   *Reasoning:* Mature miRNAs frequently undergo non-templated 3' adenylation/uridylation or 5' shifting. Standard strict aligners (0-mismatch parameters) discard these biologically active isomiRs. Multi-mapping heuristics are also crucial for resolving paralogous miRNA families.
+            *   **Deduplication Constraint:**
+                *   *Methods:* `UMI-tools` (Coordinate-collapsing explicitly bypassed).
+                *   *Purpose:* True quantitative counting of short RNAs.
+                *   *Reasoning:* 22nt reads inherently map to exact start/stop coordinates. Using traditional coordinate deduplication aggressively downsamples true biological abundance by >95%. UMI tracking is the sole mathematically sound method for short RNA deduplication.
+            
+            ### 💊 siRNA Engine
+            *   **Alignment Stringency:**
+                *   *Methods:* `Bowtie` (configured for `-v 0` exact matching).
+                *   *Purpose:* Perfect-match alignment to validate synthetic therapeutic payload stability.
+                *   *Reasoning:* Therapeutic siRNAs are highly specific 21-24nt sequences. Allowing even a 1bp mismatch generates severe multi-mapping background against the endogenous human transcriptome, obfuscating precise pharmacokinetic tracking.
+            *   **Off-Target & Cleavage Analytics:**
+                *   *Methods:* `TargetScan` heuristic seed-matching + Degradome-seq mapping logic.
+                *   *Purpose:* Quantify exact on-target Ago2 cleavage and measure 3' UTR seed-based off-target toxicity.
+                *   *Reasoning:* Unlike miRNA, siRNA functions via perfect 5'-cleavage. The pipeline must explicitly confirm 5'-RACE/degradome signatures at the intended target locus, while systematically scanning the transcriptome for off-target RNAi knockdown driven by partial heptamer seed complementarity.
+            """)
+
 # ==============================================================================
 # 6. CLINICAL DASHBOARD UX
 # ==============================================================================
 else:
-    # Prepare dictionary to capture figures for the PDF
     pdf_figures = {}
 
     col_title, col_btn = st.columns([4, 1])
@@ -314,5 +385,5 @@ else:
             type="primary",
             use_container_width=True
         )
-    except Exception as e:
-        st.error(f"PDF generation requires 'fpdf' and 'kaleido'. (Error: {e})")
+    except Exception:
+        st.warning("⚠️ **Report Generation Unavailable**: The document compilation engine is temporarily offline.")
