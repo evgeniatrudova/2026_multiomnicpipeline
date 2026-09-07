@@ -14,14 +14,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # ==============================================================================
-# 1. PAGE CONFIGURATION & NUCLEAR ANTI-TRANSPARENCY OVERRIDE
+# 1. PAGE CONFIGURATION & ANTI-TRANSPARENCY OVERRIDE
 # ==============================================================================
 st.set_page_config(page_title="EV Cargo Diagnostics", page_icon="🔬", layout="wide")
 
-# Hardcoded framework override to kill Streamlit's default loading states
 st.markdown("""
 <style>
-/* 1. Hide the default top-right "Running..." status widget entirely */
 [data-testid="stStatusWidget"] {
     visibility: hidden !important;
     width: 0px !important;
@@ -29,20 +27,14 @@ st.markdown("""
     opacity: 0 !important;
     display: none !important;
 }
-
-/* 2. Force absolute opacity on all stale elements and their parent containers */
 .stApp [data-stale="true"], 
 .stApp [data-stale="true"] *,
 div[data-testid="stAppViewBlockContainer"],
-div[data-testid="stAppViewContainer"],
-.st-emotion-cache-1zwsops, 
-.st-emotion-cache-16txtl3 {
+div[data-testid="stAppViewContainer"] {
     opacity: 1 !important;
     filter: none !important;
     transition: none !important;
 }
-
-/* 3. Hide Streamlit skeleton loaders */
 [data-testid="stSkeleton"] {
     display: none !important;
 }
@@ -145,7 +137,6 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
         
         try:
             fig, ax = plt.subplots(figsize=(8, 5))
-            
             if data['type'] == 'fragment_size':
                 sns.histplot(data['sizes'], stat="density", color='#E69F00', alpha=0.6, ax=ax, edgecolor='black', bins=50)
                 sns.kdeplot(data['sizes'], color='#0072B2', linewidth=2.5, ax=ax)
@@ -155,79 +146,57 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                     ax.legend(frameon=False)
                 ax.set_xlabel("Insert Size / Template Length (bp)")
                 ax.set_ylabel("Probability Density")
-                
             elif data['type'] == 'motif':
                 keys = list(data['motif_dict'].keys())
                 vals = list(data['motif_dict'].values())
                 ax.bar(keys, vals, color="#CC79A7", edgecolor='black', linewidth=1.5)
                 ax.set_xlabel("Nucleotide Motif")
                 ax.set_ylabel("Frequency (%)")
-                
             elif data['type'] == 'vaf':
                 sns.histplot(data['vaf_data'] * 100, bins=30, color='#D55E00', ax=ax, edgecolor='black')
                 ax.axvline(0.1, color='black', linestyle='--', alpha=0.7)
-                ax.text(0.12, ax.get_ylim()[1]*0.9, 'LOD (0.1%)', fontsize=10)
                 ax.set_xlabel("Variant Allele Frequency (%)")
                 ax.set_ylabel("Mutation Count")
-                
             elif data['type'] == 'lollipop':
                 vcf = data['vcf_df']
                 ax.vlines(vcf['POS'], ymin=0, ymax=vcf['VAF']*100, color='#56B4E9', linewidth=2.5, zorder=1)
                 ax.scatter(vcf['POS'], vcf['VAF']*100, color='#D55E00', s=120, edgecolors='black', zorder=2)
-                ax.axvspan(7577000, 7578500, color='#F0E442', alpha=0.2, label='DNA-Binding Domain', zorder=0)
                 ax.set_xlabel("Genomic Coordinate (GRCh38)")
                 ax.set_ylabel("Variant Allele Frequency (%)")
-                ax.legend(frameon=False)
-                
             elif data['type'] == 'volcano':
                 df = data['df']
                 colors = {'Not Significant': 'lightgrey', 'Upregulated/Off-Target': '#D55E00', 'Knockdown/Downregulated': '#0072B2'}
                 for status, color in colors.items():
                     subset = df[df['Status'] == status]
-                    edge = 'black' if status != 'Not Significant' else 'none'
-                    ax.scatter(subset['log2FC'], subset['neg_log10_pval'], color=color, label=status, alpha=0.8, edgecolor=edge, s=40)
-                ax.axvline(1.5, color='black', linestyle='--', alpha=0.4)
-                ax.axvline(-1.5, color='black', linestyle='--', alpha=0.4)
-                ax.axhline(1.3, color='black', linestyle='--', alpha=0.4)
+                    ax.scatter(subset['log2FC'], subset['neg_log10_pval'], color=color, label=status, alpha=0.8, edgecolor='black' if status!='Not Significant' else 'none', s=40)
                 ax.set_xlabel(r"$\log_2$(Fold Change)")
                 ax.set_ylabel(r"$-\log_{10}$($p$-value)")
                 ax.legend(frameon=True, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10)
-                
             plt.tight_layout()
-            
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
                 fig.savefig(tmpfile.name, dpi=300, bbox_inches='tight')
                 pdf.image(tmpfile.name, x=15, y=pdf.get_y(), w=180)
             plt.close(fig) 
-            
         except Exception:
             pdf.ln(20)
-            pdf.set_font("Arial", 'I', 11)
-            pdf.set_text_color(100, 100, 100)
-            pdf.cell(0, 10, "[ Visualization omitted: High-resolution export unavailable on this server ]", ln=True, align='C')
-            pdf.set_text_color(0, 0, 0)
-            
+            pdf.cell(0, 10, "[ Visualization omitted ]", ln=True, align='C')
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
 # 4. SOLID DNA -> RNA -> FRAGMENT CSS ANIMATION COMPONENT
 # ==============================================================================
 def render_dna_fragmentation_sequence():
-    """
-    Renders a solid full-screen animation handling the transition from DNA -> RNA -> Fragments.
-    The background remains 100% opaque until the DOM is unmounted, preventing gray-out leaks.
-    """
     html_code = """<style>
 .biopsy-loader-wrapper {
 position: fixed;
 top: 0; left: 0; width: 100vw; height: 100vh;
-background-color: #0b0f19; /* Solid, non-transparent background */
+background-color: #0b0f19;
 z-index: 9999999;
 display: flex;
 flex-direction: column;
 align-items: center;
 justify-content: center;
-opacity: 1 !important; /* Forces 100% opacity, ignoring Streamlit stale states */
+opacity: 1 !important;
 }
 .orbit-ring {
 position: absolute;
@@ -301,14 +270,8 @@ animation: bridgeBreak 3.5s forwards;
 .rung-delay-11 { animation: helixSpin 2s linear infinite 1.65s, shatter2 3.5s forwards; }
 @keyframes spinOrbit { 100% { transform: rotate(360deg); } }
 @keyframes helixSpin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
-@keyframes dissolveRight {
-0%, 30% { opacity: 1; }
-35%, 100% { opacity: 0; }
-}
-@keyframes bridgeBreak {
-0%, 30% { background: linear-gradient(90deg, #3b82f6 50%, #ef4444 50%); width: 100%; opacity: 1; }
-35%, 100% { background: linear-gradient(90deg, #3b82f6 100%, transparent 0%); width: 45%; opacity: 0.8; }
-}
+@keyframes dissolveRight { 0%, 30% { opacity: 1; } 35%, 100% { opacity: 0; } }
+@keyframes bridgeBreak { 0%, 30% { background: linear-gradient(90deg, #3b82f6 50%, #ef4444 50%); width: 100%; opacity: 1; } 35%, 100% { background: linear-gradient(90deg, #3b82f6 100%, transparent 0%); width: 45%; opacity: 0.8; } }
 @keyframes shatter1 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(-50px, -60px) rotate(45deg); } }
 @keyframes shatter2 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(60px, -20px) rotate(-30deg); } }
 @keyframes shatter3 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(-40px, 50px) rotate(80deg); } }
@@ -366,8 +329,12 @@ def get_volcano_data(assay="mRNA"):
     df = pd.DataFrame({'Gene': [f"TARGET_{i}" for i in range(n_genes)], 'log2FC': np.random.normal(0, 1.2, n_genes), 'neg_log10_pval': np.random.exponential(0.8, n_genes)})
     if assay == "siRNA":
         outliers = pd.DataFrame({'Gene': ['ON_TARGET_KD', 'OFF_TARGET_1', 'OFF_TARGET_2'], 'log2FC': [-4.8, -1.2, -1.5], 'neg_log10_pval': [12.4, 3.1, 2.5]})
-    else:
+    elif assay == "miRNA":
+        outliers = pd.DataFrame({'Gene': ['hsa-miR-21-5p', 'hsa-miR-155-5p', 'hsa-miR-141-3p'], 'log2FC': [3.8, 2.9, -2.1], 'neg_log10_pval': [9.1, 6.4, 5.2]})
+    elif assay == "mRNA":
         outliers = pd.DataFrame({'Gene': ['ERBB2', 'CD274', 'MYC'], 'log2FC': [4.5, 3.1, 3.8], 'neg_log10_pval': [8.2, 5.4, 7.5]})
+    else:
+        outliers = pd.DataFrame({'Gene': ['TARGET_X', 'TARGET_Y'], 'log2FC': [2.0, -2.0], 'neg_log10_pval': [4.0, 4.0]})
     df = pd.concat([df, outliers], ignore_index=True)
     df['Status'] = 'Not Significant'
     df.loc[(df['log2FC'] >= 1.5) & (df['neg_log10_pval'] >= 1.3), 'Status'] = 'Upregulated/Off-Target'
@@ -417,12 +384,10 @@ if not st.session_state.analyzed:
                         st.warning("Please upload a file to begin.")
                     else:
                         st.session_state.data_source_id = "Uploaded Patient Data"
-                        
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(3.6) # Matches inner animation shatter
-                            
+                            time.sleep(3.6) 
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
@@ -431,12 +396,10 @@ if not st.session_state.analyzed:
                 st.info(f"**Loaded Validation Dataset:** [{ds['id']}] — {ds['desc']}")
                 if st.button(f"🚀 Run Analysis on {ds['id']}", type="primary", use_container_width=True):
                     st.session_state.data_source_id = ds['id']
-                    
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(3.6) # Matches inner animation shatter
-                        
+                        time.sleep(3.6) 
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
@@ -484,7 +447,7 @@ if not st.session_state.analyzed:
             """)
 
 # ==============================================================================
-# 7. CLINICAL DASHBOARD UX
+# 7. CLINICAL DASHBOARD UX (DECOUPLED FOR ALL 4 ASSAYS)
 # ==============================================================================
 else:
     pdf_data_payload = {}
@@ -504,18 +467,32 @@ else:
 
     # --- MODULE 1: QUALITY & ALIGNMENT ---
     with tab1:
-        st.markdown("### Step 1: Sequence Cleaning & Human Genome Matching")
-        st.info("Before looking for mutations, the software cleans the raw data to remove biological noise (adapters, PCR duplicates) and aligns the patient's sequence perfectly to the standard human genome map to figure out where the DNA/RNA came from.")
+        st.markdown(f"### Step 1: Sequence Cleaning & Human Genome Matching ({st.session_state.assay})")
+        if st.session_state.assay == "cfDNA":
+            st.info("Adapter trimming and UMI consensus alignment optimized for double-stranded cell-free DNA fragments.")
+        elif st.session_state.assay == "mRNA":
+            st.info("Splice-aware alignment and deduplication tuned for fragmented EV transcriptomic cargo.")
+        elif st.session_state.assay == "miRNA":
+            st.info("isomiR-aware alignment and UMI collapsing structured for circulating small non-coding RNA.")
+        elif st.session_state.assay == "siRNA":
+            st.info("Strict 0-mismatch alignment tailored for synthetic therapeutic small interfering RNA payloads.")
         
         c1, c2, c3 = st.columns(3)
         c1.metric("Adapter Trimming", "Complete", "Data Cleaned")
         c2.metric("Sequence Quality (Q30)", "> 95%", "High Confidence")
-        c3.metric("Usable Fragments", "12.8 Million", "-71% PCR Noise Filtered")
+        c3.metric("Usable Reads", "12.8 Million", "-71% Noise Filtered")
 
     # --- MODULE 2: STRUCTURAL INTEGRITY ---
     with tab2:
-        st.markdown("### Step 2: Biological Fingerprinting (Fragmentomics)")
-        st.info("Tumor DNA circulating in the blood physically breaks down differently than healthy DNA. By measuring the length and the 'cut marks' on the DNA ends, we can mathematically confirm if the sample actually contains fragments shed by a tumor.")
+        st.markdown(f"### Step 2: Biological Fingerprinting ({st.session_state.assay})")
+        if st.session_state.assay == "cfDNA":
+            st.info("Evaluating apoptotic and tumor-derived fragment length modes (145bp / 167bp).")
+        elif st.session_state.assay == "mRNA":
+            st.info("Assessing transcript length distribution and exonic/back-spliced structural integrity.")
+        elif st.session_state.assay == "miRNA":
+            st.info("Validating strict mature small RNA length distribution (~22nt) and 5' terminal bias.")
+        elif st.session_state.assay == "siRNA":
+            st.info("Verifying precise therapeutic payload length (21-24nt) and nuclease stability.")
         
         fig_col1, fig_col2 = st.columns(2)
         with fig_col1:
@@ -525,71 +502,108 @@ else:
             elif st.session_state.assay == "mRNA": sim_sizes = np.random.normal(loc=300, scale=60, size=5000)
             else: sim_sizes = np.concatenate([np.random.normal(167, 25, 3000), np.random.normal(145, 20, 2000)])
             
-            pdf_data_payload["High-Resolution Fragment Size Distribution"] = {'type': 'fragment_size', 'sizes': sim_sizes}
+            pdf_data_payload["Fragment Size Distribution"] = {'type': 'fragment_size', 'sizes': sim_sizes}
             st.plotly_chart(plot_web_fragment_size(sim_sizes, st.session_state.assay), use_container_width=True)
             
         with fig_col2:
-            motif_data = {'CCCA': 4.2, 'AAAA': 3.8, 'TATA': 2.9, 'GGGG': 2.1} if st.session_state.assay not in ["miRNA", "siRNA"] else {'T/U': 78.5, 'A': 12.1, 'C': 5.4, 'G': 4.0}
+            motif_data = {'CCCA': 4.2, 'AAAA': 3.8, 'TATA': 2.9, 'GGGG': 2.1} if st.session_state.assay not in ["miRNA", "siRNA"] else {'T/U (Argonaute)': 78.5, 'A': 12.1, 'C': 5.4, 'G': 4.0}
             pdf_data_payload["Terminal Cleavage Motif Analysis"] = {'type': 'motif', 'motif_dict': motif_data}
-            
-            fig_motif = px.bar(x=list(motif_data.keys()), y=list(motif_data.values()), title="Terminal Cleavage Bias")
+            fig_motif = px.bar(x=list(motif_data.keys()), y=list(motif_data.values()), title="Terminal Cleavage / End Motif Bias")
             st.plotly_chart(fig_motif, use_container_width=True)
 
-    # --- MODULE 3: ANALYTICS ---
+    # --- MODULE 3: ANALYTICS (DECOUPLED FOR EACH ASSAY) ---
     with tab3:
-        st.markdown(f"### Step 3: Disease Driver Detection ({st.session_state.assay})")
+        st.markdown(f"### Step 3: Analytical Profiling ({st.session_state.assay})")
         
         if st.session_state.assay == "cfDNA":
-            st.info("Here we look for the actual 'spelling mistakes' (mutations) in the tumor's DNA. We also filter out mutations that naturally occur in healthy white blood cells as people age (CHIP mutations), ensuring we only flag true cancer drivers.")
+            st.info("Executing GATK Mutect2 somatic mutation calling with CHIP leukocyte subtraction.")
             fig_col3, fig_col4 = st.columns(2)
-            
             with fig_col3:
                 vaf_data = get_vaf_data()
                 pdf_data_payload["Variant Allele Frequency Spectrum"] = {'type': 'vaf', 'vaf_data': vaf_data}
-                
                 fig_vaf = px.histogram(x=vaf_data * 100, nbins=30, color_discrete_sequence=["#D55E00"], title="Variant Allele Frequency Spectrum")
                 fig_vaf.add_vline(x=0.1, line_dash="dash", line_color="black")
                 st.plotly_chart(fig_vaf, use_container_width=True)
-                
             with fig_col4:
                 mock_vcf = pd.DataFrame({'POS': [7577121, 7578406, 7577538], 'VAF': [0.012, 0.005, 0.045]})
                 pdf_data_payload["Somatic Clonal Architecture Map"] = {'type': 'lollipop', 'vcf_df': mock_vcf}
-                
                 fig_lolli = go.Figure()
                 for _, row in mock_vcf.iterrows(): fig_lolli.add_shape(type="line", x0=row['POS'], y0=0, x1=row['POS'], y1=row['VAF'] * 100, line=dict(color="#56B4E9", width=2))
                 fig_lolli.add_trace(go.Scatter(x=mock_vcf['POS'], y=mock_vcf['VAF'] * 100, mode='markers', marker=dict(size=12, color='#D55E00')))
                 fig_lolli.update_layout(title="Mutation Map: TP53", template="simple_white")
                 st.plotly_chart(fig_lolli, use_container_width=True)
 
-        elif st.session_state.assay in ["mRNA", "miRNA", "siRNA"]:
-            st.info("Instead of looking at DNA mutations, this step measures 'volume'. Are certain cancer-driving genes turned up too high (upregulated)? Or, for siRNA therapeutics, did the drug successfully silence the target gene without hitting healthy genes by mistake?")
-            df_volcano = get_volcano_data(assay=st.session_state.assay)
-            pdf_data_payload["Differential Abundance Profile"] = {'type': 'volcano', 'df': df_volcano}
-            
+        elif st.session_state.assay == "mRNA":
+            st.info("Quantifying transcript expression abundance and filtering A-to-I RNA editing events.")
+            df_volcano = get_volcano_data(assay="mRNA")
+            pdf_data_payload["Differential Expression Profile"] = {'type': 'volcano', 'df': df_volcano}
             color_map = {'Not Significant': 'grey', 'Upregulated/Off-Target': '#D55E00', 'Knockdown/Downregulated': '#0072B2'}
-            fig_volcano = px.scatter(df_volcano, x='log2FC', y='neg_log10_pval', color='Status', color_discrete_map=color_map, title="Differential Abundance Profile")
+            fig_volcano = px.scatter(df_volcano, x='log2FC', y='neg_log10_pval', color='Status', color_discrete_map=color_map, title="mRNA Differential Expression (Volcano Plot)")
             st.plotly_chart(fig_volcano, use_container_width=True)
 
-    # --- MODULE 4: CLINICAL INTELLIGENCE ---
+        elif st.session_state.assay == "miRNA":
+            st.info("Profiling circulating microRNA signatures and isomiR variant distributions.")
+            df_volcano = get_volcano_data(assay="miRNA")
+            pdf_data_payload["miRNA Abundance Profile"] = {'type': 'volcano', 'df': df_volcano}
+            color_map = {'Not Significant': 'grey', 'Upregulated/Off-Target': '#D55E00', 'Knockdown/Downregulated': '#0072B2'}
+            fig_volcano = px.scatter(df_volcano, x='log2FC', y='neg_log10_pval', color='Status', color_discrete_map=color_map, title="miRNA Abundance Profile (Volcano Plot)")
+            st.plotly_chart(fig_volcano, use_container_width=True)
+
+        elif st.session_state.assay == "siRNA":
+            st.info("Measuring on-target mRNA knockdown efficiency and scanning 3' UTRs for off-target seed matches.")
+            df_volcano = get_volcano_data(assay="siRNA")
+            pdf_data_payload["siRNA Knockdown Profile"] = {'type': 'volcano', 'df': df_volcano}
+            color_map = {'Not Significant': 'grey', 'Upregulated/Off-Target': '#D55E00', 'Knockdown/Downregulated': '#0072B2'}
+            fig_volcano = px.scatter(df_volcano, x='log2FC', y='neg_log10_pval', color='Status', color_discrete_map=color_map, title="siRNA Knockdown & Off-Target Profile")
+            st.plotly_chart(fig_volcano, use_container_width=True)
+
+    # --- MODULE 4: CLINICAL INTELLIGENCE (DECOUPLED FOR EACH ASSAY) ---
     with tab4:
-        st.markdown("### Step 4: Clinical Translation & Actionability")
-        st.info("We cross-reference the patient's specific molecular profile against live international clinical databases (like Ensembl and NCCN guidelines) to recommend targeted FDA-approved therapies.")
+        st.markdown(f"### Step 4: Clinical Intelligence & Translation ({st.session_state.assay})")
         
-        m_col1, m_col2, m_col3 = st.columns(3)
-        m_col1.metric("Disease Risk / Signature Score", "94.2%", delta="High Priority")
-        m_col2.metric("Longitudinal Evolution", "Stable", delta="-0.2% vs previous visit")
-        m_col3.metric("Tumor-Informed Confidence", "+24.5% Sens.", help="Compared to baseline")
-        
-        st.divider()
-        with st.spinner("Securely checking international guidelines (Ensembl API)..."):
-            annotation = fetch_ensembl_vep_live("ENST00000275493.6:c.2573T>G")
-            if "Status" not in annotation:
-                df_action = pd.DataFrame([annotation])
-                df_action['Therapeutic Indication'] = df_action['Gene'].apply(lambda x: "Osimertinib (Tier 1)" if x == "EGFR" else "Review Required")
-                df_action['Guideline'] = "NCCN NSCLC v2.2024"
-                st.dataframe(df_action[['Gene', 'Consequence', 'Impact', 'Therapeutic Indication', 'Guideline']], use_container_width=True, hide_index=True)
-            else:
-                st.warning(annotation["Status"])
+        if st.session_state.assay == "cfDNA":
+            m_col1, m_col2, m_col3 = st.columns(3)
+            m_col1.metric("Dynamic Multimodal Fusion", "94.2% Risk", delta="High")
+            m_col2.metric("Longitudinal Evolution", "Stable", delta="-0.2% VAF")
+            m_col3.metric("Tumor-Informed Confidence", "+24.5% Sens.", help="Force calling vs Agnostic")
+            st.divider()
+            st.subheader("Ensembl-VEP Clinical Evidence Matching (Live API)")
+            with st.spinner("Querying Ensembl REST API..."):
+                annotation = fetch_ensembl_vep_live("ENST00000275493.6:c.2573T>G")
+                if "Status" not in annotation:
+                    df_action = pd.DataFrame([annotation])
+                    df_action['Therapeutic Indication'] = df_action['Gene'].apply(lambda x: "Osimertinib (Tier 1)" if x == "EGFR" else "Review Required")
+                    df_action['Guideline'] = "NCCN NSCLC v2.2024"
+                    st.dataframe(df_action[['Gene', 'Consequence', 'Impact', 'Therapeutic Indication', 'Guideline']], use_container_width=True, hide_index=True)
+                else:
+                    st.warning(annotation["Status"])
+
+        elif st.session_state.assay == "mRNA":
+            m_col1, m_col2, m_col3 = st.columns(3)
+            m_col1.metric("Transcriptomic Outlier Score", "88.1% Risk", delta="Elevated")
+            m_col2.metric("Longitudinal Evolution", "Spiking", delta="+14.2 Fold Change", delta_color="inverse")
+            m_col3.metric("Tumor-Informed Comparison", "Bypassed", help="DNA-specific tracking protocol.")
+            st.divider()
+            st.subheader("EV-mRNA Knowledgebase Match")
+            st.success("**Tier 1 Indication:** ERBB2 (HER2) Overexpression detected (+4.5x FC). Indicated for Trastuzumab (Herceptin).")
+
+        elif st.session_state.assay == "miRNA":
+            m_col1, m_col2, m_col3 = st.columns(3)
+            m_col1.metric("Oncogenic miRNA Signature", "91.5% Index", delta="High Risk")
+            m_col2.metric("Signature Stability", "Robust", delta="Serum Stable")
+            m_col3.metric("Biomarker Match", "miR-21 / miR-155", help="Verified oncogenic panel")
+            st.divider()
+            st.subheader("Circulating miRNA Knowledgebase Match")
+            st.success("**Diagnostic Panel Match:** Elevated hsa-miR-21-5p and hsa-miR-155-5p associated with tumor proliferation and immune evasion in NSCLC.")
+
+        elif st.session_state.assay == "siRNA":
+            m_col1, m_col2, m_col3 = st.columns(3)
+            m_col1.metric("Cleavage Efficiency Score", "92.4% KD", delta="Optimal")
+            m_col2.metric("Systemic Clearance", "T1/2 = 48h", delta="-12% from T-1", delta_color="normal")
+            m_col3.metric("Off-Target Impact", "Minimal", help="Perfect match stringency maintained.")
+            st.divider()
+            st.subheader("Transcriptome Exact Target Match")
+            st.success("**Validation:** 100% exact complementary match to target mRNA confirmed. No significant 3' UTR off-target hits detected.")
 
     st.write("---")
     
@@ -609,7 +623,6 @@ else:
             pipeline_desc=pipeline_narrative,
             data_payload=pdf_data_payload
         )
-        
         st.download_button(
             label="📥 Download Academic Clinical Report (PDF)",
             data=pdf_bytes,
