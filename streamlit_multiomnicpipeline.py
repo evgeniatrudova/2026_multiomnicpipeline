@@ -217,13 +217,27 @@ if not st.session_state.analyzed:
             
         with onboard_tabs[2]:
             st.markdown("""
-            **Dynamic Algorithmic Routing**
-            The pipeline breaks the rigid 15-step model into modular blocks to handle biomaterial reality:
+            **Dynamic Algorithmic Routing & Biological Validation**
             
-            *   **cfDNA Engine:** Links fragmentomics (end-motifs, sizes) as a Bayesian prior for Mutect2 SNV calling.
-            *   **mRNA Engine:** Deploys Chimeric/Back-splice detection (for EV circRNA) and integrates A-to-I RNA editing subtraction to prevent false-positive Mutect2 SNVs.
-            *   **miRNA Engine:** Replaces strict 0-mismatch alignment with **isomiR-aware quantification** (miRge3.0) and uses **UMI deduplication** to prevent massive biological data loss during coordinate collapsing.
-            *   **siRNA Engine (11 Steps):** Enforces **perfect-match (0 mismatch)** alignment to measure target knockdown efficiency via 5'-RACE/degradome logic, while scanning 3' UTRs transcriptome-wide for off-target seed mismatches. Bypasses standard SNV calling.
+            The pipeline discards the rigid monolithic approach, deploying assay-specific algorithms tailored to the physical and molecular properties of the target genetic material:
+
+            ### 🧬 cfDNA Engine
+            *   **Pre-Processing & Alignment:** End-repair trimming isolates double-stranded apoptotic fragments, aligning via BWA-MEM to GRCh38 to preserve paired-end insert topologies.
+            *   **Fragmentomics (Priors):** Models insert sizes (distinguishing 145bp tumor-derived from 167bp wild-type nucleosomal footprints) and 5' end-motif cleavage preferences to construct Bayesian priors.
+            *   **Variant Analytics:** Mutect2 somatic SNV/Indel calling is heavily penalized for background error rates, executing stringent CHIP (Clonal Hematopoiesis of Indeterminate Potential) subtraction using matched buffy coat references.
+
+            ### 🧪 EV-mRNA Engine
+            *   **Alignment & Integrity:** Standard poly-A selected aligners fail on EV-mRNA. This module deploys chimeric-aware, splice-tolerant alignment (e.g., STAR) to capture highly fragmented transcripts, 3' UTR enriched elements, and exon-back-spliced circular RNAs (circRNAs) protected from RNase degradation.
+            *   **Signal Normalization:** Bypasses standard library size scaling (like DESeq2 median-of-ratios) which fails under variable EV secretion rates. Normalizes to exogenous spike-ins linked to vesicle particle counts.
+            *   **Variant Subtraction:** Implements a strict A-to-I (A>G) RNA-editing subtraction filter via REDIportal to prevent hyper-mutated transcripts from triggering false-positive tumor somatic calls in Mutect2.
+
+            ### 🔬 miRNA Engine
+            *   **Alignment Strategy:** Abandons strict 0-mismatch mapping. Utilizes **isomiR-aware quantification** (e.g., miRge3.0) to capture biologically active 5'/3' trimmed variants and non-templated adenylation/uridylation, distinguishing true EV cargo from Argonaute (Ago2) bound contaminants.
+            *   **Deduplication Constraint:** Coordinate-based deduplication is mathematically fatal for small RNAs. Strictly enforces **UMI (Unique Molecular Identifier) parsing** to differentiate massive biological transcription spikes from PCR amplification artifacts.
+            
+            ### 💊 siRNA Engine
+            *   **Alignment Constraint:** Conversely demands **perfect-match (0 mismatch)** alignment to map synthetic 21-24bp therapeutic payloads, ensuring intact systemic delivery without in vivo nuclease degradation.
+            *   **Targeting & Off-Target Analytics:** Replaces standard SNV mapping with degradome-seq logic. Validates perfect complementary 5'-cleavage at the intended target mRNA locus, whilst executing a transcriptome-wide scan of 3' UTRs for heuristic heptamer seed-matches to quantify off-target RNAi toxicity.
             """)
 
 # ==============================================================================
