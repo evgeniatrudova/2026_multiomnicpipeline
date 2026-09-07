@@ -183,7 +183,7 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 4. SOLID DNA -> RNA -> FRAGMENT CSS ANIMATION COMPONENT
+# 4. ORGANIC GRADIENT & GENTLE FRAGMENT ANIMATION COMPONENT
 # ==============================================================================
 def render_dna_fragmentation_sequence():
     html_code = """<style>
@@ -198,123 +198,128 @@ align-items: center;
 justify-content: center;
 opacity: 1 !important;
 }
-.orbit-ring {
+
+.animation-canvas {
+position: relative;
+width: 260px;
+height: 260px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+/* Outer circular track with red-to-blue gradient effect */
+.progress-ring {
 position: absolute;
-width: 320px; height: 320px;
-border: 1px dashed rgba(255, 255, 255, 0.15);
+width: 200px;
+height: 200px;
 border-radius: 50%;
-animation: spinOrbit 12s linear infinite;
+border: 3px solid rgba(255, 255, 255, 0.05);
+background: conic-gradient(from 0deg, #ef4444, #f59e0b, #3b82f6);
+-webkit-mask: radial-gradient(farthest-side, transparent 85%, black 88%);
+mask: radial-gradient(farthest-side, transparent 85%, black 88%);
+animation: rotateRing 3.6s linear forwards;
 }
-.orbit-ring:nth-child(2) { width: 420px; height: 150px; animation-direction: reverse; animation-duration: 18s; }
-.orbit-dot {
-position: absolute; width: 8px; height: 8px; background: #9ca3af; border-radius: 50%;
-top: -4px; left: 50%; transform: translateX(-50%);
+
+@keyframes rotateRing {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
 }
-.dna-geo-container {
-position: relative;
-width: 80px;
-height: 340px;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: space-between;
-}
-.central-axis {
+
+/* Smooth glowing particle traversing the gradient circle */
+.gradient-particle {
 position: absolute;
-width: 1px;
-height: 100%;
-background: rgba(255,255,255, 0.1);
-z-index: 0;
+width: 16px;
+height: 16px;
+background: radial-gradient(circle, #ffffff 0%, #3b82f6 70%);
+border-radius: 50%;
+box-shadow: 0 0 16px #3b82f6, 0 0 8px #ef4444;
+animation: particleTrajectory 3.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+z-index: 5;
 }
-.rung-pair {
-position: relative;
-width: 100%;
-height: 18px;
-display: flex;
-justify-content: space-between;
-align-items: center;
-transform-style: preserve-3d;
-z-index: 1;
+
+@keyframes particleTrajectory {
+0% {
+    transform: rotate(0deg) translate(100px) rotate(0deg);
+    background: radial-gradient(circle, #fff 0%, #ef4444 70%);
+    box-shadow: 0 0 16px #ef4444;
 }
-.backbone-left, .backbone-right {
-width: 4px;
-height: 18px;
-background: #3b82f6; 
-border-radius: 2px;
+50% {
+    background: radial-gradient(circle, #fff 0%, #f59e0b 70%);
+    box-shadow: 0 0 16px #f59e0b;
+}
+100% {
+    transform: rotate(360deg) translate(100px) rotate(-360deg);
+    background: radial-gradient(circle, #fff 0%, #3b82f6 70%);
+    box-shadow: 0 0 16px #3b82f6;
+}
+}
+
+/* Gently floating, organic genetic fragments */
+.organic-fragment {
 position: absolute;
+background: linear-gradient(135deg, rgba(59, 130, 246, 0.6), rgba(239, 68, 68, 0.6));
+border-radius: 6px;
+opacity: 0;
+animation: floatGentle 3.6s ease-in-out infinite;
 }
-.backbone-right {
-background: #ef4444; 
-right: 0;
-animation: dissolveRight 3.5s forwards;
+
+.frag-1 { width: 24px; height: 6px; top: 30%; left: 20%; animation-delay: 0.1s; }
+.frag-2 { width: 18px; height: 6px; top: 70%; left: 70%; animation-delay: 0.4s; }
+.frag-3 { width: 30px; height: 6px; top: 40%; left: 75%; animation-delay: 0.2s; }
+.frag-4 { width: 20px; height: 6px; top: 65%; left: 25%; animation-delay: 0.5s; }
+
+@keyframes floatGentle {
+0% {
+    transform: translate(0, 0) rotate(0deg) scale(0.2);
+    opacity: 0;
 }
-.base-bridge {
-width: 100%;
-height: 2px;
-background: linear-gradient(90deg, #3b82f6 50%, #ef4444 50%);
-position: absolute;
-top: 8px;
-animation: bridgeBreak 3.5s forwards;
+30% {
+    opacity: 0.8;
+    transform: translate(-15px, -20px) rotate(25deg) scale(1);
 }
-.rung-delay-0 { animation: helixSpin 2s linear infinite, shatter1 3.5s forwards; }
-.rung-delay-1 { animation: helixSpin 2s linear infinite 0.15s, shatter2 3.5s forwards; }
-.rung-delay-2 { animation: helixSpin 2s linear infinite 0.30s, shatter3 3.5s forwards; }
-.rung-delay-3 { animation: helixSpin 2s linear infinite 0.45s, shatter4 3.5s forwards; }
-.rung-delay-4 { animation: helixSpin 2s linear infinite 0.60s, shatter5 3.5s forwards; }
-.rung-delay-5 { animation: helixSpin 2s linear infinite 0.75s, shatter1 3.5s forwards; }
-.rung-delay-6 { animation: helixSpin 2s linear infinite 0.90s, shatter2 3.5s forwards; }
-.rung-delay-7 { animation: helixSpin 2s linear infinite 1.05s, shatter3 3.5s forwards; }
-.rung-delay-8 { animation: helixSpin 2s linear infinite 1.20s, shatter4 3.5s forwards; }
-.rung-delay-9 { animation: helixSpin 2s linear infinite 1.35s, shatter5 3.5s forwards; }
-.rung-delay-10 { animation: helixSpin 2s linear infinite 1.50s, shatter1 3.5s forwards; }
-.rung-delay-11 { animation: helixSpin 2s linear infinite 1.65s, shatter2 3.5s forwards; }
-@keyframes spinOrbit { 100% { transform: rotate(360deg); } }
-@keyframes helixSpin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
-@keyframes dissolveRight { 0%, 30% { opacity: 1; } 35%, 100% { opacity: 0; } }
-@keyframes bridgeBreak { 0%, 30% { background: linear-gradient(90deg, #3b82f6 50%, #ef4444 50%); width: 100%; opacity: 1; } 35%, 100% { background: linear-gradient(90deg, #3b82f6 100%, transparent 0%); width: 45%; opacity: 0.8; } }
-@keyframes shatter1 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(-50px, -60px) rotate(45deg); } }
-@keyframes shatter2 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(60px, -20px) rotate(-30deg); } }
-@keyframes shatter3 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(-40px, 50px) rotate(80deg); } }
-@keyframes shatter4 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(70px, 60px) rotate(-60deg); } }
-@keyframes shatter5 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(-15px, -80px) rotate(120deg); } }
-.status-text {
-margin-top: 50px;
+70% {
+    opacity: 0.8;
+    transform: translate(20px, 25px) rotate(-15deg) scale(1);
+}
+100% {
+    transform: translate(0, 50px) rotate(45deg) scale(0.2);
+    opacity: 0;
+}
+}
+
+.status-label {
+margin-top: 40px;
 color: #9ca3af;
 font-family: monospace;
-font-size: 14px;
-letter-spacing: 3px;
+font-size: 13px;
+letter-spacing: 2px;
 text-transform: uppercase;
 }
-.status-text::after {
-content: "ASSEMBLING DNA";
-animation: textSwap 3.5s forwards;
+.status-label::after {
+content: "INITIALIZING PIPELINE (RED)";
+animation: textFlow 3.6s forwards;
 }
-@keyframes textSwap {
-0%, 29% { content: "ASSEMBLING DNA"; color: #e5e7eb; }
-30%, 64% { content: "ISOLATING RNA"; color: #3b82f6; }
-65%, 100% { content: "EXTRACTING FRAGMENTS"; color: #9ca3af; }
+
+@keyframes textFlow {
+0% { content: "SPECTRAL ALIGNMENT (RED)"; color: #ef4444; }
+50% { content: "PROCESSING CARGO (AMBER)"; color: #f59e0b; }
+100% { content: "READY TO SHOW RESULTS (BLUE)"; color: #3b82f6; }
 }
 </style>
+
 <div class="biopsy-loader-wrapper">
-<div class="orbit-ring"><div class="orbit-dot"></div></div>
-<div class="orbit-ring" style="transform: rotate(45deg);"><div class="orbit-dot"></div></div>
-<div class="dna-geo-container">
-<div class="central-axis"></div>
-<div class="rung-pair rung-delay-0"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-1"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-2"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-3"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-4"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-5"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-6"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-7"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-8"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-9"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-10"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
-<div class="rung-pair rung-delay-11"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+    <div class="animation-canvas">
+        <div class="progress-ring"></div>
+        <div class="gradient-particle"></div>
+        <div class="organic-fragment frag-1"></div>
+        <div class="organic-fragment frag-2"></div>
+        <div class="organic-fragment frag-3"></div>
+        <div class="organic-fragment frag-4"></div>
+    </div>
+    <div class="status-label"></div>
 </div>
-<div class="status-text"></div>
-</div>"""
+"""
     st.markdown(html_code, unsafe_allow_html=True)
 
 # ==============================================================================
@@ -387,7 +392,7 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(3.6) 
+                            time.sleep(3.6) # Syncs with red-to-blue gradient completion
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
@@ -399,7 +404,7 @@ if not st.session_state.analyzed:
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(3.6) 
+                        time.sleep(3.6) # Syncs with red-to-blue gradient completion
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
