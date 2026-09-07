@@ -183,13 +183,13 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 4. ARTISTIC LIQUID WATER TEXTURE & ORGANIC DNA/RNA ANIMATION
+# 4. ARTISTIC SPIRALING DNA MOLECULE ANIMATION (INSPIRED BY REFERENCE IMAGE)
 # ==============================================================================
 def render_dna_fragmentation_sequence():
     """
-    Renders an artistic, organic minimal-art waiting experience featuring liquid 
-    water texture light shifting over pastel coral and blue gradients, RNA strands 
-    forming DNA, and dissolving fragments over a 30-second window.
+    Renders an organic, smooth spiraling DNA double helix made of glowing spherical nodes
+    in pastel coral and blue tones, set against a liquid water shimmer texture with an
+    orbiting UX timer node and user-focused progress text (30-60 second window).
     """
     html_code = """<style>
 .biopsy-loader-wrapper {
@@ -206,8 +206,8 @@ def render_dna_fragmentation_sequence():
 
 .artistic-canvas {
     position: relative;
-    width: 300px;
-    height: 300px;
+    width: 320px;
+    height: 320px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -216,12 +216,12 @@ def render_dna_fragmentation_sequence():
 /* Liquid water texture ring with shifting pastel light gradients */
 .liquid-ring {
     position: absolute;
-    width: 240px;
-    height: 240px;
+    width: 260px;
+    height: 260px;
     border-radius: 50%;
     background: linear-gradient(135deg, rgba(161, 196, 253, 0.15), rgba(255, 154, 158, 0.15), rgba(161, 196, 253, 0.05));
     border: 1.5px solid rgba(161, 196, 253, 0.3);
-    box-shadow: inset 0 0 30px rgba(161, 196, 253, 0.1);
+    box-shadow: inset 0 0 35px rgba(161, 196, 253, 0.1);
     -webkit-mask: radial-gradient(farthest-side, transparent 84%, black 87%);
     mask: radial-gradient(farthest-side, transparent 84%, black 87%);
     animation: liquidShimmer 8s ease-in-out infinite alternate, ringRotate 30s linear infinite;
@@ -251,79 +251,73 @@ def render_dna_fragmentation_sequence():
 }
 
 @keyframes nodePath {
-    0% { transform: rotate(0deg) translate(120px) rotate(0deg); }
-    100% { transform: rotate(360deg) translate(120px) rotate(-360deg); }
+    0% { transform: rotate(0deg) translate(130px) rotate(0deg); }
+    100% { transform: rotate(360deg) translate(130px) rotate(-360deg); }
 }
 
-/* Organic Minimalist Genetic Core */
-.genetic-fluid-core {
+/* Spiraling DNA Double Helix Container */
+.dna-spiral-core {
     position: relative;
-    width: 90px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
+    transform-style: preserve-3d;
+    animation: spiralRotate 6s linear infinite;
 }
 
-/* Organic fluid RNA/DNA strands */
-.fluid-strand-l, .fluid-strand-r {
+@keyframes spiralRotate {
+    0% { transform: rotateZ(0deg) scale(0.95); }
+    50% { transform: rotateZ(180deg) scale(1.05); }
+    100% { transform: rotateZ(360deg) scale(0.95); }
+}
+
+/* Spherical nodes mimicking reference image */
+.dna-sphere-strand-1, .dna-sphere-strand-2 {
     position: absolute;
-    width: 4px;
-    height: 110px;
-    border-radius: 4px;
-    background: linear-gradient(180deg, #ff9a9e, #a1c4fd, #ff9a9e);
-    background-size: 100% 200%;
-    animation: fluidWave 30s ease-in-out forwards, liquidShimmer 6s infinite;
-}
-.fluid-strand-l { left: 26px; transform-origin: center; }
-.fluid-strand-r { right: 26px; transform-origin: center; animation-delay: 0.2s; }
-
-@keyframes fluidWave {
-    0% { transform: scaleY(0.3) scaleX(0.5); opacity: 0; filter: blur(4px); }
-    10% { transform: scaleY(0.8) scaleX(1); opacity: 0.8; filter: blur(1px); }
-    30% { transform: scaleY(1.05) scaleX(1.1); opacity: 1; filter: blur(0px); }
-    70% { transform: scaleY(1) scaleX(1) rotate(0deg); opacity: 0.9; }
-    88% { transform: scaleY(0.6) translate(-20px, -30px) rotate(-25deg); opacity: 0.4; filter: blur(2px); }
-    100% { transform: scaleY(0.1) translate(-40px, -60px) rotate(-55deg); opacity: 0; filter: blur(5px); }
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #ffccd2, #ff9a9e 70%, #d946ef 100%);
+    box-shadow: 0 0 8px rgba(255, 154, 158, 0.8);
+    animation: sphereFloat 3s ease-in-out infinite alternate;
 }
 
-/* Minimalist shifting rungs */
-.fluid-rungs {
+.dna-sphere-strand-2 {
+    background: radial-gradient(circle at 30% 30%, #dbeafe, #a1c4fd 70%, #3b82f6 100%);
+    box-shadow: 0 0 8px rgba(161, 196, 253, 0.8);
+    animation-delay: 1.5s;
+}
+
+/* Distributed nodes across the helix waveform */
+.node-1 { top: 10px; left: 20px; }
+.node-2 { top: 30px; left: 50px; }
+.node-3 { top: 60px; left: 80px; }
+.node-4 { top: 90px; left: 50px; }
+.node-5 { top: 110px; left: 20px; }
+
+@keyframes sphereFloat {
+    0% { transform: translateY(-4px) scale(0.9); }
+    100% { transform: translateY(4px) scale(1.1); }
+}
+
+/* Connecting Base Pair Rungs */
+.helix-rung {
     position: absolute;
-    width: 32px;
-    height: 75px;
-    background-image: linear-gradient(0deg, rgba(255, 154, 158, 0.8) 2px, transparent 2.5px);
-    background-size: 100% 12px;
-    animation: rungsEvolution 30s ease-in-out forwards;
-}
-
-@keyframes rungsEvolution {
-    0%, 15% { opacity: 0; transform: scaleX(0.2); }
-    25% { opacity: 1; transform: scaleX(1); }
-    70% { opacity: 1; transform: scaleX(1); filter: brightness(1.2); }
-    88% { opacity: 0.4; transform: scaleX(0.5) scaleY(0.6); filter: blur(2px); }
-    100% { opacity: 0; transform: scaleX(0); }
-}
-
-/* Organic dissolving micro-fragments */
-.organic-fragment {
-    position: absolute;
-    width: 14px;
-    height: 4px;
+    width: 40px;
+    height: 2px;
     background: linear-gradient(90deg, #ff9a9e, #a1c4fd);
-    border-radius: 3px;
-    opacity: 0;
-    animation: fragmentDisperse 30s ease-in-out forwards;
+    opacity: 0.7;
+    animation: rungPulse 3s ease-in-out infinite alternate;
 }
-.of-1 { top: 30%; left: 20%; animation-delay: 24s; }
-.of-2 { top: 60%; left: 70%; animation-delay: 25s; }
-.of-3 { top: 45% ; left: 75%; animation-delay: 26s; }
-.of-4 { top: 70% ; left: 25%; animation-delay: 27s; }
+.rung-1 { top: 35px; left: 40px; transform: rotate(20deg); }
+.rung-2 { top: 65px; left: 40px; transform: rotate(-20deg); }
+.rung-3 { top: 95px; left: 40px; transform: rotate(15deg); }
 
-@keyframes fragmentDisperse {
-    0%, 75% { transform: translate(0, 0) scale(0); opacity: 0; }
-    82% { transform: translate(-20px, -15px) scale(1) rotate(15deg); opacity: 0.9; }
-    100% { transform: translate(45px, -50px) scale(0.2) rotate(60deg); opacity: 0; }
+@keyframes rungPulse {
+    0% { opacity: 0.4; width: 35px; }
+    100% { opacity: 0.9; width: 45px; }
 }
 
 .ux-status-container {
@@ -356,14 +350,22 @@ def render_dna_fragmentation_sequence():
     <div class="artistic-canvas">
         <div class="liquid-ring"></div>
         <div class="liquid-node"></div>
-        <div class="genetic-fluid-core">
-            <div class="fluid-strand-l"></div>
-            <div class="fluid-rungs"></div>
-            <div class="fluid-strand-r"></div>
-            <div class="organic-fragment of-1"></div>
-            <div class="organic-fragment of-2"></div>
-            <div class="organic-fragment of-3"></div>
-            <div class="organic-fragment of-4"></div>
+        <div class="dna-spiral-core">
+            <div class="dna-sphere-strand-1 node-1"></div>
+            <div class="dna-sphere-strand-1 node-2"></div>
+            <div class="dna-sphere-strand-1 node-3"></div>
+            <div class="dna-sphere-strand-1 node-4"></div>
+            <div class="dna-sphere-strand-1 node-5"></div>
+
+            <div class="dna-sphere-strand-2 node-1" style="left: 80px;"></div>
+            <div class="dna-sphere-strand-2 node-2" style="left: 50px;"></div>
+            <div class="dna-sphere-strand-2 node-3" style="left: 20px;"></div>
+            <div class="dna-sphere-strand-2 node-4" style="left: 50px;"></div>
+            <div class="dna-sphere-strand-2 node-5" style="left: 80px;"></div>
+
+            <div class="helix-rung rung-1"></div>
+            <div class="helix-rung rung-2"></div>
+            <div class="helix-rung rung-3"></div>
         </div>
     </div>
     <div class="ux-status-container">
@@ -444,7 +446,7 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(30.0) # 30-second pipeline execution window matching UX expectations
+                            time.sleep(30.0) # Extended to 30 seconds for complete UX window
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
@@ -456,7 +458,7 @@ if not st.session_state.analyzed:
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(30.0) # 30-second pipeline execution window matching UX expectations
+                        time.sleep(30.0) # Extended to 30 seconds for complete UX window
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
