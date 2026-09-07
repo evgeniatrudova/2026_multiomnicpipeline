@@ -10,6 +10,8 @@ import io
 import tempfile
 from scipy.stats import gaussian_kde
 from fpdf import FPDF
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # ==============================================================================
 # 1. API MANAGEMENT & EXTERNAL INTEGRATIONS
@@ -37,9 +39,25 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
         return {"Status": f"API Connection Error: {str(e)}"}
 
 # ==============================================================================
-# 2. PDF REPORT GENERATOR ENGINE (Graceful Degradation)
+# 2. ACADEMIC PDF GENERATOR ENGINE (Pure Python, No Browser Dependency)
 # ==============================================================================
-def generate_pdf_report(assay_type, source_id, pipeline_desc, figures_dict):
+def apply_academic_style():
+    """Applies a publication-ready aesthetic to Matplotlib figures."""
+    plt.style.use('default')
+    plt.rcParams.update({
+        'font.family': 'serif',
+        'axes.spines.top': False,
+        'axes.spines.right': False,
+        'axes.linewidth': 1.2,
+        'axes.labelsize': 12,
+        'axes.titlesize': 14,
+        'axes.titleweight': 'bold',
+        'xtick.direction': 'out',
+        'ytick.direction': 'out',
+        'figure.dpi': 300
+    })
+
+def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     
@@ -66,23 +84,71 @@ def generate_pdf_report(assay_type, source_id, pipeline_desc, figures_dict):
     pdf.set_font("Arial", 'I', 10)
     pdf.multi_cell(0, 8, "Disclaimer: This report is generated for investigational/research use and requires clinical validation.")
     
-    # --- SUBSEQUENT PAGES: Graphs ---
-    for title, fig in figures_dict.items():
+    # --- GRAPH RENDERING LOOP ---
+    apply_academic_style()
+    
+    for title, data in data_payload.items():
         pdf.add_page()
         pdf.set_font("Arial", 'B', 14)
         pdf.cell(0, 10, title, ln=True, align='C')
         pdf.ln(5)
         
-        try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
-                fig.write_image(tmpfile.name, scale=2)
-                pdf.image(tmpfile.name, x=10, y=30, w=190)
-        except Exception:
-            pdf.ln(20)
-            pdf.set_font("Arial", 'I', 11)
-            pdf.set_text_color(100, 100, 100)
-            pdf.cell(0, 10, "[ Visualization omitted: High-resolution export unavailable on this server ]", ln=True, align='C')
-            pdf.set_text_color(0, 0, 0) 
+        fig, ax = plt.subplots(figsize=(8, 5))
+        
+        if data['type'] == 'fragment_size':
+            sns.histplot(data['sizes'], stat="density", color='#E69F00', alpha=0.6, ax=ax, edgecolor='black', bins=50)
+            sns.kdeplot(data['sizes'], color='#0072B2', linewidth=2.5, ax=ax)
+            if assay_type == "cfDNA":
+                ax.axvline(145, color='#D55E00', linestyle='--', label='Tumor Mode (145bp)')
+                ax.axvline(167, color='#009E73', linestyle='--', label='Apoptotic Mode (167bp)')
+                ax.legend(frameon=False)
+            ax.set_xlabel("Insert Size / Template Length (bp)")
+            ax.set_ylabel("Probability Density")
+            
+        elif data['type'] == 'motif':
+            keys = list(data['motif_dict'].keys())
+            vals = list(data['motif_dict'].values())
+            ax.bar(keys, vals, color="#CC79A7", edgecolor='black', linewidth=1.5)
+            ax.set_xlabel("Nucleotide Motif")
+            ax.set_ylabel("Frequency (%)")
+            
+        elif data['type'] == 'vaf':
+            sns.histplot(data['vaf_data'] * 100, bins=30, color='#D55E00', ax=ax, edgecolor='black')
+            ax.axvline(0.1, color='black', linestyle='--', alpha=0.7)
+            ax.text(0.12, ax.get_ylim()[1]*0.9, 'LOD (0.1%)', fontsize=10)
+            ax.set_xlabel("Variant Allele Frequency (%)")
+            ax.set_ylabel("Mutation Count")
+            
+        elif data['type'] == 'lollipop':
+            vcf = data['vcf_df']
+            ax.vlines(vcf['POS'], ymin=0, ymax=vcf['VAF']*100, color='#56B4E9', linewidth=2.5, zorder=1)
+            ax.scatter(vcf['POS'], vcf['VAF']*100, color='#D55E00', s=120, edgecolors='black', zorder=2)
+            ax.axvspan(7577000, 7578500, color='#F0E442', alpha=0.2, label='DNA-Binding Domain', zorder=0)
+            ax.set_xlabel("Genomic Coordinate (GRCh38)")
+            ax.set_ylabel("Variant Allele Frequency (%)")
+            ax.legend(frameon=False)
+            
+        elif data['type'] == 'volcano':
+            df = data['df']
+            colors = {'Not Significant': 'lightgrey', 'Upregulated/Off-Target': '#D55E00', 'Knockdown/Downregulated': '#0072B2'}
+            for status, color in colors.items():
+                subset = df[df['Status'] == status]
+                edge = 'black' if status != 'Not Significant' else 'none'
+                ax.scatter(subset['log2FC'], subset['neg_log10_pval'], color=color, label=status, alpha=0.8, edgecolor=edge, s=40)
+            ax.axvline(1.5, color='black', linestyle='--', alpha=0.4)
+            ax.axvline(-1.5, color='black', linestyle='--', alpha=0.4)
+            ax.axhline(1.3, color='black', linestyle='--', alpha=0.4)
+            ax.set_xlabel(r"$\log_2$(Fold Change)")
+            ax.set_ylabel(r"$-\log_{10}$($p$-value)")
+            ax.legend(frameon=True, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10)
+            
+        plt.tight_layout()
+        
+        # Save matplotlib fig to temp file and inject to PDF
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
+            fig.savefig(tmpfile.name, dpi=300, bbox_inches='tight')
+            pdf.image(tmpfile.name, x=15, y=pdf.get_y(), w=180)
+        plt.close(fig) # Clear memory
             
     return pdf.output(dest="S").encode("latin-1")
 
@@ -102,17 +168,13 @@ def reset_app():
     st.session_state.analyzed = False
 
 # ==============================================================================
-# 4. INTERACTIVE UX (PLOTLY ENGINE)
+# 4. INTERACTIVE UX (PLOTLY WEB ENGINE)
 # ==============================================================================
-def generate_vaf_plot():
+def get_vaf_data():
     vaf_mock = np.random.exponential(scale=0.01, size=100)
-    vaf_mock = vaf_mock[vaf_mock < 0.1]
-    fig = px.histogram(x=vaf_mock * 100, nbins=30, color_discrete_sequence=["#D55E00"])
-    fig.add_vline(x=0.1, line_dash="dash", line_color="black", annotation_text="LOD (0.1%)")
-    fig.update_layout(title="Variant Allele Frequency Spectrum", template="simple_white", xaxis_title="VAF (%)", yaxis_title="Count")
-    return fig
+    return vaf_mock[vaf_mock < 0.1]
 
-def generate_volcano_plot(assay="mRNA"):
+def get_volcano_data(assay="mRNA"):
     n_genes = 500
     df = pd.DataFrame({'Gene': [f"TARGET_{i}" for i in range(n_genes)], 'log2FC': np.random.normal(0, 1.2, n_genes), 'neg_log10_pval': np.random.exponential(0.8, n_genes)})
     if assay == "siRNA":
@@ -123,12 +185,10 @@ def generate_volcano_plot(assay="mRNA"):
     df['Status'] = 'Not Significant'
     df.loc[(df['log2FC'] >= 1.5) & (df['neg_log10_pval'] >= 1.3), 'Status'] = 'Upregulated/Off-Target'
     df.loc[(df['log2FC'] <= -1.5) & (df['neg_log10_pval'] >= 1.3), 'Status'] = 'Knockdown/Downregulated'
-    color_map = {'Not Significant': 'grey', 'Upregulated/Off-Target': '#D55E00', 'Knockdown/Downregulated': '#0072B2'}
-    fig = px.scatter(df, x='log2FC', y='neg_log10_pval', color='Status', hover_name='Gene', color_discrete_map=color_map)
-    fig.update_layout(title="Differential Abundance Profile", template="simple_white", xaxis_title="log2(Fold Change)", yaxis_title="-log10(p-value)")
-    return fig
+    return df
 
-def plot_academic_fragment_size(sim_sizes, assay_type):
+# Plotly functions (used only for the interactive web UI)
+def plot_web_fragment_size(sim_sizes, assay_type):
     df = pd.DataFrame({'Size': sim_sizes})
     kde = gaussian_kde(df['Size'])
     x_range = np.linspace(df['Size'].min(), df['Size'].max(), 500)
@@ -140,14 +200,6 @@ def plot_academic_fragment_size(sim_sizes, assay_type):
         fig.add_vline(x=145, line_dash="dash", line_color="#D55E00", annotation_text="Tumor Mode (145bp)")
         fig.add_vline(x=167, line_dash="dash", line_color="#009E73", annotation_text="Apoptotic Mode (167bp)")
     fig.update_layout(title="Fragment Size Distribution", xaxis_title="Length (bp)", yaxis_title="Probability", template="simple_white")
-    return fig
-
-def plot_academic_lollipop(vcf_df, gene_name):
-    fig = go.Figure()
-    for _, row in vcf_df.iterrows():
-        fig.add_shape(type="line", x0=row['POS'], y0=0, x1=row['POS'], y1=row['VAF'] * 100, line=dict(color="#56B4E9", width=2))
-    fig.add_trace(go.Scatter(x=vcf_df['POS'], y=vcf_df['VAF'] * 100, mode='markers', marker=dict(size=12, color='#D55E00'), name='Mutation'))
-    fig.update_layout(title=f"Mutation Map: {gene_name}", xaxis_title="Genomic Coordinate", yaxis_title="VAF (%)", template="simple_white")
     return fig
 
 # ==============================================================================
@@ -195,7 +247,6 @@ if not st.session_state.analyzed:
 
         st.write("---")
         
-        # Restored Technical/Scientific Tabs
         onboard_tabs = st.tabs(["🏛️ Academic Purpose", "🛡️ Privacy & Architecture", "⚙️ Modular Adjustments (Algorithm Spec)"])
         
         with onboard_tabs[0]:
@@ -220,51 +271,28 @@ if not st.session_state.analyzed:
             The pipeline breaks the rigid 15-step generic model, deploying assay-specific bioinformatic algorithms tailored to the physical constraints of the target genetic material.
 
             ### 🧬 cfDNA Engine
-            *   **Alignment & Consensus Calling:** 
-                *   *Methods:* `BWA-MEM` + `fgbio` (for UMI deduplication).
-                *   *Purpose:* Retain intact double-stranded paired-end read topologies and correct PCR amplification bias.
-                *   *Reasoning:* cfDNA fragments are ultra-short (modes at 145bp and 167bp). Standard deduplication (`Picard MarkDuplicates`) fails due to high biological duplication of identical genomic coordinates. UMI-aware consensus calling is mathematically required to suppress sequencing error rates for ultra-low VAF (<0.1%) liquid biopsy detection.
-            *   **Somatic Variant Analytics:** 
-                *   *Methods:* `GATK Mutect2` + Matched Buffy Coat Subtraction.
-                *   *Purpose:* High-sensitivity SNV/Indel calling combined with biological noise filtration.
-                *   *Reasoning:* Clonal Hematopoiesis of Indeterminate Potential (CHIP) inherently contaminates plasma with leukocyte-derived somatic mutations. Pipeline robustness mandates a matched leukocyte subtraction to prevent massive false-positive oncogene calling.
+            *   **Alignment & Consensus Calling:** `BWA-MEM` + `fgbio` (for UMI deduplication). Retains intact double-stranded paired-end read topologies. UMI-aware consensus calling is mathematically required to suppress sequencing error rates for ultra-low VAF (<0.1%).
+            *   **Somatic Variant Analytics:** `GATK Mutect2` + Matched Buffy Coat Subtraction. Pipeline robustness mandates a matched leukocyte subtraction to prevent massive false-positive oncogene calling originating from CHIP.
 
             ### 🧪 EV-mRNA Engine
-            *   **Alignment & Integrity:**
-                *   *Methods:* `STAR` (Chimeric-aware mode) / `HISAT2`.
-                *   *Purpose:* Splice-tolerant mapping to capture fragmented, back-spliced, and 3' UTR enriched reads.
-                *   *Reasoning:* EV-packaged mRNA is heavily degraded and enriched for circular RNAs (circRNAs) that resist RNase digestion. Traditional full-length poly-A alignment parameters will inappropriately discard these as structural errors.
-            *   **Somatic Noise Filtration:**
-                *   *Methods:* `REDItools` / `REDIportal` cross-referencing.
-                *   *Purpose:* A-to-I RNA editing subtraction.
-                *   *Reasoning:* RNA sequencing naturally captures ADAR-mediated A-to-I editing events (sequenced as A>G). If fed directly into standard somatic variant callers without strict RNA-editing masking, the pipeline will emit thousands of false-positive tumor mutations.
+            *   **Alignment & Integrity:** `STAR` (Chimeric-aware mode). Splice-tolerant mapping required to capture fragmented, back-spliced, and 3' UTR enriched EV reads that standard poly-A aligners erroneously discard.
+            *   **Somatic Noise Filtration:** `REDItools` / `REDIportal` cross-referencing for A-to-I RNA editing subtraction to prevent ADAR-mediated hyper-mutated transcripts from triggering false-positive tumor somatic calls.
 
             ### 🔬 miRNA Engine
-            *   **Alignment Strategy:**
-                *   *Methods:* `miRge3.0` or `isomiR-SEA`.
-                *   *Purpose:* Probabilistic multi-mapping and isomiR-aware quantification.
-                *   *Reasoning:* Mature miRNAs frequently undergo non-templated 3' adenylation/uridylation or 5' shifting. Standard strict aligners (0-mismatch parameters) discard these biologically active isomiRs. Multi-mapping heuristics are also crucial for resolving paralogous miRNA families.
-            *   **Deduplication Constraint:**
-                *   *Methods:* `UMI-tools` (Coordinate-collapsing explicitly bypassed).
-                *   *Purpose:* True quantitative counting of short RNAs.
-                *   *Reasoning:* 22nt reads inherently map to exact start/stop coordinates. Using traditional coordinate deduplication aggressively downsamples true biological abundance by >95%. UMI tracking is the sole mathematically sound method for short RNA deduplication.
+            *   **Alignment Strategy:** `miRge3.0` or `isomiR-SEA`. Probabilistic multi-mapping captures biologically active 5'/3' trimmed variants and non-templated adenylation/uridylation, distinguishing true EV cargo from Argonaute-bound contaminants.
+            *   **Deduplication Constraint:** `UMI-tools`. Coordinate-based deduplication is mathematically fatal for 22nt small RNAs. UMI tracking is strictly enforced to prevent catastrophic biological data loss.
             
             ### 💊 siRNA Engine
-            *   **Alignment Stringency:**
-                *   *Methods:* `Bowtie` (configured for `-v 0` exact matching).
-                *   *Purpose:* Perfect-match alignment to validate synthetic therapeutic payload stability.
-                *   *Reasoning:* Therapeutic siRNAs are highly specific 21-24nt sequences. Allowing even a 1bp mismatch generates severe multi-mapping background against the endogenous human transcriptome, obfuscating precise pharmacokinetic tracking.
-            *   **Off-Target & Cleavage Analytics:**
-                *   *Methods:* `TargetScan` heuristic seed-matching + Degradome-seq mapping logic.
-                *   *Purpose:* Quantify exact on-target Ago2 cleavage and measure 3' UTR seed-based off-target toxicity.
-                *   *Reasoning:* Unlike miRNA, siRNA functions via perfect 5'-cleavage. The pipeline must explicitly confirm 5'-RACE/degradome signatures at the intended target locus, while systematically scanning the transcriptome for off-target RNAi knockdown driven by partial heptamer seed complementarity.
+            *   **Alignment Stringency:** `Bowtie` (configured for `-v 0` exact matching) ensures perfect-match alignment to track synthetic therapeutic payloads accurately without mapping noise against the endogenous transcriptome.
+            *   **Off-Target Analytics:** Validates exact 5'-cleavage at the intended target mRNA locus, whilst executing a transcriptome-wide scan of 3' UTRs for heuristic heptamer seed-matches to quantify RNAi toxicity.
             """)
 
 # ==============================================================================
 # 6. CLINICAL DASHBOARD UX
 # ==============================================================================
 else:
-    pdf_figures = {}
+    # Dictionary to store raw data specifically for the Matplotlib PDF builder
+    pdf_data_payload = {}
 
     col_title, col_btn = st.columns([4, 1])
     col_title.title(f"Clinical Dashboard: {st.session_state.assay} Analysis")
@@ -302,15 +330,17 @@ else:
             elif st.session_state.assay == "mRNA": sim_sizes = np.random.normal(loc=300, scale=60, size=5000)
             else: sim_sizes = np.concatenate([np.random.normal(167, 25, 3000), np.random.normal(145, 20, 2000)])
             
-            fig_frag = plot_academic_fragment_size(sim_sizes, st.session_state.assay)
-            st.plotly_chart(fig_frag, use_container_width=True)
-            pdf_figures["Fragment Size & Origin Distribution"] = fig_frag
+            # Save raw data for PDF
+            pdf_data_payload["High-Resolution Fragment Size Distribution"] = {'type': 'fragment_size', 'sizes': sim_sizes}
+            # Plot interactive UI
+            st.plotly_chart(plot_web_fragment_size(sim_sizes, st.session_state.assay), use_container_width=True)
             
         with fig_col2:
             motif_data = {'CCCA': 4.2, 'AAAA': 3.8, 'TATA': 2.9, 'GGGG': 2.1} if st.session_state.assay not in ["miRNA", "siRNA"] else {'T/U': 78.5, 'A': 12.1, 'C': 5.4, 'G': 4.0}
+            pdf_data_payload["Terminal Cleavage Motif Analysis"] = {'type': 'motif', 'motif_dict': motif_data}
+            
             fig_motif = px.bar(x=list(motif_data.keys()), y=list(motif_data.values()), title="Terminal Cleavage Bias")
             st.plotly_chart(fig_motif, use_container_width=True)
-            pdf_figures["Nuclease Cleavage Motif Analysis"] = fig_motif
 
     # --- MODULE 3: ANALYTICS ---
     with tab3:
@@ -321,21 +351,31 @@ else:
             fig_col3, fig_col4 = st.columns(2)
             
             with fig_col3:
-                fig_vaf = generate_vaf_plot()
+                vaf_data = get_vaf_data()
+                pdf_data_payload["Variant Allele Frequency Spectrum"] = {'type': 'vaf', 'vaf_data': vaf_data}
+                
+                fig_vaf = px.histogram(x=vaf_data * 100, nbins=30, color_discrete_sequence=["#D55E00"], title="Variant Allele Frequency Spectrum")
+                fig_vaf.add_vline(x=0.1, line_dash="dash", line_color="black")
                 st.plotly_chart(fig_vaf, use_container_width=True)
-                pdf_figures["Variant Allele Frequency (VAF) Plot"] = fig_vaf
                 
             with fig_col4:
                 mock_vcf = pd.DataFrame({'POS': [7577121, 7578406, 7577538], 'VAF': [0.012, 0.005, 0.045]})
-                fig_lolli = plot_academic_lollipop(mock_vcf, "TP53")
+                pdf_data_payload["Somatic Clonal Architecture Map"] = {'type': 'lollipop', 'vcf_df': mock_vcf}
+                
+                fig_lolli = go.Figure()
+                for _, row in mock_vcf.iterrows(): fig_lolli.add_shape(type="line", x0=row['POS'], y0=0, x1=row['POS'], y1=row['VAF'] * 100, line=dict(color="#56B4E9", width=2))
+                fig_lolli.add_trace(go.Scatter(x=mock_vcf['POS'], y=mock_vcf['VAF'] * 100, mode='markers', marker=dict(size=12, color='#D55E00')))
+                fig_lolli.update_layout(title="Mutation Map: TP53", template="simple_white")
                 st.plotly_chart(fig_lolli, use_container_width=True)
-                pdf_figures["Somatic Mutation Map (Lollipop)"] = fig_lolli
 
         elif st.session_state.assay in ["mRNA", "miRNA", "siRNA"]:
             st.info("Instead of looking at DNA mutations, this step measures 'volume'. Are certain cancer-driving genes turned up too high (upregulated)? Or, for siRNA therapeutics, did the drug successfully silence the target gene without hitting healthy genes by mistake?")
-            fig_volcano = generate_volcano_plot(assay=st.session_state.assay)
+            df_volcano = get_volcano_data(assay=st.session_state.assay)
+            pdf_data_payload["Differential Abundance Profile"] = {'type': 'volcano', 'df': df_volcano}
+            
+            color_map = {'Not Significant': 'grey', 'Upregulated/Off-Target': '#D55E00', 'Knockdown/Downregulated': '#0072B2'}
+            fig_volcano = px.scatter(df_volcano, x='log2FC', y='neg_log10_pval', color='Status', color_discrete_map=color_map, title="Differential Abundance Profile")
             st.plotly_chart(fig_volcano, use_container_width=True)
-            pdf_figures["Expression / Abundance Profile"] = fig_volcano
 
     # --- MODULE 4: CLINICAL INTELLIGENCE ---
     with tab4:
@@ -365,25 +405,25 @@ else:
     The {st.session_state.assay} analysis was conducted using the following clinically-adapted pipeline:
     1. Sample QC: Sequence data underwent artifact removal and stringent quality validation (>95% Q30).
     2. Structural Integrity: Algorithms evaluated sequence biological origin, protecting against false signals.
-    3. Molecular Analytics: Disease-driving anomalies (mutations or expression outliers) were isolated while suppressing biological background noise (e.g., white blood cell mutations).
+    3. Molecular Analytics: Disease-driving anomalies (mutations or expression outliers) were isolated while suppressing biological background noise.
     4. Clinical Intelligence: Findings were mapped to standard clinical databases for therapeutic actionability.
     """
     
     try:
-        pdf_bytes = generate_pdf_report(
+        pdf_bytes = generate_academic_pdf(
             assay_type=st.session_state.assay,
             source_id=st.session_state.data_source_id,
             pipeline_desc=pipeline_narrative,
-            figures_dict=pdf_figures
+            data_payload=pdf_data_payload
         )
         
         st.download_button(
-            label="📥 Download Clinical PDF Report",
+            label="📥 Download Academic Clinical Report (PDF)",
             data=pdf_bytes,
-            file_name=f"Patient_Report_{st.session_state.assay}.pdf",
+            file_name=f"Academic_Report_{st.session_state.assay}.pdf",
             mime="application/pdf",
             type="primary",
             use_container_width=True
         )
-    except Exception:
-        st.warning("⚠️ **Report Generation Unavailable**: The document compilation engine is temporarily offline.")
+    except Exception as e:
+        st.error(f"Error generating PDF document: {e}")
