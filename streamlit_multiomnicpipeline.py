@@ -183,197 +183,171 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 4. ARTISTIC SPIRALING DNA MOLECULE ANIMATION (INSPIRED BY REFERENCE IMAGE)
+# 4. FULLY FLATTENED HTML ANIMATION COMPONENT (PREVENTS MARKDOWN LEAK)
 # ==============================================================================
 def render_dna_fragmentation_sequence():
     """
-    Renders an organic, smooth spiraling DNA double helix made of glowing spherical nodes
-    in pastel coral and blue tones, set against a liquid water shimmer texture with an
-    orbiting UX timer node and user-focused progress text (30-60 second window).
+    Renders an artistic, organic minimal-art waiting experience featuring liquid 
+    water texture light shifting over pastel coral and blue gradients, RNA strands 
+    forming DNA, and dissolving fragments over a 30-second window.
+    HTML string is completely unindented to prevent Streamlit Markdown interpretation.
     """
     html_code = """<style>
 .biopsy-loader-wrapper {
-    position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
-    background-color: #0b0f19;
-    z-index: 9999999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    opacity: 1 !important;
+position: fixed;
+top: 0; left: 0; width: 100vw; height: 100vh;
+background-color: #0b0f19;
+z-index: 9999999;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+opacity: 1 !important;
 }
-
 .artistic-canvas {
-    position: relative;
-    width: 320px;
-    height: 320px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+position: relative;
+width: 320px;
+height: 320px;
+display: flex;
+align-items: center;
+justify-content: center;
 }
-
-/* Liquid water texture ring with shifting pastel light gradients */
 .liquid-ring {
-    position: absolute;
-    width: 260px;
-    height: 260px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(161, 196, 253, 0.15), rgba(255, 154, 158, 0.15), rgba(161, 196, 253, 0.05));
-    border: 1.5px solid rgba(161, 196, 253, 0.3);
-    box-shadow: inset 0 0 35px rgba(161, 196, 253, 0.1);
-    -webkit-mask: radial-gradient(farthest-side, transparent 84%, black 87%);
-    mask: radial-gradient(farthest-side, transparent 84%, black 87%);
-    animation: liquidShimmer 8s ease-in-out infinite alternate, ringRotate 30s linear infinite;
+position: absolute;
+width: 260px;
+height: 260px;
+border-radius: 50%;
+background: linear-gradient(135deg, rgba(161, 196, 253, 0.15), rgba(255, 154, 158, 0.15), rgba(161, 196, 253, 0.05));
+border: 1.5px solid rgba(161, 196, 253, 0.3);
+box-shadow: inset 0 0 35px rgba(161, 196, 253, 0.1);
+-webkit-mask: radial-gradient(farthest-side, transparent 84%, black 87%);
+mask: radial-gradient(farthest-side, transparent 84%, black 87%);
+animation: liquidShimmer 8s ease-in-out infinite alternate, ringRotate 30s linear infinite;
 }
-
 @keyframes ringRotate {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
 }
-
 @keyframes liquidShimmer {
-    0% { filter: hue-rotate(0deg) brightness(0.9); }
-    50% { filter: hue-rotate(25deg) brightness(1.2); }
-    100% { filter: hue-rotate(0deg) brightness(0.9); }
+0% { filter: hue-rotate(0deg) brightness(0.9); }
+50% { filter: hue-rotate(25deg) brightness(1.2); }
+100% { filter: hue-rotate(0deg) brightness(0.9); }
 }
-
-/* Fluid timer pulse node */
 .liquid-node {
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    background: radial-gradient(circle, #ffffff 0%, #a1c4fd 60%, #ff9a9e 100%);
-    border-radius: 50%;
-    box-shadow: 0 0 16px #a1c4fd, 0 0 8px #ff9a9e;
-    animation: nodePath 30s cubic-bezier(0.37, 0, 0.63, 1) forwards;
-    z-index: 10;
+position: absolute;
+width: 14px;
+height: 14px;
+background: radial-gradient(circle, #ffffff 0%, #a1c4fd 60%, #ff9a9e 100%);
+border-radius: 50%;
+box-shadow: 0 0 16px #a1c4fd, 0 0 8px #ff9a9e;
+animation: nodePath 30s cubic-bezier(0.37, 0, 0.63, 1) forwards;
+z-index: 10;
 }
-
 @keyframes nodePath {
-    0% { transform: rotate(0deg) translate(130px) rotate(0deg); }
-    100% { transform: rotate(360deg) translate(130px) rotate(-360deg); }
+0% { transform: rotate(0deg) translate(130px) rotate(0deg); }
+100% { transform: rotate(360deg) translate(130px) rotate(-360deg); }
 }
-
-/* Spiraling DNA Double Helix Container */
 .dna-spiral-core {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform-style: preserve-3d;
-    animation: spiralRotate 6s linear infinite;
+position: relative;
+width: 120px;
+height: 120px;
+display: flex;
+align-items: center;
+justify-content: center;
+transform-style: preserve-3d;
+animation: spiralRotate 6s linear infinite;
 }
-
 @keyframes spiralRotate {
-    0% { transform: rotateZ(0deg) scale(0.95); }
-    50% { transform: rotateZ(180deg) scale(1.05); }
-    100% { transform: rotateZ(360deg) scale(0.95); }
+0% { transform: rotateZ(0deg) scale(0.95); }
+50% { transform: rotateZ(180deg) scale(1.05); }
+100% { transform: rotateZ(360deg) scale(0.95); }
 }
-
-/* Spherical nodes mimicking reference image */
 .dna-sphere-strand-1, .dna-sphere-strand-2 {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #ffccd2, #ff9a9e 70%, #d946ef 100%);
-    box-shadow: 0 0 8px rgba(255, 154, 158, 0.8);
-    animation: sphereFloat 3s ease-in-out infinite alternate;
+position: absolute;
+width: 10px;
+height: 10px;
+border-radius: 50%;
+background: radial-gradient(circle at 30% 30%, #ffccd2, #ff9a9e 70%, #d946ef 100%);
+box-shadow: 0 0 8px rgba(255, 154, 158, 0.8);
+animation: sphereFloat 3s ease-in-out infinite alternate;
 }
-
 .dna-sphere-strand-2 {
-    background: radial-gradient(circle at 30% 30%, #dbeafe, #a1c4fd 70%, #3b82f6 100%);
-    box-shadow: 0 0 8px rgba(161, 196, 253, 0.8);
-    animation-delay: 1.5s;
+background: radial-gradient(circle at 30% 30%, #dbeafe, #a1c4fd 70%, #3b82f6 100%);
+box-shadow: 0 0 8px rgba(161, 196, 253, 0.8);
+animation-delay: 1.5s;
 }
-
-/* Distributed nodes across the helix waveform */
 .node-1 { top: 10px; left: 20px; }
 .node-2 { top: 30px; left: 50px; }
 .node-3 { top: 60px; left: 80px; }
 .node-4 { top: 90px; left: 50px; }
 .node-5 { top: 110px; left: 20px; }
-
 @keyframes sphereFloat {
-    0% { transform: translateY(-4px) scale(0.9); }
-    100% { transform: translateY(4px) scale(1.1); }
+0% { transform: translateY(-4px) scale(0.9); }
+100% { transform: translateY(4px) scale(1.1); }
 }
-
-/* Connecting Base Pair Rungs */
 .helix-rung {
-    position: absolute;
-    width: 40px;
-    height: 2px;
-    background: linear-gradient(90deg, #ff9a9e, #a1c4fd);
-    opacity: 0.7;
-    animation: rungPulse 3s ease-in-out infinite alternate;
+position: absolute;
+width: 40px;
+height: 2px;
+background: linear-gradient(90deg, #ff9a9e, #a1c4fd);
+opacity: 0.7;
+animation: rungPulse 3s ease-in-out infinite alternate;
 }
 .rung-1 { top: 35px; left: 40px; transform: rotate(20deg); }
 .rung-2 { top: 65px; left: 40px; transform: rotate(-20deg); }
 .rung-3 { top: 95px; left: 40px; transform: rotate(15deg); }
-
 @keyframes rungPulse {
-    0% { opacity: 0.4; width: 35px; }
-    100% { opacity: 0.9; width: 45px; }
+0% { opacity: 0.4; width: 35px; }
+100% { opacity: 0.9; width: 45px; }
 }
-
 .ux-status-container {
-    margin-top: 35px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    text-align: center;
+margin-top: 35px;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 8px;
+text-align: center;
 }
-
 .ux-status-title {
-    color: #f3f4f6;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
+color: #f3f4f6;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+font-size: 13px;
+font-weight: 500;
+letter-spacing: 1.5px;
+text-transform: uppercase;
 }
-
 .ux-status-subtitle {
-    color: #9ca3af;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 11px;
-    letter-spacing: 0.8px;
+color: #9ca3af;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+font-size: 11px;
+letter-spacing: 0.8px;
 }
 </style>
-
 <div class="biopsy-loader-wrapper">
-    <div class="artistic-canvas">
-        <div class="liquid-ring"></div>
-        <div class="liquid-node"></div>
-        <div class="dna-spiral-core">
-            <div class="dna-sphere-strand-1 node-1"></div>
-            <div class="dna-sphere-strand-1 node-2"></div>
-            <div class="dna-sphere-strand-1 node-3"></div>
-            <div class="dna-sphere-strand-1 node-4"></div>
-            <div class="dna-sphere-strand-1 node-5"></div>
-
-            <div class="dna-sphere-strand-2 node-1" style="left: 80px;"></div>
-            <div class="dna-sphere-strand-2 node-2" style="left: 50px;"></div>
-            <div class="dna-sphere-strand-2 node-3" style="left: 20px;"></div>
-            <div class="dna-sphere-strand-2 node-4" style="left: 50px;"></div>
-            <div class="dna-sphere-strand-2 node-5" style="left: 80px;"></div>
-
-            <div class="helix-rung rung-1"></div>
-            <div class="helix-rung rung-2"></div>
-            <div class="helix-rung rung-3"></div>
-        </div>
-    </div>
-    <div class="ux-status-container">
-        <div class="ux-status-title">Executing Deep Multi-Omics Pipeline</div>
-        <div class="ux-status-subtitle">Typical runtime is 30–60 seconds to ensure high-fidelity biomarker resolution.</div>
-    </div>
+<div class="artistic-canvas">
+<div class="liquid-ring"></div>
+<div class="liquid-node"></div>
+<div class="dna-spiral-core">
+<div class="dna-sphere-strand-1 node-1"></div>
+<div class="dna-sphere-strand-1 node-2"></div>
+<div class="dna-sphere-strand-1 node-3"></div>
+<div class="dna-sphere-strand-1 node-4"></div>
+<div class="dna-sphere-strand-1 node-5"></div>
+<div class="dna-sphere-strand-2 node-1" style="left: 80px;"></div>
+<div class="dna-sphere-strand-2 node-2" style="left: 50px;"></div>
+<div class="dna-sphere-strand-2 node-3" style="left: 20px;"></div>
+<div class="dna-sphere-strand-2 node-4" style="left: 50px;"></div>
+<div class="dna-sphere-strand-2 node-5" style="left: 80px;"></div>
+<div class="helix-rung rung-1"></div>
+<div class="helix-rung rung-2"></div>
+<div class="helix-rung rung-3"></div>
 </div>
-"""
+</div>
+<div class="ux-status-container">
+<div class="ux-status-title">Executing Deep Multi-Omics Pipeline</div>
+<div class="ux-status-subtitle">Typical runtime is 30–60 seconds to ensure high-fidelity biomarker resolution.</div>
+</div>
+</div>"""
     st.markdown(html_code, unsafe_allow_html=True)
 
 # ==============================================================================
@@ -446,7 +420,7 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(30.0) # Extended to 30 seconds for complete UX window
+                            time.sleep(30.0)
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
@@ -458,7 +432,7 @@ if not st.session_state.analyzed:
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(30.0) # Extended to 30 seconds for complete UX window
+                        time.sleep(30.0)
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
@@ -683,7 +657,7 @@ else:
             data_payload=pdf_data_payload
         )
         st.download_button(
-            label="📥 Download Academic Clinical Report (PDF)",
+            label="Download Academic Clinical Report (PDF)",
             data=pdf_bytes,
             file_name=f"Academic_Report_{st.session_state.assay}.pdf",
             mime="application/pdf",
