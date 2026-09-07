@@ -183,14 +183,14 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 4. FULLY FLATTENED HTML ANIMATION COMPONENT (PREVENTS MARKDOWN LEAK)
+# 4. FULLY FLATTENED HTML ANIMATION COMPONENT
 # ==============================================================================
 def render_dna_fragmentation_sequence():
     """
-    Renders an artistic, organic minimal-art waiting experience featuring liquid 
-    water texture light shifting over pastel coral and blue gradients, RNA strands 
-    forming DNA, and dissolving fragments over a 30-second window.
-    HTML string is completely unindented to prevent Streamlit Markdown interpretation.
+    Renders an artistic, organic minimal-art 3D DNA helix using pure CSS lines.
+    Features pastel blue-to-coral gradients, an orbiting UX timer running exactly twice,
+    and a smooth, completely opaque 35-second loading state.
+    HTML string is flush left to prevent Streamlit Markdown interpretation leaks.
     """
     html_code = """<style>
 .biopsy-loader-wrapper {
@@ -211,141 +211,178 @@ height: 320px;
 display: flex;
 align-items: center;
 justify-content: center;
+perspective: 1000px;
 }
-.liquid-ring {
+.orbit-ring-1 {
+position: absolute;
+width: 260px;
+height: 260px;
+border: 1px solid rgba(161, 196, 253, 0.3);
+border-radius: 50%;
+transform: rotateX(65deg) rotateY(20deg);
+}
+.orbit-ring-2 {
+position: absolute;
+width: 260px;
+height: 260px;
+border: 1px solid rgba(255, 154, 158, 0.3);
+border-radius: 50%;
+transform: rotateX(65deg) rotateY(-40deg);
+}
+.orbit-ring-3 {
+position: absolute;
+width: 260px;
+height: 260px;
+border: 1px dashed rgba(255, 255, 255, 0.1);
+border-radius: 50%;
+transform: rotateX(75deg);
+}
+.blue-ball-container {
 position: absolute;
 width: 260px;
 height: 260px;
 border-radius: 50%;
-background: linear-gradient(135deg, rgba(161, 196, 253, 0.15), rgba(255, 154, 158, 0.15), rgba(161, 196, 253, 0.05));
-border: 1.5px solid rgba(161, 196, 253, 0.3);
-box-shadow: inset 0 0 35px rgba(161, 196, 253, 0.1);
--webkit-mask: radial-gradient(farthest-side, transparent 84%, black 87%);
-mask: radial-gradient(farthest-side, transparent 84%, black 87%);
-animation: liquidShimmer 8s ease-in-out infinite alternate, ringRotate 30s linear infinite;
-}
-@keyframes ringRotate {
-0% { transform: rotate(0deg); }
-100% { transform: rotate(360deg); }
-}
-@keyframes liquidShimmer {
-0% { filter: hue-rotate(0deg) brightness(0.9); }
-50% { filter: hue-rotate(25deg) brightness(1.2); }
-100% { filter: hue-rotate(0deg) brightness(0.9); }
-}
-.liquid-node {
-position: absolute;
-width: 14px;
-height: 14px;
-background: radial-gradient(circle, #ffffff 0%, #a1c4fd 60%, #ff9a9e 100%);
-border-radius: 50%;
-box-shadow: 0 0 16px #a1c4fd, 0 0 8px #ff9a9e;
-animation: nodePath 30s cubic-bezier(0.37, 0, 0.63, 1) forwards;
+animation: orbitSpin 17.5s linear 2;
 z-index: 10;
 }
-@keyframes nodePath {
-0% { transform: rotate(0deg) translate(130px) rotate(0deg); }
-100% { transform: rotate(360deg) translate(130px) rotate(-360deg); }
-}
-.dna-spiral-core {
-position: relative;
-width: 120px;
-height: 120px;
-display: flex;
-align-items: center;
-justify-content: center;
-transform-style: preserve-3d;
-animation: spiralRotate 6s linear infinite;
-}
-@keyframes spiralRotate {
-0% { transform: rotateZ(0deg) scale(0.95); }
-50% { transform: rotateZ(180deg) scale(1.05); }
-100% { transform: rotateZ(360deg) scale(0.95); }
-}
-.dna-sphere-strand-1, .dna-sphere-strand-2 {
+.blue-ball {
 position: absolute;
-width: 10px;
-height: 10px;
+top: -6px;
+left: 50%;
+transform: translateX(-50%);
+width: 12px;
+height: 12px;
+background: #a1c4fd;
 border-radius: 50%;
-background: radial-gradient(circle at 30% 30%, #ffccd2, #ff9a9e 70%, #d946ef 100%);
-box-shadow: 0 0 8px rgba(255, 154, 158, 0.8);
-animation: sphereFloat 3s ease-in-out infinite alternate;
+box-shadow: 0 0 15px #a1c4fd, 0 0 30px #a1c4fd;
 }
-.dna-sphere-strand-2 {
-background: radial-gradient(circle at 30% 30%, #dbeafe, #a1c4fd 70%, #3b82f6 100%);
-box-shadow: 0 0 8px rgba(161, 196, 253, 0.8);
-animation-delay: 1.5s;
+@keyframes orbitSpin {
+0% { transform: rotateX(65deg) rotateY(20deg) rotateZ(0deg); }
+100% { transform: rotateX(65deg) rotateY(20deg) rotateZ(360deg); }
 }
-.node-1 { top: 10px; left: 20px; }
-.node-2 { top: 30px; left: 50px; }
-.node-3 { top: 60px; left: 80px; }
-.node-4 { top: 90px; left: 50px; }
-.node-5 { top: 110px; left: 20px; }
-@keyframes sphereFloat {
-0% { transform: translateY(-4px) scale(0.9); }
-100% { transform: translateY(4px) scale(1.1); }
+.dna-spiral {
+position: relative;
+width: 50px;
+height: 160px;
+transform-style: preserve-3d;
+animation: helixSpin 10s linear infinite;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: space-between;
 }
-.helix-rung {
+@keyframes helixSpin {
+0% { transform: rotateY(0deg); }
+100% { transform: rotateY(360deg); }
+}
+.central-axis {
 position: absolute;
-width: 40px;
-height: 2px;
-background: linear-gradient(90deg, #ff9a9e, #a1c4fd);
-opacity: 0.7;
-animation: rungPulse 3s ease-in-out infinite alternate;
+width: 1px;
+height: 100%;
+background: linear-gradient(180deg, transparent, rgba(255,255,255,0.2), transparent);
 }
-.rung-1 { top: 35px; left: 40px; transform: rotate(20deg); }
-.rung-2 { top: 65px; left: 40px; transform: rotate(-20deg); }
-.rung-3 { top: 95px; left: 40px; transform: rotate(15deg); }
-@keyframes rungPulse {
-0% { opacity: 0.4; width: 35px; }
-100% { opacity: 0.9; width: 45px; }
+.rung {
+position: relative;
+width: 100%;
+height: 1.5px;
+background: linear-gradient(90deg, #ff9a9e, #a1c4fd);
+transform-style: preserve-3d;
+margin: 4px 0;
+}
+.rung::before, .rung::after {
+content: '';
+position: absolute;
+top: -3px;
+width: 7px;
+height: 7px;
+border-radius: 50%;
+background: #ff9a9e;
+box-shadow: 0 0 6px #ff9a9e;
+}
+.rung::after {
+right: 0;
+background: #a1c4fd;
+box-shadow: 0 0 6px #a1c4fd;
+}
+.fragment {
+position: absolute;
+width: 12px;
+height: 1.5px;
+background: #a1c4fd;
+border-radius: 2px;
+opacity: 0;
+animation: fragmentFloat 17.5s ease-in-out 2;
+}
+.frag-1 { top: 20%; left: 30%; animation-delay: 2s; background: #ff9a9e; }
+.frag-2 { top: 60%; right: 20%; animation-delay: 5s; }
+.frag-3 { top: 80%; left: 40%; animation-delay: 9s; }
+@keyframes fragmentFloat {
+0% { transform: translate(0, 0) scale(1); opacity: 0; }
+15% { opacity: 0.8; }
+35% { transform: translate(-30px, -40px) rotate(45deg) scale(0.5); opacity: 0; }
+100% { opacity: 0; }
 }
 .ux-status-container {
-margin-top: 35px;
+margin-top: 40px;
 display: flex;
 flex-direction: column;
 align-items: center;
 gap: 8px;
 text-align: center;
+z-index: 20;
 }
 .ux-status-title {
 color: #f3f4f6;
 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-font-size: 13px;
+font-size: 14px;
 font-weight: 500;
-letter-spacing: 1.5px;
+letter-spacing: 2px;
 text-transform: uppercase;
 }
 .ux-status-subtitle {
 color: #9ca3af;
 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 font-size: 11px;
-letter-spacing: 0.8px;
+letter-spacing: 1px;
+text-transform: uppercase;
+animation: pulseText 3s ease-in-out infinite;
+}
+@keyframes pulseText {
+0%, 100% { opacity: 0.5; }
+50% { opacity: 1; }
 }
 </style>
 <div class="biopsy-loader-wrapper">
 <div class="artistic-canvas">
-<div class="liquid-ring"></div>
-<div class="liquid-node"></div>
-<div class="dna-spiral-core">
-<div class="dna-sphere-strand-1 node-1"></div>
-<div class="dna-sphere-strand-1 node-2"></div>
-<div class="dna-sphere-strand-1 node-3"></div>
-<div class="dna-sphere-strand-1 node-4"></div>
-<div class="dna-sphere-strand-1 node-5"></div>
-<div class="dna-sphere-strand-2 node-1" style="left: 80px;"></div>
-<div class="dna-sphere-strand-2 node-2" style="left: 50px;"></div>
-<div class="dna-sphere-strand-2 node-3" style="left: 20px;"></div>
-<div class="dna-sphere-strand-2 node-4" style="left: 50px;"></div>
-<div class="dna-sphere-strand-2 node-5" style="left: 80px;"></div>
-<div class="helix-rung rung-1"></div>
-<div class="helix-rung rung-2"></div>
-<div class="helix-rung rung-3"></div>
+<div class="orbit-ring-1"></div>
+<div class="orbit-ring-2"></div>
+<div class="orbit-ring-3"></div>
+<div class="blue-ball-container"><div class="blue-ball"></div></div>
+<div class="dna-spiral">
+<div class="central-axis"></div>
+<div class="rung" style="transform: rotateY(0deg);"></div>
+<div class="rung" style="transform: rotateY(24deg);"></div>
+<div class="rung" style="transform: rotateY(48deg);"></div>
+<div class="rung" style="transform: rotateY(72deg);"></div>
+<div class="rung" style="transform: rotateY(96deg);"></div>
+<div class="rung" style="transform: rotateY(120deg);"></div>
+<div class="rung" style="transform: rotateY(144deg);"></div>
+<div class="rung" style="transform: rotateY(168deg);"></div>
+<div class="rung" style="transform: rotateY(192deg);"></div>
+<div class="rung" style="transform: rotateY(216deg);"></div>
+<div class="rung" style="transform: rotateY(240deg);"></div>
+<div class="rung" style="transform: rotateY(264deg);"></div>
+<div class="rung" style="transform: rotateY(288deg);"></div>
+<div class="rung" style="transform: rotateY(312deg);"></div>
+<div class="rung" style="transform: rotateY(336deg);"></div>
 </div>
+<div class="fragment frag-1"></div>
+<div class="fragment frag-2"></div>
+<div class="fragment frag-3"></div>
 </div>
 <div class="ux-status-container">
 <div class="ux-status-title">Executing Deep Multi-Omics Pipeline</div>
-<div class="ux-status-subtitle">Typical runtime is 30–60 seconds to ensure high-fidelity biomarker resolution.</div>
+<div class="ux-status-subtitle">Pipeline run time is around 30-60 seconds...</div>
 </div>
 </div>"""
     st.markdown(html_code, unsafe_allow_html=True)
@@ -420,7 +457,7 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(30.0)
+                            time.sleep(35.0) # Matches two complete 17.5s animation orbits
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
@@ -432,7 +469,7 @@ if not st.session_state.analyzed:
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(30.0)
+                        time.sleep(35.0) # Matches two complete 17.5s animation orbits
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
@@ -657,7 +694,7 @@ else:
             data_payload=pdf_data_payload
         )
         st.download_button(
-            label="Download Academic Clinical Report (PDF)",
+            label="📥 Download Academic Clinical Report (PDF)",
             data=pdf_bytes,
             file_name=f"Academic_Report_{st.session_state.assay}.pdf",
             mime="application/pdf",
