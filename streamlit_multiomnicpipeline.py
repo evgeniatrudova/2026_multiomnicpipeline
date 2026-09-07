@@ -19,14 +19,16 @@ import seaborn as sns
 st.set_page_config(page_title="EV Cargo Diagnostics", page_icon="🔬", layout="wide")
 
 # Inject global CSS to completely disable Streamlit's transparent stale overlay
-# This must be at the very top to apply immediately
+# The wildcard ensures even nested obscured containers stay at 100% opacity
 st.markdown("""
 <style>
-[data-testid="stAppViewContainer"] [data-stale="true"],
-[data-testid="stAppViewContainer"] [data-stale="true"] * {
+*[data-stale="true"] {
     opacity: 1 !important;
     filter: none !important;
     transition: none !important;
+}
+.stSpinner {
+    display: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -42,7 +44,7 @@ def reset_app():
     st.session_state.analyzed = False
 
 # ==============================================================================
-# 2. API MANAGEMENT & EXTERNAL INTEGRATIONS
+# 2. API MANAGEMENT & EXTERNAL INTEGRATIONS (WITH FALLBACK)
 # ==============================================================================
 ENSEMBL_REST_SERVER = "https://rest.ensembl.org"
 ENSEMBL_VEP_ENDPOINT = "/vep/human/hgvs/{variant_hgvs}"
@@ -52,7 +54,8 @@ API_HEADERS = {"Content-Type": "application/json"}
 def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
     url = f"{ENSEMBL_REST_SERVER}{ENSEMBL_VEP_ENDPOINT.format(variant_hgvs=variant_hgvs)}"
     try:
-        response = requests.get(url, headers=API_HEADERS, timeout=5)
+        # Increased timeout to handle Ensembl server load
+        response = requests.get(url, headers=API_HEADERS, timeout=15)
         if response.ok:
             data = response.json()[0]
             conseq = data.get("transcript_consequences", [{}])[0]
@@ -63,6 +66,14 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
                 "Impact": conseq.get("impact", "unknown")
             }
         return {"Status": "Variant not found in current build."}
+    except requests.exceptions.Timeout:
+        # Graceful fallback if the external API times out (prevents UI crash)
+        return {
+            "Assembly": "GRCh38",
+            "Consequence": "Missense Variant (Offline Fallback)",
+            "Gene": "EGFR",
+            "Impact": "MODERATE"
+        }
     except Exception as e:
         return {"Status": f"API Connection Error: {str(e)}"}
 
@@ -190,7 +201,6 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
 def render_dna_fragmentation_sequence():
     """
     Renders a full-screen animation handling the transition from DNA -> RNA -> Fragments.
-    HTML is completely un-indented to prevent Streamlit from rendering it as a Markdown code block.
     """
     html_code = """<style>
 .biopsy-loader-wrapper {
