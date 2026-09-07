@@ -183,9 +183,13 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 4. ORGANIC GRADIENT & GENTLE FRAGMENT ANIMATION COMPONENT
+# 4. PASTEL BLUE-TO-CORAL GEOMETRIC ANIMATION COMPONENT
 # ==============================================================================
 def render_dna_fragmentation_sequence():
+    """
+    Renders a clean, UX-friendly pastel animation featuring a red-to-blue gradient ring
+    and organic gentle genetic fragments floating across the screen.
+    """
     html_code = """<style>
 .biopsy-loader-wrapper {
 position: fixed;
@@ -201,24 +205,24 @@ opacity: 1 !important;
 
 .animation-canvas {
 position: relative;
-width: 260px;
-height: 260px;
+width: 280px;
+height: 280px;
 display: flex;
 align-items: center;
 justify-content: center;
 }
 
-/* Outer circular track with red-to-blue gradient effect */
+/* Minimalist circular track with pastel red-to-blue gradient */
 .progress-ring {
 position: absolute;
-width: 200px;
-height: 200px;
+width: 210px;
+height: 210px;
 border-radius: 50%;
-border: 3px solid rgba(255, 255, 255, 0.05);
-background: conic-gradient(from 0deg, #ef4444, #f59e0b, #3b82f6);
--webkit-mask: radial-gradient(farthest-side, transparent 85%, black 88%);
-mask: radial-gradient(farthest-side, transparent 85%, black 88%);
-animation: rotateRing 3.6s linear forwards;
+border: 2.5px solid rgba(255, 255, 255, 0.04);
+background: conic-gradient(from 0deg, #ff9a9e 0%, #fbcfe8 50%, #a1c4fd 100%);
+-webkit-mask: radial-gradient(farthest-side, transparent 86%, black 89%);
+mask: radial-gradient(farthest-side, transparent 86%, black 89%);
+animation: rotateRing 3.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 @keyframes rotateRing {
@@ -226,48 +230,48 @@ animation: rotateRing 3.6s linear forwards;
 100% { transform: rotate(360deg); }
 }
 
-/* Smooth glowing particle traversing the gradient circle */
+/* Glowing pastel particle traversing the gradient ring from coral to sky blue */
 .gradient-particle {
 position: absolute;
-width: 16px;
-height: 16px;
-background: radial-gradient(circle, #ffffff 0%, #3b82f6 70%);
+width: 14px;
+height: 14px;
+background: radial-gradient(circle, #ffffff 0%, #a1c4fd 70%);
 border-radius: 50%;
-box-shadow: 0 0 16px #3b82f6, 0 0 8px #ef4444;
-animation: particleTrajectory 3.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+box-shadow: 0 0 18px #a1c4fd, 0 0 8px #ff9a9e;
+animation: particleTrajectory 3.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 z-index: 5;
 }
 
 @keyframes particleTrajectory {
 0% {
-    transform: rotate(0deg) translate(100px) rotate(0deg);
-    background: radial-gradient(circle, #fff 0%, #ef4444 70%);
-    box-shadow: 0 0 16px #ef4444;
+    transform: rotate(0deg) translate(105px) rotate(0deg);
+    background: radial-gradient(circle, #fff 0%, #ff9a9e 70%);
+    box-shadow: 0 0 18px #ff9a9e;
 }
 50% {
-    background: radial-gradient(circle, #fff 0%, #f59e0b 70%);
-    box-shadow: 0 0 16px #f59e0b;
+    background: radial-gradient(circle, #fff 0%, #fbcfe8 70%);
+    box-shadow: 0 0 18px #fbcfe8;
 }
 100% {
-    transform: rotate(360deg) translate(100px) rotate(-360deg);
-    background: radial-gradient(circle, #fff 0%, #3b82f6 70%);
-    box-shadow: 0 0 16px #3b82f6;
+    transform: rotate(360deg) translate(105px) rotate(-360deg);
+    background: radial-gradient(circle, #fff 0%, #a1c4fd 70%);
+    box-shadow: 0 0 18px #a1c4fd;
 }
 }
 
-/* Gently floating, organic genetic fragments */
+/* Gently floating organic genetic fragments in pastel tones */
 .organic-fragment {
 position: absolute;
-background: linear-gradient(135deg, rgba(59, 130, 246, 0.6), rgba(239, 68, 68, 0.6));
-border-radius: 6px;
+background: linear-gradient(135deg, rgba(161, 196, 253, 0.5), rgba(255, 154, 158, 0.5));
+border-radius: 4px;
 opacity: 0;
 animation: floatGentle 3.6s ease-in-out infinite;
 }
 
-.frag-1 { width: 24px; height: 6px; top: 30%; left: 20%; animation-delay: 0.1s; }
-.frag-2 { width: 18px; height: 6px; top: 70%; left: 70%; animation-delay: 0.4s; }
-.frag-3 { width: 30px; height: 6px; top: 40%; left: 75%; animation-delay: 0.2s; }
-.frag-4 { width: 20px; height: 6px; top: 65%; left: 25%; animation-delay: 0.5s; }
+.frag-1 { width: 22px; height: 5px; top: 32%; left: 22%; animation-delay: 0.1s; }
+.frag-2 { width: 16px; height: 5px; top: 68%; left: 68%; animation-delay: 0.4s; }
+.frag-3 { width: 28px; height: 5px; top: 38%; left: 72%; animation-delay: 0.2s; }
+.frag-4 { width: 18px; height: 5px; top: 62%; left: 28%; animation-delay: 0.5s; }
 
 @keyframes floatGentle {
 0% {
@@ -275,36 +279,36 @@ animation: floatGentle 3.6s ease-in-out infinite;
     opacity: 0;
 }
 30% {
-    opacity: 0.8;
-    transform: translate(-15px, -20px) rotate(25deg) scale(1);
+    opacity: 0.7;
+    transform: translate(-12px, -15px) rotate(20deg) scale(1);
 }
 70% {
-    opacity: 0.8;
-    transform: translate(20px, 25px) rotate(-15deg) scale(1);
+    opacity: 0.7;
+    transform: translate(15px, 18px) rotate(-15deg) scale(1);
 }
 100% {
-    transform: translate(0, 50px) rotate(45deg) scale(0.2);
+    transform: translate(0, 35px) rotate(35deg) scale(0.2);
     opacity: 0;
 }
 }
 
 .status-label {
-margin-top: 40px;
+margin-top: 35px;
 color: #9ca3af;
 font-family: monospace;
-font-size: 13px;
+font-size: 12px;
 letter-spacing: 2px;
 text-transform: uppercase;
 }
 .status-label::after {
-content: "INITIALIZING PIPELINE (RED)";
+content: "INITIALIZING (CORAL)";
 animation: textFlow 3.6s forwards;
 }
 
 @keyframes textFlow {
-0% { content: "SPECTRAL ALIGNMENT (RED)"; color: #ef4444; }
-50% { content: "PROCESSING CARGO (AMBER)"; color: #f59e0b; }
-100% { content: "READY TO SHOW RESULTS (BLUE)"; color: #3b82f6; }
+0% { content: "SPECTRAL ALIGNMENT (CORAL)"; color: #ff9a9e; }
+50% { content: "PROCESSING CARGO (AMBER)"; color: #fbcfe8; }
+100% { content: "PIPELINE READY (PASTEL BLUE)"; color: #a1c4fd; }
 }
 </style>
 
@@ -392,7 +396,7 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(3.6) # Syncs with red-to-blue gradient completion
+                            time.sleep(3.6) # Perfectly syncs with the coral-to-blue gradient orbit
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
@@ -404,7 +408,7 @@ if not st.session_state.analyzed:
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(3.6) # Syncs with red-to-blue gradient completion
+                        time.sleep(3.6) # Perfectly syncs with the coral-to-blue gradient orbit
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
@@ -452,7 +456,7 @@ if not st.session_state.analyzed:
             """)
 
 # ==============================================================================
-# 7. CLINICAL DASHBOARD UX (DECOUPLED FOR ALL 4 ASSAYS)
+# 7. CLINICAL DASHBOARD UX
 # ==============================================================================
 else:
     pdf_data_payload = {}
@@ -516,7 +520,7 @@ else:
             fig_motif = px.bar(x=list(motif_data.keys()), y=list(motif_data.values()), title="Terminal Cleavage / End Motif Bias")
             st.plotly_chart(fig_motif, use_container_width=True)
 
-    # --- MODULE 3: ANALYTICS (DECOUPLED FOR EACH ASSAY) ---
+    # --- MODULE 3: ANALYTICS ---
     with tab3:
         st.markdown(f"### Step 3: Analytical Profiling ({st.session_state.assay})")
         
@@ -562,7 +566,7 @@ else:
             fig_volcano = px.scatter(df_volcano, x='log2FC', y='neg_log10_pval', color='Status', color_discrete_map=color_map, title="siRNA Knockdown & Off-Target Profile")
             st.plotly_chart(fig_volcano, use_container_width=True)
 
-    # --- MODULE 4: CLINICAL INTELLIGENCE (DECOUPLED FOR EACH ASSAY) ---
+    # --- MODULE 4: CLINICAL INTELLIGENCE ---
     with tab4:
         st.markdown(f"### Step 4: Clinical Intelligence & Translation ({st.session_state.assay})")
         
