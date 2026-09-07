@@ -183,162 +183,170 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 4. 10-SECOND OPTIMIZED ANIMATION COMPONENT
+# 4. REFINED MINIMALIST UX WAITING ANIMATION (PASTEL RED/BLUE GRADIENT)
 # ==============================================================================
 def render_dna_fragmentation_sequence():
     """
-    Renders an optimized 10-second UX loading screen featuring a smooth orbit timer
-    and a fluid genetic lifecycle from RNA convergence to DNA helix and fragmentation.
+    Renders an optimized, continuous minimal-art waiting experience.
+    Features RNA strings merging into DNA, dissolving into micro-fragments, 
+    and a continuous pastel blue-to-coral timer ring.
     """
     html_code = """<style>
 .biopsy-loader-wrapper {
-position: fixed;
-top: 0; left: 0; width: 100vw; height: 100vh;
-background-color: #0b0f19;
-z-index: 9999999;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-opacity: 1 !important;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: #0b0f19;
+    z-index: 9999999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 1 !important;
 }
 
-.timer-canvas {
-position: relative;
-width: 280px;
-height: 280px;
-display: flex;
-align-items: center;
-justify-content: center;
+.ux-loader-container {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* 10-Second UX Timer Track */
-.timer-track {
-position: absolute;
-width: 230px;
-height: 230px;
-border-radius: 50%;
-border: 2px solid rgba(255, 255, 255, 0.05);
-background: conic-gradient(from 0deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.9) 100%);
--webkit-mask: radial-gradient(farthest-side, transparent 88%, black 91%);
-mask: radial-gradient(farthest-side, transparent 88%, black 91%);
-animation: trackRotate 10s linear forwards;
+/* Continuous smooth pastel gradient timer ring */
+.ux-timer-ring {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.03);
+    background: conic-gradient(from 0deg, #ff9a9e 0%, #a1c4fd 50%, #ff9a9e 100%);
+    -webkit-mask: radial-gradient(farthest-side, transparent 89%, black 92%);
+    mask: radial-gradient(farthest-side, transparent 89%, black 92%);
+    animation: ringSpin 6s linear infinite;
 }
 
-@keyframes trackRotate {
-0% { transform: rotate(0deg); }
-100% { transform: rotate(360deg); }
+@keyframes ringSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
-/* Smooth UX Timer Node orbiting over 10 seconds */
-.timer-node {
-position: absolute;
-width: 12px;
-height: 12px;
-background: #3b82f6;
-border-radius: 50%;
-box-shadow: 0 0 14px #3b82f6, 0 0 6px #ffffff;
-animation: nodeOrbit 10s linear forwards;
-z-index: 10;
+/* Glowing UX node tracking timer progress */
+.ux-node {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #a1c4fd;
+    border-radius: 50%;
+    box-shadow: 0 0 12px #a1c4fd, 0 0 6px #ff9a9e;
+    animation: nodePath 6s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+    z-index: 5;
 }
 
-@keyframes nodeOrbit {
-0% { transform: rotate(0deg) translate(115px) rotate(0deg); }
-100% { transform: rotate(360deg) translate(115px) rotate(-360deg); }
+@keyframes nodePath {
+    0% { transform: rotate(0deg) translate(110px) rotate(0deg); }
+    100% { transform: rotate(360deg) translate(110px) rotate(-360deg); }
 }
 
-/* Genetic Core Container */
-.genetic-core {
-position: relative;
-width: 100px;
-height: 140px;
-display: flex;
-align-items: center;
-justify-content: center;
+/* Minimalist Biological Core: RNA -> DNA -> Fragments */
+.bio-core {
+    position: relative;
+    width: 80px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* RNA Strings converging into DNA and resolving into fragments */
-.rna-strand-left, .rna-strand-right {
-position: absolute;
-width: 4px;
-height: 100px;
-border-radius: 2px;
-background: linear-gradient(180deg, #60a5fa, #3b82f6);
-animation: rnaLifecycleLeft 10s ease-in-out forwards;
+/* Left & Right strands representing RNA/DNA structural evolution */
+.strand-l, .strand-r {
+    position: absolute;
+    width: 3px;
+    height: 90px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #ff9a9e, #a1c4fd);
+    animation: bioMorph 6s ease-in-out infinite;
 }
-.rna-strand-left { left: 30px; }
-.rna-strand-right {
-right: 30px;
-background: linear-gradient(180deg, #f87171, #ef4444);
-animation: rnaLifecycleRight 10s ease-in-out forwards;
+.strand-l { left: 24px; }
+.strand-r { right: 24px; animation-delay: 0s; }
+
+@keyframes bioMorph {
+    0% { transform: scaleY(0.4) translateX(-10px); opacity: 0.2; filter: blur(2px); }
+    25% { transform: scaleY(1) translateX(0px); opacity: 0.9; filter: blur(0px); }
+    50% { transform: scaleY(1.05) translateX(0px); opacity: 1; }
+    75% { transform: scaleY(0.7) translate(15px, -15px) rotate(20deg); opacity: 0.5; filter: blur(1px); }
+    100% { transform: scaleY(0.2) translate(30px, -35px) rotate(45deg); opacity: 0; filter: blur(3px); }
 }
 
-@keyframes rnaLifecycleLeft {
-0% { transform: translateX(-30px) scaleY(0.5); opacity: 0; }
-15% { transform: translateX(0px) scaleY(1); opacity: 1; }
-70% { transform: translateX(0px) scaleY(1) rotate(0deg); opacity: 1; }
-88% { transform: translate(-35px, -45px) rotate(-45deg) scale(0.6); opacity: 0.6; }
-100% { transform: translate(-70px, -90px) rotate(-90deg) scale(0); opacity: 0; }
+/* Minimalist central base pairs */
+.base-rungs {
+    position: absolute;
+    width: 28px;
+    height: 60px;
+    background-image: linear-gradient(0deg, rgba(161, 196, 253, 0.7) 1.5px, transparent 1.5px);
+    background-size: 100% 10px;
+    animation: rungsPulse 6s ease-in-out infinite;
 }
 
-@keyframes rnaLifecycleRight {
-0% { transform: translateX(30px) scaleY(0.5); opacity: 0; }
-15% { transform: translateX(0px) scaleY(1); opacity: 1; }
-70% { transform: translateX(0px) scaleY(1) rotate(0deg); opacity: 1; }
-88% { transform: translate(35px, 45px) rotate(45deg) scale(0.6); opacity: 0.6; }
-100% { transform: translate(70px, 90px) rotate(90deg) scale(0); opacity: 0; }
+@keyframes rungsPulse {
+    0%, 20% { opacity: 0; transform: scaleX(0.3); }
+    35% { opacity: 0.9; transform: scaleX(1); }
+    60% { opacity: 1; transform: scaleX(1); }
+    80% { opacity: 0.3; transform: scaleX(0.4); }
+    100% { opacity: 0; transform: scaleX(0); }
 }
 
-.dna-rungs {
-position: absolute;
-width: 36px;
-height: 80px;
-background-image: linear-gradient(0deg, rgba(255,255,255,0.7) 2px, transparent 2px);
-background-size: 100% 12px;
-animation: rungsLifecycle 10s ease-in-out forwards;
+/* Floating micro-fragments representing final cargo isolation */
+.micro-frag {
+    position: absolute;
+    width: 12px;
+    height: 3px;
+    background: #ff9a9e;
+    border-radius: 2px;
+    opacity: 0;
+    animation: fragDrift 6s ease-in-out infinite;
+}
+.f1 { top: 25% ; left: 30%; animation-delay: 3.5s; }
+.f2 { top: 65% ; left: 60%; animation-delay: 3.8s; background: #a1c4fd; }
+.f3 { top: 40% ; left: 65%; animation-delay: 4.0s; }
+
+@keyframes fragDrift {
+    0%, 55% { transform: translate(0, 0) scale(0); opacity: 0; }
+    65% { transform: translate(-15px, -10px) scale(1); opacity: 0.8; }
+    100% { transform: translate(25px, -30px) scale(0.3); opacity: 0; }
 }
 
-@keyframes rungsLifecycle {
-0%, 12% { opacity: 0; transform: scaleX(0.2); }
-20% { opacity: 1; transform: scaleX(1); }
-70% { opacity: 1; transform: scaleX(1); }
-88% { opacity: 0.5; transform: scaleX(0.5) scaleY(0.7); filter: blur(2px); }
-100% { opacity: 0; transform: scaleX(0); }
+.ux-status-label {
+    margin-top: 30px;
+    color: #9ca3af;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    animation: textSmoothPulse 2s ease-in-out infinite;
 }
 
-.status-label {
-margin-top: 30px;
-color: #9ca3af;
-font-family: monospace;
-font-size: 12px;
-letter-spacing: 2px;
-text-transform: uppercase;
-}
-.status-label::after {
-content: "CONVERGING RNA STRANDS";
-animation: textFlow 10s forwards;
-}
-
-@keyframes textFlow {
-0% { content: "CONVERGING RNA STRANDS"; color: #60a5fa; }
-30% { content: "FORMING DNA HELIX"; color: #3b82f6; }
-65% { content: "EXECUTING MULTI-OMICS PIPELINE"; color: #f59e0b; }
-90% { content: "RESOLVING INTO FRAGMENTS"; color: #ef4444; }
-100% { content: "PIPELINE READY"; color: #10b981; }
+@keyframes textSmoothPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
 }
 </style>
 
 <div class="biopsy-loader-wrapper">
-    <div class="timer-canvas">
-        <div class="timer-track"></div>
-        <div class="timer-node"></div>
-        <div class="genetic-core">
-            <div class="rna-strand-left"></div>
-            <div class="dna-rungs"></div>
-            <div class="rna-strand-right"></div>
+    <div class="ux-loader-container">
+        <div class="ux-timer-ring"></div>
+        <div class="ux-node"></div>
+        <div class="bio-core">
+            <div class="strand-l"></div>
+            <div class="base-rungs"></div>
+            <div class="strand-r"></div>
+            <div class="micro-frag f1"></div>
+            <div class="micro-frag f2"></div>
+            <div class="micro-frag f3"></div>
         </div>
     </div>
-    <div class="status-label"></div>
+    <div class="ux-status-label">Isolating EV Cargo & Analyzing Molecular Signatures...</div>
 </div>
 """
     st.markdown(html_code, unsafe_allow_html=True)
@@ -413,7 +421,7 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(10.0) # Maximum 10-second timer
+                            time.sleep(10.0) # Optimized waiting window
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
@@ -425,7 +433,7 @@ if not st.session_state.analyzed:
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(10.0) # Maximum 10-second timer
+                        time.sleep(10.0) # Optimized waiting window
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
