@@ -14,14 +14,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # ==============================================================================
-# 1. PAGE CONFIGURATION & AGGRESSIVE ANTI-TRANSPARENCY OVERRIDE
+# 1. PAGE CONFIGURATION & NUCLEAR ANTI-TRANSPARENCY OVERRIDE
 # ==============================================================================
 st.set_page_config(page_title="EV Cargo Diagnostics", page_icon="🔬", layout="wide")
 
-# Shrinks default loading indicators to 0px and forces absolute opacity on root containers
+# Hardcoded framework override to kill Streamlit's default loading states
 st.markdown("""
 <style>
-/* Hide the default top-right "Running..." status widget entirely */
+/* 1. Hide the default top-right "Running..." status widget entirely */
 [data-testid="stStatusWidget"] {
     visibility: hidden !important;
     width: 0px !important;
@@ -30,14 +30,21 @@ st.markdown("""
     display: none !important;
 }
 
-/* Force absolute opacity on all stale elements and their parent containers */
+/* 2. Force absolute opacity on all stale elements and their parent containers */
 .stApp [data-stale="true"], 
 .stApp [data-stale="true"] *,
 div[data-testid="stAppViewBlockContainer"],
-div[data-testid="stAppViewContainer"] {
+div[data-testid="stAppViewContainer"],
+.st-emotion-cache-1zwsops, 
+.st-emotion-cache-16txtl3 {
     opacity: 1 !important;
     filter: none !important;
     transition: none !important;
+}
+
+/* 3. Hide Streamlit skeleton loaders */
+[data-testid="stSkeleton"] {
+    display: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -203,24 +210,24 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 4. DNA -> RNA -> FRAGMENT CSS ANIMATION COMPONENT
+# 4. SOLID DNA -> RNA -> FRAGMENT CSS ANIMATION COMPONENT
 # ==============================================================================
 def render_dna_fragmentation_sequence():
     """
-    Renders a full-screen animation handling the transition from DNA -> RNA -> Fragments.
-    HTML is completely un-indented to prevent Streamlit from rendering it as a Markdown code block.
+    Renders a solid full-screen animation handling the transition from DNA -> RNA -> Fragments.
+    The background remains 100% opaque until the DOM is unmounted, preventing gray-out leaks.
     """
     html_code = """<style>
 .biopsy-loader-wrapper {
 position: fixed;
 top: 0; left: 0; width: 100vw; height: 100vh;
-background-color: #0b0f19;
+background-color: #0b0f19; /* Solid, non-transparent background */
 z-index: 9999999;
 display: flex;
 flex-direction: column;
 align-items: center;
 justify-content: center;
-animation: wrapperFadeOut 0.4s ease-out 3.4s forwards;
+opacity: 1 !important; /* Forces 100% opacity, ignoring Streamlit stale states */
 }
 .orbit-ring {
 position: absolute;
@@ -307,7 +314,6 @@ animation: bridgeBreak 3.5s forwards;
 @keyframes shatter3 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(-40px, 50px) rotate(80deg); } }
 @keyframes shatter4 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(70px, 60px) rotate(-60deg); } }
 @keyframes shatter5 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(-15px, -80px) rotate(120deg); } }
-@keyframes wrapperFadeOut { to { opacity: 0; visibility: hidden; } }
 .status-text {
 margin-top: 50px;
 color: #9ca3af;
@@ -415,7 +421,7 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(3.8) 
+                            time.sleep(3.6) # Matches inner animation shatter
                             
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
@@ -429,7 +435,7 @@ if not st.session_state.analyzed:
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(3.8) 
+                        time.sleep(3.6) # Matches inner animation shatter
                         
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
