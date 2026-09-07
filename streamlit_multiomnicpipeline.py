@@ -198,7 +198,7 @@ if not st.session_state.analyzed:
 
         st.write("---")
         
-        onboard_tabs = st.tabs(["🏛️ Academic Purpose", "🛡️ Privacy & Architecture", "⚙️ Modular Adjustments"])
+        onboard_tabs = st.tabs(["🏛️ Academic Purpose", "🛡️ Privacy & Architecture", "⚙️ Modular Adjustments (Algorithm Spec)"])
         
         with onboard_tabs[0]:
             st.markdown("""
@@ -217,27 +217,49 @@ if not st.session_state.analyzed:
             
         with onboard_tabs[2]:
             st.markdown("""
-            **Dynamic Algorithmic Routing & Biological Validation**
+            **Algorithmic Routing & Robustness Validation**
             
-            The pipeline discards the rigid monolithic approach, deploying assay-specific algorithms tailored to the physical and molecular properties of the target genetic material:
+            The pipeline breaks the rigid 15-step generic model, deploying assay-specific bioinformatic algorithms tailored to the physical constraints of the target genetic material.
 
             ### 🧬 cfDNA Engine
-            *   **Pre-Processing & Alignment:** End-repair trimming isolates double-stranded apoptotic fragments, aligning via BWA-MEM to GRCh38 to preserve paired-end insert topologies.
-            *   **Fragmentomics (Priors):** Models insert sizes (distinguishing 145bp tumor-derived from 167bp wild-type nucleosomal footprints) and 5' end-motif cleavage preferences to construct Bayesian priors.
-            *   **Variant Analytics:** Mutect2 somatic SNV/Indel calling is heavily penalized for background error rates, executing stringent CHIP (Clonal Hematopoiesis of Indeterminate Potential) subtraction using matched buffy coat references.
+            *   **Alignment & Consensus Calling:** 
+                *   *Methods:* `BWA-MEM` + `fgbio` (for UMI deduplication).
+                *   *Purpose:* Retain intact double-stranded paired-end read topologies and correct PCR amplification bias.
+                *   *Reasoning:* cfDNA fragments are ultra-short (modes at 145bp and 167bp). Standard deduplication (`Picard MarkDuplicates`) fails due to high biological duplication of identical genomic coordinates. UMI-aware consensus calling is mathematically required to suppress sequencing error rates for ultra-low VAF (<0.1%) liquid biopsy detection.
+            *   **Somatic Variant Analytics:** 
+                *   *Methods:* `GATK Mutect2` + Matched Buffy Coat Subtraction.
+                *   *Purpose:* High-sensitivity SNV/Indel calling combined with biological noise filtration.
+                *   *Reasoning:* Clonal Hematopoiesis of Indeterminate Potential (CHIP) inherently contaminates plasma with leukocyte-derived somatic mutations. Pipeline robustness mandates a matched leukocyte subtraction to prevent massive false-positive oncogene calling.
 
             ### 🧪 EV-mRNA Engine
-            *   **Alignment & Integrity:** Standard poly-A selected aligners fail on EV-mRNA. This module deploys chimeric-aware, splice-tolerant alignment (e.g., STAR) to capture highly fragmented transcripts, 3' UTR enriched elements, and exon-back-spliced circular RNAs (circRNAs) protected from RNase degradation.
-            *   **Signal Normalization:** Bypasses standard library size scaling (like DESeq2 median-of-ratios) which fails under variable EV secretion rates. Normalizes to exogenous spike-ins linked to vesicle particle counts.
-            *   **Variant Subtraction:** Implements a strict A-to-I (A>G) RNA-editing subtraction filter via REDIportal to prevent hyper-mutated transcripts from triggering false-positive tumor somatic calls in Mutect2.
+            *   **Alignment & Integrity:**
+                *   *Methods:* `STAR` (Chimeric-aware mode) / `HISAT2`.
+                *   *Purpose:* Splice-tolerant mapping to capture fragmented, back-spliced, and 3' UTR enriched reads.
+                *   *Reasoning:* EV-packaged mRNA is heavily degraded and enriched for circular RNAs (circRNAs) that resist RNase digestion. Traditional full-length poly-A alignment parameters will inappropriately discard these as structural errors.
+            *   **Somatic Noise Filtration:**
+                *   *Methods:* `REDItools` / `REDIportal` cross-referencing.
+                *   *Purpose:* A-to-I RNA editing subtraction.
+                *   *Reasoning:* RNA sequencing naturally captures ADAR-mediated A-to-I editing events (sequenced as A>G). If fed directly into standard somatic variant callers without strict RNA-editing masking, the pipeline will emit thousands of false-positive tumor mutations.
 
             ### 🔬 miRNA Engine
-            *   **Alignment Strategy:** Abandons strict 0-mismatch mapping. Utilizes **isomiR-aware quantification** (e.g., miRge3.0) to capture biologically active 5'/3' trimmed variants and non-templated adenylation/uridylation, distinguishing true EV cargo from Argonaute (Ago2) bound contaminants.
-            *   **Deduplication Constraint:** Coordinate-based deduplication is mathematically fatal for small RNAs. Strictly enforces **UMI (Unique Molecular Identifier) parsing** to differentiate massive biological transcription spikes from PCR amplification artifacts.
+            *   **Alignment Strategy:**
+                *   *Methods:* `miRge3.0` or `isomiR-SEA`.
+                *   *Purpose:* Probabilistic multi-mapping and isomiR-aware quantification.
+                *   *Reasoning:* Mature miRNAs frequently undergo non-templated 3' adenylation/uridylation or 5' shifting. Standard strict aligners (0-mismatch parameters) discard these biologically active isomiRs. Multi-mapping heuristics are also crucial for resolving paralogous miRNA families.
+            *   **Deduplication Constraint:**
+                *   *Methods:* `UMI-tools` (Coordinate-collapsing explicitly bypassed).
+                *   *Purpose:* True quantitative counting of short RNAs.
+                *   *Reasoning:* 22nt reads inherently map to exact start/stop coordinates. Using traditional coordinate deduplication aggressively downsamples true biological abundance by >95%. UMI tracking is the sole mathematically sound method for short RNA deduplication.
             
             ### 💊 siRNA Engine
-            *   **Alignment Constraint:** Conversely demands **perfect-match (0 mismatch)** alignment to map synthetic 21-24bp therapeutic payloads, ensuring intact systemic delivery without in vivo nuclease degradation.
-            *   **Targeting & Off-Target Analytics:** Replaces standard SNV mapping with degradome-seq logic. Validates perfect complementary 5'-cleavage at the intended target mRNA locus, whilst executing a transcriptome-wide scan of 3' UTRs for heuristic heptamer seed-matches to quantify off-target RNAi toxicity.
+            *   **Alignment Stringency:**
+                *   *Methods:* `Bowtie` (configured for `-v 0` exact matching).
+                *   *Purpose:* Perfect-match alignment to validate synthetic therapeutic payload stability.
+                *   *Reasoning:* Therapeutic siRNAs are highly specific 21-24nt sequences. Allowing even a 1bp mismatch generates severe multi-mapping background against the endogenous human transcriptome, obfuscating precise pharmacokinetic tracking.
+            *   **Off-Target & Cleavage Analytics:**
+                *   *Methods:* `TargetScan` heuristic seed-matching + Degradome-seq mapping logic.
+                *   *Purpose:* Quantify exact on-target Ago2 cleavage and measure 3' UTR seed-based off-target toxicity.
+                *   *Reasoning:* Unlike miRNA, siRNA functions via perfect 5'-cleavage. The pipeline must explicitly confirm 5'-RACE/degradome signatures at the intended target locus, while systematically scanning the transcriptome for off-target RNAi knockdown driven by partial heptamer seed complementarity.
             """)
 
 # ==============================================================================
@@ -269,9 +291,9 @@ else:
         elif st.session_state.assay == "mRNA":
             c3.metric("Step 4 & 5: STAR (Chimeric-Aware) / Picard", "6.4M Transcripts", "A-to-I Editing Filtered")
         elif st.session_state.assay == "miRNA":
-            c3.metric("Step 4 & 5: isomiR-SEA / UMI-tools", "4.5M isomiRs", "Coordinate collapsing bypassed")
+            c3.metric("Step 4 & 5: miRge3.0 / UMI-tools", "4.5M isomiRs", "Coordinate collapsing bypassed")
         elif st.session_state.assay == "siRNA":
-            c3.metric("Step 4 & 5: Perfect-Match / UMI-tools", "2.1M On-Target", "0 Mismatches Allowed")
+            c3.metric("Step 4 & 5: Bowtie (v=0) / UMI-tools", "2.1M On-Target", "0 Mismatches Allowed")
 
     # --- MODULE 3: STRUCTURAL & SEQUENCE INTEGRITY ---
     with tab2:
