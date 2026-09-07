@@ -183,13 +183,13 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 4. REFINED MINIMALIST UX WAITING ANIMATION (PASTEL RED/BLUE GRADIENT)
+# 4. ARTISTIC LIQUID WATER TEXTURE & ORGANIC DNA/RNA ANIMATION
 # ==============================================================================
 def render_dna_fragmentation_sequence():
     """
-    Renders an optimized, continuous minimal-art waiting experience.
-    Features RNA strings merging into DNA, dissolving into micro-fragments, 
-    and a continuous pastel blue-to-coral timer ring.
+    Renders an artistic, organic minimal-art waiting experience featuring liquid 
+    water texture light shifting over pastel coral and blue gradients, RNA strands 
+    forming DNA, and dissolving fragments over a 30-second window.
     """
     html_code = """<style>
 .biopsy-loader-wrapper {
@@ -204,149 +204,172 @@ def render_dna_fragmentation_sequence():
     opacity: 1 !important;
 }
 
-.ux-loader-container {
+.artistic-canvas {
     position: relative;
-    width: 260px;
-    height: 260px;
+    width: 300px;
+    height: 300px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Continuous smooth pastel gradient timer ring */
-.ux-timer-ring {
+/* Liquid water texture ring with shifting pastel light gradients */
+.liquid-ring {
     position: absolute;
-    width: 220px;
-    height: 220px;
+    width: 240px;
+    height: 240px;
     border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.03);
-    background: conic-gradient(from 0deg, #ff9a9e 0%, #a1c4fd 50%, #ff9a9e 100%);
-    -webkit-mask: radial-gradient(farthest-side, transparent 89%, black 92%);
-    mask: radial-gradient(farthest-side, transparent 89%, black 92%);
-    animation: ringSpin 6s linear infinite;
+    background: linear-gradient(135deg, rgba(161, 196, 253, 0.15), rgba(255, 154, 158, 0.15), rgba(161, 196, 253, 0.05));
+    border: 1.5px solid rgba(161, 196, 253, 0.3);
+    box-shadow: inset 0 0 30px rgba(161, 196, 253, 0.1);
+    -webkit-mask: radial-gradient(farthest-side, transparent 84%, black 87%);
+    mask: radial-gradient(farthest-side, transparent 84%, black 87%);
+    animation: liquidShimmer 8s ease-in-out infinite alternate, ringRotate 30s linear infinite;
 }
 
-@keyframes ringSpin {
+@keyframes ringRotate {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* Glowing UX node tracking timer progress */
-.ux-node {
+@keyframes liquidShimmer {
+    0% { filter: hue-rotate(0deg) brightness(0.9); }
+    50% { filter: hue-rotate(25deg) brightness(1.2); }
+    100% { filter: hue-rotate(0deg) brightness(0.9); }
+}
+
+/* Fluid timer pulse node */
+.liquid-node {
     position: absolute;
-    width: 10px;
-    height: 10px;
-    background: #a1c4fd;
+    width: 14px;
+    height: 14px;
+    background: radial-gradient(circle, #ffffff 0%, #a1c4fd 60%, #ff9a9e 100%);
     border-radius: 50%;
-    box-shadow: 0 0 12px #a1c4fd, 0 0 6px #ff9a9e;
-    animation: nodePath 6s cubic-bezier(0.37, 0, 0.63, 1) infinite;
-    z-index: 5;
+    box-shadow: 0 0 16px #a1c4fd, 0 0 8px #ff9a9e;
+    animation: nodePath 30s cubic-bezier(0.37, 0, 0.63, 1) forwards;
+    z-index: 10;
 }
 
 @keyframes nodePath {
-    0% { transform: rotate(0deg) translate(110px) rotate(0deg); }
-    100% { transform: rotate(360deg) translate(110px) rotate(-360deg); }
+    0% { transform: rotate(0deg) translate(120px) rotate(0deg); }
+    100% { transform: rotate(360deg) translate(120px) rotate(-360deg); }
 }
 
-/* Minimalist Biological Core: RNA -> DNA -> Fragments */
-.bio-core {
+/* Organic Minimalist Genetic Core */
+.genetic-fluid-core {
     position: relative;
-    width: 80px;
-    height: 120px;
+    width: 90px;
+    height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Left & Right strands representing RNA/DNA structural evolution */
-.strand-l, .strand-r {
+/* Organic fluid RNA/DNA strands */
+.fluid-strand-l, .fluid-strand-r {
     position: absolute;
-    width: 3px;
-    height: 90px;
-    border-radius: 2px;
-    background: linear-gradient(180deg, #ff9a9e, #a1c4fd);
-    animation: bioMorph 6s ease-in-out infinite;
+    width: 4px;
+    height: 110px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #ff9a9e, #a1c4fd, #ff9a9e);
+    background-size: 100% 200%;
+    animation: fluidWave 30s ease-in-out forwards, liquidShimmer 6s infinite;
 }
-.strand-l { left: 24px; }
-.strand-r { right: 24px; animation-delay: 0s; }
+.fluid-strand-l { left: 26px; transform-origin: center; }
+.fluid-strand-r { right: 26px; transform-origin: center; animation-delay: 0.2s; }
 
-@keyframes bioMorph {
-    0% { transform: scaleY(0.4) translateX(-10px); opacity: 0.2; filter: blur(2px); }
-    25% { transform: scaleY(1) translateX(0px); opacity: 0.9; filter: blur(0px); }
-    50% { transform: scaleY(1.05) translateX(0px); opacity: 1; }
-    75% { transform: scaleY(0.7) translate(15px, -15px) rotate(20deg); opacity: 0.5; filter: blur(1px); }
-    100% { transform: scaleY(0.2) translate(30px, -35px) rotate(45deg); opacity: 0; filter: blur(3px); }
+@keyframes fluidWave {
+    0% { transform: scaleY(0.3) scaleX(0.5); opacity: 0; filter: blur(4px); }
+    10% { transform: scaleY(0.8) scaleX(1); opacity: 0.8; filter: blur(1px); }
+    30% { transform: scaleY(1.05) scaleX(1.1); opacity: 1; filter: blur(0px); }
+    70% { transform: scaleY(1) scaleX(1) rotate(0deg); opacity: 0.9; }
+    88% { transform: scaleY(0.6) translate(-20px, -30px) rotate(-25deg); opacity: 0.4; filter: blur(2px); }
+    100% { transform: scaleY(0.1) translate(-40px, -60px) rotate(-55deg); opacity: 0; filter: blur(5px); }
 }
 
-/* Minimalist central base pairs */
-.base-rungs {
+/* Minimalist shifting rungs */
+.fluid-rungs {
     position: absolute;
-    width: 28px;
-    height: 60px;
-    background-image: linear-gradient(0deg, rgba(161, 196, 253, 0.7) 1.5px, transparent 1.5px);
-    background-size: 100% 10px;
-    animation: rungsPulse 6s ease-in-out infinite;
+    width: 32px;
+    height: 75px;
+    background-image: linear-gradient(0deg, rgba(255, 154, 158, 0.8) 2px, transparent 2.5px);
+    background-size: 100% 12px;
+    animation: rungsEvolution 30s ease-in-out forwards;
 }
 
-@keyframes rungsPulse {
-    0%, 20% { opacity: 0; transform: scaleX(0.3); }
-    35% { opacity: 0.9; transform: scaleX(1); }
-    60% { opacity: 1; transform: scaleX(1); }
-    80% { opacity: 0.3; transform: scaleX(0.4); }
+@keyframes rungsEvolution {
+    0%, 15% { opacity: 0; transform: scaleX(0.2); }
+    25% { opacity: 1; transform: scaleX(1); }
+    70% { opacity: 1; transform: scaleX(1); filter: brightness(1.2); }
+    88% { opacity: 0.4; transform: scaleX(0.5) scaleY(0.6); filter: blur(2px); }
     100% { opacity: 0; transform: scaleX(0); }
 }
 
-/* Floating micro-fragments representing final cargo isolation */
-.micro-frag {
+/* Organic dissolving micro-fragments */
+.organic-fragment {
     position: absolute;
-    width: 12px;
-    height: 3px;
-    background: #ff9a9e;
-    border-radius: 2px;
+    width: 14px;
+    height: 4px;
+    background: linear-gradient(90deg, #ff9a9e, #a1c4fd);
+    border-radius: 3px;
     opacity: 0;
-    animation: fragDrift 6s ease-in-out infinite;
+    animation: fragmentDisperse 30s ease-in-out forwards;
 }
-.f1 { top: 25% ; left: 30%; animation-delay: 3.5s; }
-.f2 { top: 65% ; left: 60%; animation-delay: 3.8s; background: #a1c4fd; }
-.f3 { top: 40% ; left: 65%; animation-delay: 4.0s; }
+.of-1 { top: 30%; left: 20%; animation-delay: 24s; }
+.of-2 { top: 60%; left: 70%; animation-delay: 25s; }
+.of-3 { top: 45% ; left: 75%; animation-delay: 26s; }
+.of-4 { top: 70% ; left: 25%; animation-delay: 27s; }
 
-@keyframes fragDrift {
-    0%, 55% { transform: translate(0, 0) scale(0); opacity: 0; }
-    65% { transform: translate(-15px, -10px) scale(1); opacity: 0.8; }
-    100% { transform: translate(25px, -30px) scale(0.3); opacity: 0; }
+@keyframes fragmentDisperse {
+    0%, 75% { transform: translate(0, 0) scale(0); opacity: 0; }
+    82% { transform: translate(-20px, -15px) scale(1) rotate(15deg); opacity: 0.9; }
+    100% { transform: translate(45px, -50px) scale(0.2) rotate(60deg); opacity: 0; }
 }
 
-.ux-status-label {
-    margin-top: 30px;
+.ux-status-container {
+    margin-top: 35px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.ux-status-title {
+    color: #f3f4f6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.ux-status-subtitle {
     color: #9ca3af;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    animation: textSmoothPulse 2s ease-in-out infinite;
-}
-
-@keyframes textSmoothPulse {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
+    letter-spacing: 0.8px;
 }
 </style>
 
 <div class="biopsy-loader-wrapper">
-    <div class="ux-loader-container">
-        <div class="ux-timer-ring"></div>
-        <div class="ux-node"></div>
-        <div class="bio-core">
-            <div class="strand-l"></div>
-            <div class="base-rungs"></div>
-            <div class="strand-r"></div>
-            <div class="micro-frag f1"></div>
-            <div class="micro-frag f2"></div>
-            <div class="micro-frag f3"></div>
+    <div class="artistic-canvas">
+        <div class="liquid-ring"></div>
+        <div class="liquid-node"></div>
+        <div class="genetic-fluid-core">
+            <div class="fluid-strand-l"></div>
+            <div class="fluid-rungs"></div>
+            <div class="fluid-strand-r"></div>
+            <div class="organic-fragment of-1"></div>
+            <div class="organic-fragment of-2"></div>
+            <div class="organic-fragment of-3"></div>
+            <div class="organic-fragment of-4"></div>
         </div>
     </div>
-    <div class="ux-status-label">Isolating EV Cargo & Analyzing Molecular Signatures...</div>
+    <div class="ux-status-container">
+        <div class="ux-status-title">Executing Deep Multi-Omics Pipeline</div>
+        <div class="ux-status-subtitle">Typical runtime is 30–60 seconds to ensure high-fidelity biomarker resolution.</div>
+    </div>
 </div>
 """
     st.markdown(html_code, unsafe_allow_html=True)
@@ -421,7 +444,7 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(10.0) # Optimized waiting window
+                            time.sleep(30.0) # 30-second pipeline execution window matching UX expectations
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
@@ -433,7 +456,7 @@ if not st.session_state.analyzed:
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(10.0) # Optimized waiting window
+                        time.sleep(30.0) # 30-second pipeline execution window matching UX expectations
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
