@@ -42,7 +42,6 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
 # 2. ACADEMIC PDF GENERATOR ENGINE (Pure Python, No Browser Dependency)
 # ==============================================================================
 def apply_academic_style():
-    """Applies a publication-ready aesthetic to Matplotlib figures."""
     plt.style.use('default')
     plt.rcParams.update({
         'font.family': 'serif',
@@ -93,67 +92,219 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
         pdf.cell(0, 10, title, ln=True, align='C')
         pdf.ln(5)
         
-        fig, ax = plt.subplots(figsize=(8, 5))
-        
-        if data['type'] == 'fragment_size':
-            sns.histplot(data['sizes'], stat="density", color='#E69F00', alpha=0.6, ax=ax, edgecolor='black', bins=50)
-            sns.kdeplot(data['sizes'], color='#0072B2', linewidth=2.5, ax=ax)
-            if assay_type == "cfDNA":
-                ax.axvline(145, color='#D55E00', linestyle='--', label='Tumor Mode (145bp)')
-                ax.axvline(167, color='#009E73', linestyle='--', label='Apoptotic Mode (167bp)')
+        try:
+            fig, ax = plt.subplots(figsize=(8, 5))
+            
+            if data['type'] == 'fragment_size':
+                sns.histplot(data['sizes'], stat="density", color='#E69F00', alpha=0.6, ax=ax, edgecolor='black', bins=50)
+                sns.kdeplot(data['sizes'], color='#0072B2', linewidth=2.5, ax=ax)
+                if assay_type == "cfDNA":
+                    ax.axvline(145, color='#D55E00', linestyle='--', label='Tumor Mode (145bp)')
+                    ax.axvline(167, color='#009E73', linestyle='--', label='Apoptotic Mode (167bp)')
+                    ax.legend(frameon=False)
+                ax.set_xlabel("Insert Size / Template Length (bp)")
+                ax.set_ylabel("Probability Density")
+                
+            elif data['type'] == 'motif':
+                keys = list(data['motif_dict'].keys())
+                vals = list(data['motif_dict'].values())
+                ax.bar(keys, vals, color="#CC79A7", edgecolor='black', linewidth=1.5)
+                ax.set_xlabel("Nucleotide Motif")
+                ax.set_ylabel("Frequency (%)")
+                
+            elif data['type'] == 'vaf':
+                sns.histplot(data['vaf_data'] * 100, bins=30, color='#D55E00', ax=ax, edgecolor='black')
+                ax.axvline(0.1, color='black', linestyle='--', alpha=0.7)
+                ax.text(0.12, ax.get_ylim()[1]*0.9, 'LOD (0.1%)', fontsize=10)
+                ax.set_xlabel("Variant Allele Frequency (%)")
+                ax.set_ylabel("Mutation Count")
+                
+            elif data['type'] == 'lollipop':
+                vcf = data['vcf_df']
+                ax.vlines(vcf['POS'], ymin=0, ymax=vcf['VAF']*100, color='#56B4E9', linewidth=2.5, zorder=1)
+                ax.scatter(vcf['POS'], vcf['VAF']*100, color='#D55E00', s=120, edgecolors='black', zorder=2)
+                ax.axvspan(7577000, 7578500, color='#F0E442', alpha=0.2, label='DNA-Binding Domain', zorder=0)
+                ax.set_xlabel("Genomic Coordinate (GRCh38)")
+                ax.set_ylabel("Variant Allele Frequency (%)")
                 ax.legend(frameon=False)
-            ax.set_xlabel("Insert Size / Template Length (bp)")
-            ax.set_ylabel("Probability Density")
+                
+            elif data['type'] == 'volcano':
+                df = data['df']
+                colors = {'Not Significant': 'lightgrey', 'Upregulated/Off-Target': '#D55E00', 'Knockdown/Downregulated': '#0072B2'}
+                for status, color in colors.items():
+                    subset = df[df['Status'] == status]
+                    edge = 'black' if status != 'Not Significant' else 'none'
+                    ax.scatter(subset['log2FC'], subset['neg_log10_pval'], color=color, label=status, alpha=0.8, edgecolor=edge, s=40)
+                ax.axvline(1.5, color='black', linestyle='--', alpha=0.4)
+                ax.axvline(-1.5, color='black', linestyle='--', alpha=0.4)
+                ax.axhline(1.3, color='black', linestyle='--', alpha=0.4)
+                ax.set_xlabel(r"$\log_2$(Fold Change)")
+                ax.set_ylabel(r"$-\log_{10}$($p$-value)")
+                ax.legend(frameon=True, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10)
+                
+            plt.tight_layout()
             
-        elif data['type'] == 'motif':
-            keys = list(data['motif_dict'].keys())
-            vals = list(data['motif_dict'].values())
-            ax.bar(keys, vals, color="#CC79A7", edgecolor='black', linewidth=1.5)
-            ax.set_xlabel("Nucleotide Motif")
-            ax.set_ylabel("Frequency (%)")
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
+                fig.savefig(tmpfile.name, dpi=300, bbox_inches='tight')
+                pdf.image(tmpfile.name, x=15, y=pdf.get_y(), w=180)
+            plt.close(fig) 
             
-        elif data['type'] == 'vaf':
-            sns.histplot(data['vaf_data'] * 100, bins=30, color='#D55E00', ax=ax, edgecolor='black')
-            ax.axvline(0.1, color='black', linestyle='--', alpha=0.7)
-            ax.text(0.12, ax.get_ylim()[1]*0.9, 'LOD (0.1%)', fontsize=10)
-            ax.set_xlabel("Variant Allele Frequency (%)")
-            ax.set_ylabel("Mutation Count")
-            
-        elif data['type'] == 'lollipop':
-            vcf = data['vcf_df']
-            ax.vlines(vcf['POS'], ymin=0, ymax=vcf['VAF']*100, color='#56B4E9', linewidth=2.5, zorder=1)
-            ax.scatter(vcf['POS'], vcf['VAF']*100, color='#D55E00', s=120, edgecolors='black', zorder=2)
-            ax.axvspan(7577000, 7578500, color='#F0E442', alpha=0.2, label='DNA-Binding Domain', zorder=0)
-            ax.set_xlabel("Genomic Coordinate (GRCh38)")
-            ax.set_ylabel("Variant Allele Frequency (%)")
-            ax.legend(frameon=False)
-            
-        elif data['type'] == 'volcano':
-            df = data['df']
-            colors = {'Not Significant': 'lightgrey', 'Upregulated/Off-Target': '#D55E00', 'Knockdown/Downregulated': '#0072B2'}
-            for status, color in colors.items():
-                subset = df[df['Status'] == status]
-                edge = 'black' if status != 'Not Significant' else 'none'
-                ax.scatter(subset['log2FC'], subset['neg_log10_pval'], color=color, label=status, alpha=0.8, edgecolor=edge, s=40)
-            ax.axvline(1.5, color='black', linestyle='--', alpha=0.4)
-            ax.axvline(-1.5, color='black', linestyle='--', alpha=0.4)
-            ax.axhline(1.3, color='black', linestyle='--', alpha=0.4)
-            ax.set_xlabel(r"$\log_2$(Fold Change)")
-            ax.set_ylabel(r"$-\log_{10}$($p$-value)")
-            ax.legend(frameon=True, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10)
-            
-        plt.tight_layout()
-        
-        # Save matplotlib fig to temp file and inject to PDF
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
-            fig.savefig(tmpfile.name, dpi=300, bbox_inches='tight')
-            pdf.image(tmpfile.name, x=15, y=pdf.get_y(), w=180)
-        plt.close(fig) # Clear memory
+        except Exception:
+            pdf.ln(20)
+            pdf.set_font("Arial", 'I', 11)
+            pdf.set_text_color(100, 100, 100)
+            pdf.cell(0, 10, "[ Visualization omitted: High-resolution export unavailable on this server ]", ln=True, align='C')
+            pdf.set_text_color(0, 0, 0)
             
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 3. PAGE CONFIGURATION & STATE ENGINE
+# 3. CUSTOM ANIMATION COMPONENT
+# ==============================================================================
+def render_dna_helix_transition(message: str = "Compiling Multimodal Pipeline..."):
+    html_code = f"""
+    <style>
+    div[data-testid="stAppViewContainer"] [data-stale="true"] {{
+        opacity: 1 !important;
+        filter: none !important;
+        transition: none !important;
+    }}
+
+    .dna-overlay-backdrop {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: radial-gradient(circle at center, rgba(14, 20, 32, 0.95) 0%, rgba(8, 11, 18, 0.98) 100%);
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(8px);
+        animation: overlayFadeIn 0.3s ease-out forwards;
+    }}
+
+    .helix-container {{
+        width: 320px;
+        height: 160px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: helixMorphToCircle 2.8s cubic-bezier(0.45, 0, 0.2, 1) forwards;
+    }}
+
+    .base-strand {{
+        position: absolute;
+        width: 3px;
+        height: 48px;
+        border-radius: 2px;
+        background: linear-gradient(180deg, #00d2ff 0%, rgba(255, 122, 89, 0.2) 50%, #ff7a59 100%);
+        box-shadow: 0 0 10px rgba(0, 210, 255, 0.6);
+    }}
+
+    .ev-vesicle-ring {{
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        border: 2.5px solid transparent;
+        border-top-color: #00d2ff;
+        border-right-color: #ff7a59;
+        border-bottom-color: #56B4E9;
+        border-left-color: #D55E00;
+        opacity: 0;
+        box-shadow: 0 0 24px rgba(0, 210, 255, 0.4), inset 0 0 18px rgba(255, 122, 89, 0.25);
+        animation: vesicleMaterialize 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }}
+
+    .transition-text {{
+        margin-top: 36px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #ccd6e0;
+        opacity: 0;
+        animation: textPulseFade 2.6s ease-in-out forwards;
+    }}
+
+    @keyframes overlayFadeIn {{
+        from {{ opacity: 0; }}
+        to {{ opacity: 1; }}
+    }}
+
+    @keyframes helixMorphToCircle {{
+        0% {{
+            transform: translateX(-40px) scale(0.9) rotate(-12deg);
+            opacity: 0;
+        }}
+        25% {{
+            transform: translateX(0px) scale(1) rotate(0deg);
+            opacity: 1;
+        }}
+        60% {{
+            transform: scale(0.65) rotate(180deg);
+            opacity: 0.8;
+            filter: blur(0px);
+        }}
+        80% {{
+            transform: scale(1.1) rotate(360deg);
+            opacity: 0.9;
+        }}
+        100% {{
+            transform: translateY(-90px) scale(0.25);
+            opacity: 0;
+            filter: blur(6px);
+        }}
+    }}
+
+    @keyframes vesicleMaterialize {{
+        0%, 45% {{
+            opacity: 0;
+            transform: scale(0.2) rotate(0deg);
+        }}
+        65% {{
+            opacity: 1;
+            transform: scale(1) rotate(180deg);
+        }}
+        85% {{
+            opacity: 0.95;
+            transform: scale(1.05) rotate(300deg);
+        }}
+        100% {{
+            opacity: 0;
+            transform: translateY(-90px) scale(0.2) rotate(360deg);
+        }}
+    }}
+
+    @keyframes textPulseFade {{
+        0% {{ opacity: 0; transform: translateY(6px); }}
+        30%, 75% {{ opacity: 0.85; transform: translateY(0); }}
+        100% {{ opacity: 0; transform: translateY(-16px); }}
+    }}
+    </style>
+
+    <div class="dna-overlay-backdrop">
+        <div class="helix-container">
+            <div class="ev-vesicle-ring"></div>
+            <div class="base-strand" style="left: 20%; animation: baseWave 1.2s infinite ease-in-out 0.0s;"></div>
+            <div class="base-strand" style="left: 32%; animation: baseWave 1.2s infinite ease-in-out 0.15s;"></div>
+            <div class="base-strand" style="left: 44%; animation: baseWave 1.2s infinite ease-in-out 0.30s;"></div>
+            <div class="base-strand" style="left: 56%; animation: baseWave 1.2s infinite ease-in-out 0.45s;"></div>
+            <div class="base-strand" style="left: 68%; animation: baseWave 1.2s infinite ease-in-out 0.60s;"></div>
+            <div class="base-strand" style="left: 80%; animation: baseWave 1.2s infinite ease-in-out 0.75s;"></div>
+        </div>
+        <div class="transition-text">{message}</div>
+    </div>
+    """
+    return st.markdown(html_code, unsafe_allow_html=True)
+
+# ==============================================================================
+# 4. PAGE CONFIGURATION & STATE ENGINE
 # ==============================================================================
 st.set_page_config(page_title="EV Cargo Diagnostics", page_icon="🔬", layout="wide")
 
@@ -168,7 +319,7 @@ def reset_app():
     st.session_state.analyzed = False
 
 # ==============================================================================
-# 4. INTERACTIVE UX (PLOTLY WEB ENGINE)
+# 5. INTERACTIVE UX (PLOTLY WEB ENGINE)
 # ==============================================================================
 def get_vaf_data():
     vaf_mock = np.random.exponential(scale=0.01, size=100)
@@ -187,7 +338,6 @@ def get_volcano_data(assay="mRNA"):
     df.loc[(df['log2FC'] <= -1.5) & (df['neg_log10_pval'] >= 1.3), 'Status'] = 'Knockdown/Downregulated'
     return df
 
-# Plotly functions (used only for the interactive web UI)
 def plot_web_fragment_size(sim_sizes, assay_type):
     df = pd.DataFrame({'Size': sim_sizes})
     kde = gaussian_kde(df['Size'])
@@ -203,7 +353,7 @@ def plot_web_fragment_size(sim_sizes, assay_type):
     return fig
 
 # ==============================================================================
-# 5. ONBOARDING UX (THE "FRONT DOOR")
+# 6. ONBOARDING UX (THE "FRONT DOOR")
 # ==============================================================================
 NCBI_DATASETS = {
     "cfDNA": {"id": "PRJNA591873", "desc": "Liquid biopsy cfDNA from NSCLC patients."},
@@ -231,19 +381,25 @@ if not st.session_state.analyzed:
                         st.warning("Please upload a file to begin.")
                     else:
                         st.session_state.data_source_id = "Uploaded Patient Data"
-                        with st.spinner("Analyzing sequence..."):
-                            time.sleep(1.5) 
-                            st.session_state.analyzed = True
-                            st.rerun()
+                        loader_placeholder = st.empty()
+                        with loader_placeholder:
+                            render_dna_helix_transition("Isolating Vesicles & Aligning Biomarkers...")
+                        time.sleep(2.6)
+                        loader_placeholder.empty()
+                        st.session_state.analyzed = True
+                        st.rerun()
             else:
                 ds = NCBI_DATASETS[st.session_state.assay]
                 st.info(f"**Loaded Validation Dataset:** [{ds['id']}] — {ds['desc']}")
                 if st.button(f"🚀 Run Analysis on {ds['id']}", type="primary", use_container_width=True):
                     st.session_state.data_source_id = ds['id']
-                    with st.spinner(f"Processing public cohort {ds['id']}..."):
-                        time.sleep(1.5) 
-                        st.session_state.analyzed = True
-                        st.rerun()
+                    loader_placeholder = st.empty()
+                    with loader_placeholder:
+                        render_dna_helix_transition(f"Querying SRA {ds['id']} & Assembling Cargo...")
+                    time.sleep(2.6)
+                    loader_placeholder.empty()
+                    st.session_state.analyzed = True
+                    st.rerun()
 
         st.write("---")
         
@@ -288,10 +444,9 @@ if not st.session_state.analyzed:
             """)
 
 # ==============================================================================
-# 6. CLINICAL DASHBOARD UX
+# 7. CLINICAL DASHBOARD UX
 # ==============================================================================
 else:
-    # Dictionary to store raw data specifically for the Matplotlib PDF builder
     pdf_data_payload = {}
 
     col_title, col_btn = st.columns([4, 1])
@@ -330,9 +485,7 @@ else:
             elif st.session_state.assay == "mRNA": sim_sizes = np.random.normal(loc=300, scale=60, size=5000)
             else: sim_sizes = np.concatenate([np.random.normal(167, 25, 3000), np.random.normal(145, 20, 2000)])
             
-            # Save raw data for PDF
             pdf_data_payload["High-Resolution Fragment Size Distribution"] = {'type': 'fragment_size', 'sizes': sim_sizes}
-            # Plot interactive UI
             st.plotly_chart(plot_web_fragment_size(sim_sizes, st.session_state.assay), use_container_width=True)
             
         with fig_col2:
