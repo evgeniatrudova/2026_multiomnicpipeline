@@ -5,4 +5,5 @@ plotly
 requests
 scipy
 fpdf
-kaleido>=1.0.0
+matplotlib
+seaborn
