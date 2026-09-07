@@ -159,146 +159,119 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 3. CUSTOM ANIMATION COMPONENT
+# 3. CUSTOM FRAGMENT ANIMATION COMPONENT
 # ==============================================================================
-def render_dna_helix_transition(message: str = "Compiling Multimodal Pipeline..."):
+def render_dna_helix_transition(message: str = "Analyzing Sequence..."):
+    """
+    Renders an inline, non-blocking CSS animation.
+    Two single strands scale inward, form a glowing double-strand, and dissolve.
+    """
     html_code = f"""
     <style>
+    /* Suppress Streamlit's default grayed-out overlay globally */
     div[data-testid="stAppViewContainer"] [data-stale="true"] {{
         opacity: 1 !important;
         filter: none !important;
         transition: none !important;
     }}
 
-    .dna-overlay-backdrop {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: radial-gradient(circle at center, rgba(14, 20, 32, 0.95) 0%, rgba(8, 11, 18, 0.98) 100%);
-        z-index: 999999;
+    .fragment-loader-card {{
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        backdrop-filter: blur(8px);
-        animation: overlayFadeIn 0.3s ease-out forwards;
+        padding: 3rem;
+        margin: 2rem auto;
+        max-width: 400px;
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }}
 
-    .helix-container {{
-        width: 320px;
-        height: 160px;
+    .strand-container {{
         position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: helixMorphToCircle 2.8s cubic-bezier(0.45, 0, 0.2, 1) forwards;
+        width: 180px;
+        height: 80px;
+        margin-bottom: 24px;
     }}
 
-    .base-strand {{
+    .strand-line {{
         position: absolute;
-        width: 3px;
-        height: 48px;
+        width: 100%;
+        height: 3px;
         border-radius: 2px;
-        background: linear-gradient(180deg, #00d2ff 0%, rgba(255, 122, 89, 0.2) 50%, #ff7a59 100%);
-        box-shadow: 0 0 10px rgba(0, 210, 255, 0.6);
-    }}
-
-    .ev-vesicle-ring {{
-        position: absolute;
-        width: 110px;
-        height: 110px;
-        border-radius: 50%;
-        border: 2.5px solid transparent;
-        border-top-color: #00d2ff;
-        border-right-color: #ff7a59;
-        border-bottom-color: #56B4E9;
-        border-left-color: #D55E00;
+        background: linear-gradient(90deg, transparent, #3b82f6, transparent);
         opacity: 0;
-        box-shadow: 0 0 24px rgba(0, 210, 255, 0.4), inset 0 0 18px rgba(255, 122, 89, 0.25);
-        animation: vesicleMaterialize 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        animation: strandMerge 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }}
 
-    .transition-text {{
-        margin-top: 36px;
+    .strand-line.bottom {{
+        background: linear-gradient(90deg, transparent, #ef4444, transparent);
+        animation: strandMergeBottom 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }}
+
+    .bonds {{
+        position: absolute;
+        top: 50%;
+        left: 20%;
+        right: 20%;
+        height: 24px;
+        transform: translateY(-50%);
+        background-image: linear-gradient(90deg, rgba(255,255,255,0.3) 2px, transparent 2px);
+        background-size: 16px 100%;
+        opacity: 0;
+        animation: bondGlow 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }}
+
+    /* Top strand swoops down into the center */
+    @keyframes strandMerge {{
+        0% {{ top: 0px; transform: scaleX(0.3); opacity: 0; }}
+        20% {{ opacity: 0.8; }}
+        50% {{ top: 28px; transform: scaleX(1); opacity: 1; box-shadow: 0 0 12px #3b82f6; }}
+        80% {{ opacity: 0.8; }}
+        100% {{ top: 80px; transform: scaleX(0.2); opacity: 0; }}
+    }}
+
+    /* Bottom strand swoops up into the center */
+    @keyframes strandMergeBottom {{
+        0% {{ bottom: 0px; transform: scaleX(0.3); opacity: 0; }}
+        20% {{ opacity: 0.8; }}
+        50% {{ bottom: 28px; transform: scaleX(1); opacity: 1; box-shadow: 0 0 12px #ef4444; }}
+        80% {{ opacity: 0.8; }}
+        100% {{ bottom: 80px; transform: scaleX(0.2); opacity: 0; }}
+    }}
+
+    /* Rungs materialize only when strands are aligned in the center */
+    @keyframes bondGlow {{
+        0%, 35% {{ opacity: 0; }}
+        50% {{ opacity: 1; }}
+        65%, 100% {{ opacity: 0; }}
+    }}
+
+    .loading-text {{
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 14px;
         font-weight: 500;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.08em;
+        color: #9ca3af;
         text-transform: uppercase;
-        color: #ccd6e0;
-        opacity: 0;
-        animation: textPulseFade 2.6s ease-in-out forwards;
+        animation: pulseText 1.5s infinite alternate;
     }}
 
-    @keyframes overlayFadeIn {{
-        from {{ opacity: 0; }}
+    @keyframes pulseText {{
+        from {{ opacity: 0.5; }}
         to {{ opacity: 1; }}
-    }}
-
-    @keyframes helixMorphToCircle {{
-        0% {{
-            transform: translateX(-40px) scale(0.9) rotate(-12deg);
-            opacity: 0;
-        }}
-        25% {{
-            transform: translateX(0px) scale(1) rotate(0deg);
-            opacity: 1;
-        }}
-        60% {{
-            transform: scale(0.65) rotate(180deg);
-            opacity: 0.8;
-            filter: blur(0px);
-        }}
-        80% {{
-            transform: scale(1.1) rotate(360deg);
-            opacity: 0.9;
-        }}
-        100% {{
-            transform: translateY(-90px) scale(0.25);
-            opacity: 0;
-            filter: blur(6px);
-        }}
-    }}
-
-    @keyframes vesicleMaterialize {{
-        0%, 45% {{
-            opacity: 0;
-            transform: scale(0.2) rotate(0deg);
-        }}
-        65% {{
-            opacity: 1;
-            transform: scale(1) rotate(180deg);
-        }}
-        85% {{
-            opacity: 0.95;
-            transform: scale(1.05) rotate(300deg);
-        }}
-        100% {{
-            opacity: 0;
-            transform: translateY(-90px) scale(0.2) rotate(360deg);
-        }}
-    }}
-
-    @keyframes textPulseFade {{
-        0% {{ opacity: 0; transform: translateY(6px); }}
-        30%, 75% {{ opacity: 0.85; transform: translateY(0); }}
-        100% {{ opacity: 0; transform: translateY(-16px); }}
     }}
     </style>
 
-    <div class="dna-overlay-backdrop">
-        <div class="helix-container">
-            <div class="ev-vesicle-ring"></div>
-            <div class="base-strand" style="left: 20%; animation: baseWave 1.2s infinite ease-in-out 0.0s;"></div>
-            <div class="base-strand" style="left: 32%; animation: baseWave 1.2s infinite ease-in-out 0.15s;"></div>
-            <div class="base-strand" style="left: 44%; animation: baseWave 1.2s infinite ease-in-out 0.30s;"></div>
-            <div class="base-strand" style="left: 56%; animation: baseWave 1.2s infinite ease-in-out 0.45s;"></div>
-            <div class="base-strand" style="left: 68%; animation: baseWave 1.2s infinite ease-in-out 0.60s;"></div>
-            <div class="base-strand" style="left: 80%; animation: baseWave 1.2s infinite ease-in-out 0.75s;"></div>
+    <div class="fragment-loader-card">
+        <div class="strand-container">
+            <div class="bonds"></div>
+            <div class="strand-line"></div>
+            <div class="strand-line bottom"></div>
         </div>
-        <div class="transition-text">{message}</div>
+        <div class="loading-text">{message}</div>
     </div>
     """
     return st.markdown(html_code, unsafe_allow_html=True)
@@ -381,11 +354,14 @@ if not st.session_state.analyzed:
                         st.warning("Please upload a file to begin.")
                     else:
                         st.session_state.data_source_id = "Uploaded Patient Data"
+                        
+                        # Target localized container (Prevents full-screen blackouts)
                         loader_placeholder = st.empty()
-                        with loader_placeholder:
+                        with loader_placeholder.container():
                             render_dna_helix_transition("Isolating Vesicles & Aligning Biomarkers...")
-                        time.sleep(2.6)
-                        loader_placeholder.empty()
+                            time.sleep(3.0) # Matches exactly one full cycle of the 3s animation
+                            
+                        loader_placeholder.empty() # Completely clears the container from the DOM
                         st.session_state.analyzed = True
                         st.rerun()
             else:
@@ -393,10 +369,12 @@ if not st.session_state.analyzed:
                 st.info(f"**Loaded Validation Dataset:** [{ds['id']}] — {ds['desc']}")
                 if st.button(f"🚀 Run Analysis on {ds['id']}", type="primary", use_container_width=True):
                     st.session_state.data_source_id = ds['id']
+                    
                     loader_placeholder = st.empty()
-                    with loader_placeholder:
-                        render_dna_helix_transition(f"Querying SRA {ds['id']} & Assembling Cargo...")
-                    time.sleep(2.6)
+                    with loader_placeholder.container():
+                        render_dna_helix_transition(f"Querying SRA {ds['id']} & Assembling Fragments...")
+                        time.sleep(3.0)
+                        
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
