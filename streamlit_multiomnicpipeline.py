@@ -97,9 +97,8 @@ def reset_app():
     st.session_state.analyzed = False
 
 # ==============================================================================
-# 4. INTERACTIVE UX (PLOTLY ENGINE) - Functions kept same as previous
+# 4. INTERACTIVE UX (PLOTLY ENGINE)
 # ==============================================================================
-# [Plotly functions for VAF, Volcano, Fragment Size, and Lollipop remain identical to maintain your logic]
 def generate_vaf_plot():
     vaf_mock = np.random.exponential(scale=0.01, size=100)
     vaf_mock = vaf_mock[vaf_mock < 0.1]
@@ -212,7 +211,7 @@ else:
     # --- MODULE 1: QUALITY & ALIGNMENT ---
     with tab1:
         st.markdown("### Step 1: Sequence Cleaning & Human Genome Matching")
-        st.info("💡 **Clinician Guide:** Before looking for mutations, the software cleans the raw data to remove biological noise (adapters, PCR duplicates) and aligns the patient's sequence perfectly to the standard human genome map to figure out where the DNA/RNA came from.")
+        st.info("Before looking for mutations, the software cleans the raw data to remove biological noise (adapters, PCR duplicates) and aligns the patient's sequence perfectly to the standard human genome map to figure out where the DNA/RNA came from.")
         
         c1, c2, c3 = st.columns(3)
         c1.metric("Adapter Trimming", "Complete", "Data Cleaned")
@@ -222,7 +221,7 @@ else:
     # --- MODULE 2: STRUCTURAL INTEGRITY ---
     with tab2:
         st.markdown("### Step 2: Biological Fingerprinting (Fragmentomics)")
-        st.info("💡 **Clinician Guide:** Tumor DNA circulating in the blood physically breaks down differently than healthy DNA. By measuring the length and the 'cut marks' on the DNA ends, we can mathematically confirm if the sample actually contains fragments shed by a tumor.")
+        st.info("Tumor DNA circulating in the blood physically breaks down differently than healthy DNA. By measuring the length and the 'cut marks' on the DNA ends, we can mathematically confirm if the sample actually contains fragments shed by a tumor.")
         
         fig_col1, fig_col2 = st.columns(2)
         with fig_col1:
@@ -247,7 +246,7 @@ else:
         st.markdown(f"### Step 3: Disease Driver Detection ({st.session_state.assay})")
         
         if st.session_state.assay == "cfDNA":
-            st.info("💡 **Clinician Guide:** Here we look for the actual 'spelling mistakes' (mutations) in the tumor's DNA. We also filter out mutations that naturally occur in healthy white blood cells as people age (CHIP mutations), ensuring we only flag true cancer drivers.")
+            st.info("Here we look for the actual 'spelling mistakes' (mutations) in the tumor's DNA. We also filter out mutations that naturally occur in healthy white blood cells as people age (CHIP mutations), ensuring we only flag true cancer drivers.")
             fig_col3, fig_col4 = st.columns(2)
             
             with fig_col3:
@@ -262,7 +261,7 @@ else:
                 pdf_figures["Somatic Mutation Map (Lollipop)"] = fig_lolli
 
         elif st.session_state.assay in ["mRNA", "miRNA", "siRNA"]:
-            st.info("💡 **Clinician Guide:** Instead of looking at DNA mutations, this step measures 'volume'. Are certain cancer-driving genes turned up too high (upregulated)? Or, for siRNA therapeutics, did the drug successfully silence the target gene without hitting healthy genes by mistake?")
+            st.info("Instead of looking at DNA mutations, this step measures 'volume'. Are certain cancer-driving genes turned up too high (upregulated)? Or, for siRNA therapeutics, did the drug successfully silence the target gene without hitting healthy genes by mistake?")
             fig_volcano = generate_volcano_plot(assay=st.session_state.assay)
             st.plotly_chart(fig_volcano, use_container_width=True)
             pdf_figures["Expression / Abundance Profile"] = fig_volcano
@@ -270,7 +269,7 @@ else:
     # --- MODULE 4: CLINICAL INTELLIGENCE ---
     with tab4:
         st.markdown("### Step 4: Clinical Translation & Actionability")
-        st.info("💡 **Clinician Guide:** We cross-reference the patient's specific molecular profile against live international clinical databases (like Ensembl and NCCN guidelines) to recommend targeted FDA-approved therapies.")
+        st.info("We cross-reference the patient's specific molecular profile against live international clinical databases (like Ensembl and NCCN guidelines) to recommend targeted FDA-approved therapies.")
         
         m_col1, m_col2, m_col3 = st.columns(3)
         m_col1.metric("Disease Risk / Signature Score", "94.2%", delta="High Priority")
