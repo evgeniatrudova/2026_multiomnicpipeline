@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # ==============================================================================
-# 1. PAGE CONFIGURATION & ANTI-TRANSPARENCY OVERRIDE
+# 1. PAGE CONFIGURATION & NUCLEAR ANTI-TRANSPARENCY OVERRIDE
 # ==============================================================================
 st.set_page_config(page_title="EV Cargo Diagnostics", page_icon="🔬", layout="wide")
 
@@ -183,12 +183,12 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 4. PASTEL BLUE-TO-CORAL GEOMETRIC ANIMATION COMPONENT
+# 4. RESTORED DNA -> RNA -> FRAGMENT CSS ANIMATION COMPONENT
 # ==============================================================================
 def render_dna_fragmentation_sequence():
     """
-    Renders a clean, UX-friendly pastel animation featuring a red-to-blue gradient ring
-    and organic gentle genetic fragments floating across the screen.
+    Renders a full-screen animation handling the transition from DNA -> RNA -> Fragments.
+    HTML is completely un-indented to prevent Streamlit from rendering it as a Markdown code block.
     """
     html_code = """<style>
 .biopsy-loader-wrapper {
@@ -202,128 +202,130 @@ align-items: center;
 justify-content: center;
 opacity: 1 !important;
 }
-
-.animation-canvas {
+.orbit-ring {
+position: absolute;
+width: 320px; height: 320px;
+border: 1px dashed rgba(255, 255, 255, 0.15);
+border-radius: 50%;
+animation: spinOrbit 12s linear infinite;
+}
+.orbit-ring:nth-child(2) { width: 420px; height: 150px; animation-direction: reverse; animation-duration: 18s; }
+.orbit-dot {
+position: absolute; width: 8px; height: 8px; background: #9ca3af; border-radius: 50%;
+top: -4px; left: 50%; transform: translateX(-50%);
+}
+.dna-geo-container {
 position: relative;
-width: 280px;
-height: 280px;
+width: 80px;
+height: 340px;
 display: flex;
+flex-direction: column;
 align-items: center;
-justify-content: center;
+justify-content: space-between;
 }
-
-/* Minimalist circular track with pastel red-to-blue gradient */
-.progress-ring {
+.central-axis {
 position: absolute;
-width: 210px;
-height: 210px;
-border-radius: 50%;
-border: 2.5px solid rgba(255, 255, 255, 0.04);
-background: conic-gradient(from 0deg, #ff9a9e 0%, #fbcfe8 50%, #a1c4fd 100%);
--webkit-mask: radial-gradient(farthest-side, transparent 86%, black 89%);
-mask: radial-gradient(farthest-side, transparent 86%, black 89%);
-animation: rotateRing 3.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+width: 1px;
+height: 100%;
+background: rgba(255,255,255, 0.1);
+z-index: 0;
 }
-
-@keyframes rotateRing {
-0% { transform: rotate(0deg); }
-100% { transform: rotate(360deg); }
+.rung-pair {
+position: relative;
+width: 100%;
+height: 18px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+transform-style: preserve-3d;
+z-index: 1;
 }
-
-/* Glowing pastel particle traversing the gradient ring from coral to sky blue */
-.gradient-particle {
+.backbone-left, .backbone-right {
+width: 4px;
+height: 18px;
+background: #3b82f6; 
+border-radius: 2px;
 position: absolute;
-width: 14px;
-height: 14px;
-background: radial-gradient(circle, #ffffff 0%, #a1c4fd 70%);
-border-radius: 50%;
-box-shadow: 0 0 18px #a1c4fd, 0 0 8px #ff9a9e;
-animation: particleTrajectory 3.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-z-index: 5;
 }
-
-@keyframes particleTrajectory {
-0% {
-    transform: rotate(0deg) translate(105px) rotate(0deg);
-    background: radial-gradient(circle, #fff 0%, #ff9a9e 70%);
-    box-shadow: 0 0 18px #ff9a9e;
+.backbone-right {
+background: #ef4444; 
+right: 0;
+animation: dissolveRight 3.5s forwards;
 }
-50% {
-    background: radial-gradient(circle, #fff 0%, #fbcfe8 70%);
-    box-shadow: 0 0 18px #fbcfe8;
-}
-100% {
-    transform: rotate(360deg) translate(105px) rotate(-360deg);
-    background: radial-gradient(circle, #fff 0%, #a1c4fd 70%);
-    box-shadow: 0 0 18px #a1c4fd;
-}
-}
-
-/* Gently floating organic genetic fragments in pastel tones */
-.organic-fragment {
+.base-bridge {
+width: 100%;
+height: 2px;
+background: linear-gradient(90deg, #3b82f6 50%, #ef4444 50%);
 position: absolute;
-background: linear-gradient(135deg, rgba(161, 196, 253, 0.5), rgba(255, 154, 158, 0.5));
-border-radius: 4px;
-opacity: 0;
-animation: floatGentle 3.6s ease-in-out infinite;
+top: 8px;
+animation: bridgeBreak 3.5s forwards;
 }
-
-.frag-1 { width: 22px; height: 5px; top: 32%; left: 22%; animation-delay: 0.1s; }
-.frag-2 { width: 16px; height: 5px; top: 68%; left: 68%; animation-delay: 0.4s; }
-.frag-3 { width: 28px; height: 5px; top: 38%; left: 72%; animation-delay: 0.2s; }
-.frag-4 { width: 18px; height: 5px; top: 62%; left: 28%; animation-delay: 0.5s; }
-
-@keyframes floatGentle {
-0% {
-    transform: translate(0, 0) rotate(0deg) scale(0.2);
-    opacity: 0;
+.rung-delay-0 { animation: helixSpin 2s linear infinite, shatter1 3.5s forwards; }
+.rung-delay-1 { animation: helixSpin 2s linear infinite 0.15s, shatter2 3.5s forwards; }
+.rung-delay-2 { animation: helixSpin 2s linear infinite 0.30s, shatter3 3.5s forwards; }
+.rung-delay-3 { animation: helixSpin 2s linear infinite 0.45s, shatter4 3.5s forwards; }
+.rung-delay-4 { animation: helixSpin 2s linear infinite 0.60s, shatter5 3.5s forwards; }
+.rung-delay-5 { animation: helixSpin 2s linear infinite 0.75s, shatter1 3.5s forwards; }
+.rung-delay-6 { animation: helixSpin 2s linear infinite 0.90s, shatter2 3.5s forwards; }
+.rung-delay-7 { animation: helixSpin 2s linear infinite 1.05s, shatter3 3.5s forwards; }
+.rung-delay-8 { animation: helixSpin 2s linear infinite 1.20s, shatter4 3.5s forwards; }
+.rung-delay-9 { animation: helixSpin 2s linear infinite 1.35s, shatter5 3.5s forwards; }
+.rung-delay-10 { animation: helixSpin 2s linear infinite 1.50s, shatter1 3.5s forwards; }
+.rung-delay-11 { animation: helixSpin 2s linear infinite 1.65s, shatter2 3.5s forwards; }
+@keyframes spinOrbit { 100% { transform: rotate(360deg); } }
+@keyframes helixSpin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
+@keyframes dissolveRight {
+0%, 30% { opacity: 1; }
+35%, 100% { opacity: 0; }
 }
-30% {
-    opacity: 0.7;
-    transform: translate(-12px, -15px) rotate(20deg) scale(1);
+@keyframes bridgeBreak {
+0%, 30% { background: linear-gradient(90deg, #3b82f6 50%, #ef4444 50%); width: 100%; opacity: 1; }
+35%, 100% { background: linear-gradient(90deg, #3b82f6 100%, transparent 0%); width: 45%; opacity: 0.8; }
 }
-70% {
-    opacity: 0.7;
-    transform: translate(15px, 18px) rotate(-15deg) scale(1);
-}
-100% {
-    transform: translate(0, 35px) rotate(35deg) scale(0.2);
-    opacity: 0;
-}
-}
-
-.status-label {
-margin-top: 35px;
+@keyframes shatter1 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(-50px, -60px) rotate(45deg); } }
+@keyframes shatter2 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(60px, -20px) rotate(-30deg); } }
+@keyframes shatter3 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(-40px, 50px) rotate(80deg); } }
+@keyframes shatter4 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(70px, 60px) rotate(-60deg); } }
+@keyframes shatter5 { 0%, 65% { opacity: 1; margin: 0; } 80%, 100% { opacity: 0; transform: translate(-15px, -80px) rotate(120deg); } }
+@keyframes wrapperFadeOut { to { opacity: 0; visibility: hidden; } }
+.status-text {
+margin-top: 50px;
 color: #9ca3af;
 font-family: monospace;
-font-size: 12px;
-letter-spacing: 2px;
+font-size: 14px;
+letter-spacing: 3px;
 text-transform: uppercase;
 }
-.status-label::after {
-content: "INITIALIZING (CORAL)";
-animation: textFlow 3.6s forwards;
+.status-text::after {
+content: "ASSEMBLING DNA";
+animation: textSwap 3.5s forwards;
 }
-
-@keyframes textFlow {
-0% { content: "SPECTRAL ALIGNMENT (CORAL)"; color: #ff9a9e; }
-50% { content: "PROCESSING CARGO (AMBER)"; color: #fbcfe8; }
-100% { content: "PIPELINE READY (PASTEL BLUE)"; color: #a1c4fd; }
+@keyframes textSwap {
+0%, 29% { content: "ASSEMBLING DNA"; color: #e5e7eb; }
+30%, 64% { content: "ISOLATING RNA"; color: #3b82f6; }
+65%, 100% { content: "EXTRACTING FRAGMENTS"; color: #9ca3af; }
 }
 </style>
-
 <div class="biopsy-loader-wrapper">
-    <div class="animation-canvas">
-        <div class="progress-ring"></div>
-        <div class="gradient-particle"></div>
-        <div class="organic-fragment frag-1"></div>
-        <div class="organic-fragment frag-2"></div>
-        <div class="organic-fragment frag-3"></div>
-        <div class="organic-fragment frag-4"></div>
-    </div>
-    <div class="status-label"></div>
+<div class="orbit-ring"><div class="orbit-dot"></div></div>
+<div class="orbit-ring" style="transform: rotate(45deg);"><div class="orbit-dot"></div></div>
+<div class="dna-geo-container">
+<div class="central-axis"></div>
+<div class="rung-pair rung-delay-0"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-1"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-2"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-3"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-4"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-5"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-6"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-7"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-8"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-9"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-10"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
+<div class="rung-pair rung-delay-11"><div class="backbone-left"></div><div class="base-bridge"></div><div class="backbone-right"></div></div>
 </div>
-"""
+<div class="status-text"></div>
+</div>"""
     st.markdown(html_code, unsafe_allow_html=True)
 
 # ==============================================================================
@@ -396,7 +398,7 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(3.6) # Perfectly syncs with the coral-to-blue gradient orbit
+                            time.sleep(3.6) 
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
@@ -408,7 +410,7 @@ if not st.session_state.analyzed:
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(3.6) # Perfectly syncs with the coral-to-blue gradient orbit
+                        time.sleep(3.6) 
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
@@ -456,7 +458,7 @@ if not st.session_state.analyzed:
             """)
 
 # ==============================================================================
-# 7. CLINICAL DASHBOARD UX
+# 7. CLINICAL DASHBOARD UX (DECOUPLED FOR ALL 4 ASSAYS)
 # ==============================================================================
 else:
     pdf_data_payload = {}
