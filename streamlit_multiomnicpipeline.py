@@ -301,14 +301,14 @@ letter-spacing: 2px;
 text-transform: uppercase;
 }
 .status-label::after {
-content: "INITIALIZING (CORAL)";
+content: "INITIALIZING. THIS MIGHT TAKE A MINUTE.";
 animation: textFlow 3.6s forwards;
 }
 
 @keyframes textFlow {
-0% { content: "SPECTRAL ALIGNMENT (CORAL)"; color: #ff9a9e; }
-50% { content: "PROCESSING CARGO (AMBER)"; color: #fbcfe8; }
-100% { content: "PIPELINE READY (PASTEL BLUE)"; color: #a1c4fd; }
+0% { content: "SPECTRAL ALIGNMENT RUNNING."; color: #ff9a9e; }
+50% { content: "PROCESSING CARGO."; color: #fbcfe8; }
+100% { content: "PIPELINE READY.ALMOST DONE."; color: #a1c4fd; }
 }
 </style>
 
