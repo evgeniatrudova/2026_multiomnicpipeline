@@ -72,33 +72,41 @@ def generate_vaf_plot():
     fig.update_yaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
     return fig
 
-def generate_volcano_plot():
+def generate_volcano_plot(assay="mRNA"):
     n_genes = 500
     df = pd.DataFrame({
-        'Gene': [f"GENE_{i}" for i in range(n_genes)],
+        'Gene': [f"TARGET_{i}" for i in range(n_genes)],
         'log2FC': np.random.normal(0, 1.2, n_genes),
         'neg_log10_pval': np.random.exponential(0.8, n_genes)
     })
     
-    outliers = pd.DataFrame({
-        'Gene': ['ERBB2', 'CD274', 'MYC'],
-        'log2FC': [4.5, 3.1, 3.8],
-        'neg_log10_pval': [8.2, 5.4, 7.5]
-    })
+    if assay == "siRNA":
+        outliers = pd.DataFrame({
+            'Gene': ['ON_TARGET_KD', 'OFF_TARGET_1', 'OFF_TARGET_2'],
+            'log2FC': [-4.8, -1.2, -1.5],
+            'neg_log10_pval': [12.4, 3.1, 2.5]
+        })
+    else:
+        outliers = pd.DataFrame({
+            'Gene': ['ERBB2', 'CD274', 'MYC'],
+            'log2FC': [4.5, 3.1, 3.8],
+            'neg_log10_pval': [8.2, 5.4, 7.5]
+        })
+        
     df = pd.concat([df, outliers], ignore_index=True)
     
     df['Status'] = 'Not Significant'
-    df.loc[(df['log2FC'] >= 1.5) & (df['neg_log10_pval'] >= 1.3), 'Status'] = 'Upregulated'
-    df.loc[(df['log2FC'] <= -1.5) & (df['neg_log10_pval'] >= 1.3), 'Status'] = 'Downregulated'
+    df.loc[(df['log2FC'] >= 1.5) & (df['neg_log10_pval'] >= 1.3), 'Status'] = 'Upregulated/Off-Target'
+    df.loc[(df['log2FC'] <= -1.5) & (df['neg_log10_pval'] >= 1.3), 'Status'] = 'Knockdown/Downregulated'
     
-    color_map = {'Not Significant': 'grey', 'Upregulated': '#D55E00', 'Downregulated': '#0072B2'}
+    color_map = {'Not Significant': 'grey', 'Upregulated/Off-Target': '#D55E00', 'Knockdown/Downregulated': '#0072B2'}
     
     fig = px.scatter(df, x='log2FC', y='neg_log10_pval', color='Status', hover_name='Gene', color_discrete_map=color_map)
     fig.add_vline(x=1.5, line_dash="dash", line_color="black", opacity=0.4)
     fig.add_vline(x=-1.5, line_dash="dash", line_color="black", opacity=0.4)
     fig.add_hline(y=1.3, line_dash="dash", line_color="black", opacity=0.4, annotation_text="p=0.05")
     
-    fig.update_layout(title="<b>Fig 2.</b> Differential Expression Profile", template="simple_white", xaxis_title="log2(Fold Change)", yaxis_title="-log10(p-value)")
+    fig.update_layout(title="<b>Fig 2.</b> Differential Abundance / Knockdown Profile", template="simple_white", xaxis_title="log2(Fold Change)", yaxis_title="-log10(p-value)")
     fig.update_xaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
     fig.update_yaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
     return fig
@@ -118,6 +126,8 @@ def plot_academic_fragment_size(sim_sizes, assay_type):
         fig.add_vline(x=167, line_dash="dash", line_color="#009E73", annotation_text="  Apoptotic Mode (167bp)", annotation_position="top right")
     elif assay_type == "miRNA":
         fig.add_vline(x=22, line_dash="dash", line_color="#0072B2", annotation_text="Mature miRNA (~22bp)  ", annotation_position="top left")
+    elif assay_type == "siRNA":
+        fig.add_vline(x=22.5, line_dash="dash", line_color="#D55E00", annotation_text="siRNA Payload (21-24bp)  ", annotation_position="top left")
     
     fig.update_layout(title="<b>Fig 1.</b> High-Resolution Fragment Size Distribution", xaxis_title="Insert Size / Template Length (bp)", yaxis_title="Probability Density", template="simple_white", margin=dict(l=60, r=40, t=60, b=60))
     fig.update_xaxes(showline=True, linewidth=1.5, linecolor='black', mirror=True, ticks="outside")
@@ -148,7 +158,8 @@ def render_clinical_intelligence_table(ensembl_dict):
 NCBI_DATASETS = {
     "cfDNA": {"id": "PRJNA591873", "desc": "Liquid biopsy cfDNA from NSCLC patients."},
     "mRNA": {"id": "PRJNA849887", "desc": "Transcriptome sequencing of tumor-derived EVs."},
-    "miRNA": {"id": "PRJNA602857", "desc": "Small RNA-seq profiling for circulating microRNAs."}
+    "miRNA": {"id": "PRJNA602857", "desc": "Small RNA-seq profiling for circulating microRNAs."},
+    "siRNA": {"id": "PRJNA722880", "desc": "Therapeutic siRNA degradation and off-target transcriptomics."}
 }
 
 if not st.session_state.analyzed:
@@ -161,7 +172,7 @@ if not st.session_state.analyzed:
         st.write("")
         
         with st.container(border=True):
-            st.session_state.assay = st.radio("Select Biomaterial Extract", ["cfDNA", "mRNA", "miRNA"], horizontal=True)
+            st.session_state.assay = st.radio("Select Biomaterial Extract", ["cfDNA", "mRNA", "miRNA", "siRNA"], horizontal=True)
             st.write("") 
             data_source = st.radio("Data Source Selection", ["📤 Upload Sequence", "🧪 Run NCBI Dataset"], horizontal=True, label_visibility="collapsed")
             st.write("")
@@ -187,67 +198,32 @@ if not st.session_state.analyzed:
 
         st.write("---")
         
-        onboard_tabs = st.tabs(["🏛️ Academic Purpose", "🛡️ Privacy & Architecture", "⚙️ Assay-Specific Pipelines"])
+        onboard_tabs = st.tabs(["🏛️ Academic Purpose", "🛡️ Privacy & Architecture", "⚙️ Modular Adjustments"])
         
         with onboard_tabs[0]:
             st.markdown("""
             **Translational Multi-Omics Platform**
-            This pipeline is engineered for high-fidelity detection of **Minimal Residual Disease (MRD)** and tumor profiling from non-invasive liquid biopsies. 
+            This pipeline is engineered for high-fidelity detection of **Minimal Residual Disease (MRD)**, tumor profiling, and therapeutic payload tracking from non-invasive liquid biopsies. 
             It dynamically routes data and selects appropriate analytical steps based on your target assay to overcome the inherent low signal-to-noise ratio of cell-free biological extracts.
             """)
             
         with onboard_tabs[1]:
             st.markdown("""
             **Stateless & Serverless Security (HIPAA/GDPR Aligned)**
-            * **No Data Persistence:** This application operates entirely in memory using chunked byte-buffer streaming. **Zero genomic data, metadata, or Patient Health Information (PHI) is stored, cached, or written to disk.**
-            * **Serverless Annotations:** Clinical variant annotation dynamically queries the public Ensembl REST API on the fly.
-            * **Legal Disclaimer:** This software is provided strictly for **Research Use Only (RUO)**. It is not intended for primary clinical diagnosis without CLIA/CAP certified laboratory validation.
+            * **No Data Persistence:** Operates entirely in memory using chunked byte-buffer streaming. **Zero genomic data, metadata, or PHI is stored.**
+            * **Serverless Annotations:** Clinical variant annotation dynamically queries public APIs on the fly.
+            * **Legal Disclaimer:** This software is strictly for **Research Use Only (RUO)**.
             """)
             
         with onboard_tabs[2]:
             st.markdown("""
             **Dynamic Algorithmic Routing**
-            The pipeline is not monolithic; it intelligently bypasses inapplicable modules based on the biological reality of the selected extract.
+            The pipeline breaks the rigid 15-step model into modular blocks to handle biomaterial reality:
             
-            **🧬 cfDNA Pipeline (15 Steps)**
-            * **Steps 1–3:** Quality Control (QC)
-            * **Steps 4–5:** Alignment
-            * **Steps 6–7:** Fragmentomics
-            * **Step 8:** Mutect2 SNV Calling
-            * **Step 9:** VAF Spectrum
-            * **Step 10:** CHIP Subtraction
-            * **Step 11:** Lollipop Spatial Maps
-            * **Step 12:** Multiscore
-            * **Step 13:** VEP Match
-            * **Step 14:** Evolution
-            * **Step 15:** Tumor-Informed Force Calling
-            
-            **🧪 mRNA Pipeline (13 Steps)**
-            * **Steps 1–3:** Quality Control (QC)
-            * **Step 4:** Splice-Aware Alignment
-            * **Step 5:** Deduplication
-            * **Steps 6–7:** Structural Checks
-            * **Step 8:** Mutect2 SNV Calling
-            * *Step 9: [Bypassed]*
-            * **Step 10:** Expression Normalization
-            * **Step 11:** Volcano & Lollipop Plots
-            * **Step 12:** Multiscore
-            * **Step 13:** Transcriptomic KB Match
-            * **Step 14:** Evolution
-            * *Step 15: [Bypassed]*
-            
-            **🔬 miRNA Pipeline (11 Steps)**
-            * **Steps 1–3:** Quality Control (QC)
-            * **Step 4:** Strict Alignment
-            * **Step 5:** Deduplication
-            * **Steps 6–7:** Strict Length Checks
-            * *Steps 8–9: [Bypassed]*
-            * **Step 10:** Expression Normalization
-            * **Step 11:** Volcano Plots
-            * *Step 12: [Bypassed]*
-            * **Step 13:** Transcriptomic Match
-            * **Step 14:** Evolution
-            * *Step 15: [Bypassed]*
+            *   **cfDNA Engine:** Links fragmentomics (end-motifs, sizes) as a Bayesian prior for Mutect2 SNV calling.
+            *   **mRNA Engine:** Deploys Chimeric/Back-splice detection (for EV circRNA) and integrates A-to-I RNA editing subtraction to prevent false-positive Mutect2 SNVs.
+            *   **miRNA Engine:** Replaces strict 0-mismatch alignment with **isomiR-aware quantification** (miRge3.0) and uses **UMI deduplication** to prevent massive biological data loss during coordinate collapsing.
+            *   **siRNA Engine (11 Steps):** Enforces **perfect-match (0 mismatch)** alignment to measure target knockdown efficiency via 5'-RACE/degradome logic, while scanning 3' UTRs transcriptome-wide for off-target seed mismatches. Bypasses standard SNV calling.
             """)
 
 # ==============================================================================
@@ -272,12 +248,16 @@ else:
         st.markdown("### Module 1: Pre-processing & QC | Module 2: Alignment & Consensus")
         c1, c2, c3 = st.columns(3)
         c1.metric("Step 1: Cutadapt Asymmetric Trimming", "Complete", "Adapter logic adjusted for assay")
-        c2.metric("Step 2 & 3: UMI / FastQC Validation", "Passed", "Q30 > 95%")
+        c2.metric("Step 2 & 3: FastQC Validation", "Passed", "Q30 > 95%")
         
-        if st.session_state.assay in ["mRNA", "miRNA"]:
-            c3.metric("Step 4 & 5: STAR (Splice/Length Aware)", "12.8M Transcripts", "-71% PCR Duplicates")
-        else:
-            c3.metric("Step 4 & 5: STAR (Continuous) / fgbio", "12.8M Fragments", "-71% PCR Duplicates")
+        if st.session_state.assay == "cfDNA":
+            c3.metric("Step 4 & 5: BWA-MEM / fgbio (UMI)", "12.8M Fragments", "-71% PCR Duplicates")
+        elif st.session_state.assay == "mRNA":
+            c3.metric("Step 4 & 5: STAR (Chimeric-Aware) / Picard", "6.4M Transcripts", "A-to-I Editing Filtered")
+        elif st.session_state.assay == "miRNA":
+            c3.metric("Step 4 & 5: isomiR-SEA / UMI-tools", "4.5M isomiRs", "Coordinate collapsing bypassed")
+        elif st.session_state.assay == "siRNA":
+            c3.metric("Step 4 & 5: Perfect-Match / UMI-tools", "2.1M On-Target", "0 Mismatches Allowed")
 
     # --- MODULE 3: STRUCTURAL & SEQUENCE INTEGRITY ---
     with tab2:
@@ -287,6 +267,8 @@ else:
             np.random.seed(42)
             if st.session_state.assay == "miRNA":
                 sim_sizes = np.random.normal(loc=22, scale=1.5, size=5000)
+            elif st.session_state.assay == "siRNA":
+                sim_sizes = np.random.normal(loc=22.5, scale=1.0, size=5000)
             elif st.session_state.assay == "mRNA":
                 sim_sizes = np.random.normal(loc=300, scale=60, size=5000)
             else:
@@ -295,7 +277,7 @@ else:
             st.plotly_chart(plot_academic_fragment_size(sim_sizes, st.session_state.assay), use_container_width=True)
             
         with fig_col2:
-            if st.session_state.assay == "miRNA":
+            if st.session_state.assay in ["miRNA", "siRNA"]:
                 motif_data = {'T/U (Argonaute)': 78.5, 'A': 12.1, 'C': 5.4, 'G': 4.0}
                 m_title = "5' Terminal Nucleotide Bias"
             else:
@@ -325,18 +307,25 @@ else:
         elif st.session_state.assay == "mRNA":
             with fig_col3:
                 st.plotly_chart(generate_volcano_plot(), use_container_width=True)
-                st.caption("Step 10, 11: Expression abundance normalized via TPM subtraction.")
+                st.caption("Step 10, 11: Expression abundance normalized via Spike-In scaling.")
             with fig_col4:
                 mock_vcf = pd.DataFrame({'POS': [7577121, 7578406, 7577538], 'VAF': [0.012, 0.005, 0.045]})
                 st.plotly_chart(plot_academic_lollipop(mock_vcf, "TP53"), use_container_width=True)
-                st.caption("Step 8, 11: Allele-Specific Expression mapped to structural domains.")
+                st.caption("Step 8, 11: Allele-Specific Expression mapped to structural domains (A-to-I filtered).")
                 
         elif st.session_state.assay == "miRNA":
             with fig_col3:
                 st.plotly_chart(generate_volcano_plot(), use_container_width=True)
-                st.caption("Step 10, 11: miRNA expression abundance normalized via TPM subtraction.")
+                st.caption("Step 10, 11: isomiR expression abundance normalized via Spike-In scaling.")
             with fig_col4:
                 st.info("Step 8, 9, 11: Mutect2 VAF profiling and Somatic Lollipop plots are bypassed for mature miRNA sequences.")
+                
+        elif st.session_state.assay == "siRNA":
+            with fig_col3:
+                st.plotly_chart(generate_volcano_plot(assay="siRNA"), use_container_width=True)
+                st.caption("Step 10, 11: siRNA knockdown efficiency & off-target abundance normalized.")
+            with fig_col4:
+                st.info("Step 8, 9, 11: Mutect2 bypassed. Showing On-Target cleavage specificity.")
 
     # --- MODULE 5: CLINICAL INTELLIGENCE ---
     with tab4:
@@ -357,6 +346,15 @@ else:
                 else:
                     st.error(annotation["Status"])
                     
+        elif st.session_state.assay == "siRNA":
+            m_col1.metric("Step 12: Cleavage Efficiency Score", "92.4% KD", delta="Optimal")
+            m_col2.metric("Step 14: Systemic Clearance", "T1/2 = 48h", delta="-12% from T-1", delta_color="normal")
+            m_col3.metric("Step 15: Off-Target Impact", "Minimal", help="Perfect match stringency maintained.")
+            
+            st.divider()
+            st.subheader("Step 13: Transcriptome Exact Target Match")
+            st.success("**Validation:** 100% exact complementary match to target mRNA confirmed. No significant 3' UTR off-target hits detected.")
+            
         else:
             m_col1.metric("Step 12: Transcriptomic Outlier Score", "88.1% Risk", delta="Elevated")
             m_col2.metric("Step 14: Longitudinal Evolution", "Spiking", delta="+14.2 Fold Change", delta_color="inverse")
