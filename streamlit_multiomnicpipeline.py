@@ -159,119 +159,178 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
-# 3. CUSTOM FRAGMENT ANIMATION COMPONENT
+# 3. DNA -> RNA -> FRAGMENT CSS ANIMATION COMPONENT
 # ==============================================================================
-def render_dna_helix_transition(message: str = "Analyzing Sequence..."):
+def render_dna_fragmentation_sequence():
     """
-    Renders an inline, non-blocking CSS animation.
-    Two single strands scale inward, form a glowing double-strand, and dissolve.
+    Renders a full-screen, geometric animation inspired by the user's reference image.
+    Overrides Streamlit's grey-out behavior globally.
     """
+    rungs_html = "".join([f'<div class="rung-pair rung-delay-{i}"> <div class="backbone-left"></div> <div class="base-bridge"></div> <div class="backbone-right"></div> </div>' for i in range(12)])
+    
     html_code = f"""
     <style>
-    /* Suppress Streamlit's default grayed-out overlay globally */
-    div[data-testid="stAppViewContainer"] [data-stale="true"] {{
+    /* Force Streamlit to stay 100% visible while loading */
+    [data-testid="stAppViewContainer"] [data-stale="true"], 
+    [data-testid="stAppViewContainer"] [data-stale="true"] * {{
         opacity: 1 !important;
         filter: none !important;
         transition: none !important;
     }}
 
-    .fragment-loader-card {{
+    .biopsy-loader-wrapper {{
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background-color: #0b0f19;
+        z-index: 9999999;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 3rem;
-        margin: 2rem auto;
-        max-width: 400px;
-        background: #111827;
-        border: 1px solid #1f2937;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        /* The entire wrapper fades out perfectly in sync with time.sleep(3.8) */
+        animation: wrapperFadeOut 0.4s ease-out 3.4s forwards;
     }}
 
-    .strand-container {{
+    /* Geometric background orbits */
+    .orbit-ring {{
+        position: absolute;
+        width: 320px; height: 320px;
+        border: 1px dashed rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        animation: spinOrbit 12s linear infinite;
+    }}
+    .orbit-ring:nth-child(2) {{ width: 420px; height: 150px; animation-direction: reverse; animation-duration: 18s; }}
+    .orbit-dot {{
+        position: absolute; width: 8px; height: 8px; background: #9ca3af; border-radius: 50%;
+        top: -4px; left: 50%; transform: translateX(-50%);
+    }}
+
+    /* DNA Container */
+    .dna-geo-container {{
         position: relative;
-        width: 180px;
-        height: 80px;
-        margin-bottom: 24px;
+        width: 80px;
+        height: 340px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
     }}
 
-    .strand-line {{
+    .central-axis {{
         position: absolute;
+        width: 1px;
+        height: 100%;
+        background: rgba(255,255,255, 0.1);
+        z-index: 0;
+    }}
+
+    .rung-pair {{
+        position: relative;
         width: 100%;
-        height: 3px;
+        height: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transform-style: preserve-3d;
+        z-index: 1;
+    }}
+
+    .backbone-left, .backbone-right {{
+        width: 4px;
+        height: 18px;
+        background: #3b82f6; /* Blue for left */
         border-radius: 2px;
-        background: linear-gradient(90deg, transparent, #3b82f6, transparent);
-        opacity: 0;
-        animation: strandMerge 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }}
-
-    .strand-line.bottom {{
-        background: linear-gradient(90deg, transparent, #ef4444, transparent);
-        animation: strandMergeBottom 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }}
-
-    .bonds {{
         position: absolute;
-        top: 50%;
-        left: 20%;
-        right: 20%;
-        height: 24px;
-        transform: translateY(-50%);
-        background-image: linear-gradient(90deg, rgba(255,255,255,0.3) 2px, transparent 2px);
-        background-size: 16px 100%;
-        opacity: 0;
-        animation: bondGlow 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }}
+    .backbone-right {{
+        background: #ef4444; /* Red for right */
+        right: 0;
+        /* Right side dissolves at ~35% (forming RNA) */
+        animation: dissolveRight 3.5s forwards;
     }}
 
-    /* Top strand swoops down into the center */
-    @keyframes strandMerge {{
-        0% {{ top: 0px; transform: scaleX(0.3); opacity: 0; }}
-        20% {{ opacity: 0.8; }}
-        50% {{ top: 28px; transform: scaleX(1); opacity: 1; box-shadow: 0 0 12px #3b82f6; }}
-        80% {{ opacity: 0.8; }}
-        100% {{ top: 80px; transform: scaleX(0.2); opacity: 0; }}
+    .base-bridge {{
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, #3b82f6 50%, #ef4444 50%);
+        position: absolute;
+        top: 8px;
+        animation: bridgeBreak 3.5s forwards;
     }}
 
-    /* Bottom strand swoops up into the center */
-    @keyframes strandMergeBottom {{
-        0% {{ bottom: 0px; transform: scaleX(0.3); opacity: 0; }}
-        20% {{ opacity: 0.8; }}
-        50% {{ bottom: 28px; transform: scaleX(1); opacity: 1; box-shadow: 0 0 12px #ef4444; }}
-        80% {{ opacity: 0.8; }}
-        100% {{ bottom: 80px; transform: scaleX(0.2); opacity: 0; }}
+    /* Helix spin & shatter delays */
+    .rung-delay-0 {{ animation: helixSpin 2s linear infinite, shatter1 3.5s forwards; }}
+    .rung-delay-1 {{ animation: helixSpin 2s linear infinite 0.15s, shatter2 3.5s forwards; }}
+    .rung-delay-2 {{ animation: helixSpin 2s linear infinite 0.30s, shatter3 3.5s forwards; }}
+    .rung-delay-3 {{ animation: helixSpin 2s linear infinite 0.45s, shatter4 3.5s forwards; }}
+    .rung-delay-4 {{ animation: helixSpin 2s linear infinite 0.60s, shatter5 3.5s forwards; }}
+    .rung-delay-5 {{ animation: helixSpin 2s linear infinite 0.75s, shatter1 3.5s forwards; }}
+    .rung-delay-6 {{ animation: helixSpin 2s linear infinite 0.90s, shatter2 3.5s forwards; }}
+    .rung-delay-7 {{ animation: helixSpin 2s linear infinite 1.05s, shatter3 3.5s forwards; }}
+    .rung-delay-8 {{ animation: helixSpin 2s linear infinite 1.20s, shatter4 3.5s forwards; }}
+    .rung-delay-9 {{ animation: helixSpin 2s linear infinite 1.35s, shatter5 3.5s forwards; }}
+    .rung-delay-10 {{ animation: helixSpin 2s linear infinite 1.50s, shatter1 3.5s forwards; }}
+    .rung-delay-11 {{ animation: helixSpin 2s linear infinite 1.65s, shatter2 3.5s forwards; }}
+
+    @keyframes spinOrbit {{ 100% {{ transform: rotate(360deg); }} }}
+
+    @keyframes helixSpin {{
+        0% {{ transform: rotateY(0deg); }}
+        100% {{ transform: rotateY(360deg); }}
     }}
 
-    /* Rungs materialize only when strands are aligned in the center */
-    @keyframes bondGlow {{
-        0%, 35% {{ opacity: 0; }}
-        50% {{ opacity: 1; }}
-        65%, 100% {{ opacity: 0; }}
+    /* Dissolve right backbone (DNA -> RNA transition) */
+    @keyframes dissolveRight {{
+        0%, 30% {{ opacity: 1; }}
+        35%, 100% {{ opacity: 0; }}
     }}
 
-    .loading-text {{
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        font-size: 14px;
-        font-weight: 500;
-        letter-spacing: 0.08em;
+    /* Break the bridge (DNA -> RNA transition) */
+    @keyframes bridgeBreak {{
+        0%, 30% {{ background: linear-gradient(90deg, #3b82f6 50%, #ef4444 50%); width: 100%; opacity: 1; }}
+        35%, 100% {{ background: linear-gradient(90deg, #3b82f6 100%, transparent 0%); width: 45%; opacity: 0.8; }}
+    }}
+
+    /* Shatter animations (RNA -> Fragments transition) */
+    @keyframes shatter1 {{ 0%, 65% {{ opacity: 1; margin: 0; }} 80%, 100% {{ opacity: 0; transform: translate(-50px, -60px) rotate(45deg); }} }}
+    @keyframes shatter2 {{ 0%, 65% {{ opacity: 1; margin: 0; }} 80%, 100% {{ opacity: 0; transform: translate(60px, -20px) rotate(-30deg); }} }}
+    @keyframes shatter3 {{ 0%, 65% {{ opacity: 1; margin: 0; }} 80%, 100% {{ opacity: 0; transform: translate(-40px, 50px) rotate(80deg); }} }}
+    @keyframes shatter4 {{ 0%, 65% {{ opacity: 1; margin: 0; }} 80%, 100% {{ opacity: 0; transform: translate(70px, 60px) rotate(-60deg); }} }}
+    @keyframes shatter5 {{ 0%, 65% {{ opacity: 1; margin: 0; }} 80%, 100% {{ opacity: 0; transform: translate(-15px, -80px) rotate(120deg); }} }}
+
+    @keyframes wrapperFadeOut {{
+        to {{ opacity: 0; visibility: hidden; }}
+    }}
+
+    .status-text {{
+        margin-top: 50px;
         color: #9ca3af;
+        font-family: monospace;
+        font-size: 14px;
+        letter-spacing: 3px;
         text-transform: uppercase;
-        animation: pulseText 1.5s infinite alternate;
     }}
-
-    @keyframes pulseText {{
-        from {{ opacity: 0.5; }}
-        to {{ opacity: 1; }}
+    .status-text::after {{
+        content: "ASSEMBLING DNA";
+        animation: textSwap 3.5s forwards;
+    }}
+    @keyframes textSwap {{
+        0%, 29% {{ content: "ASSEMBLING DNA"; color: #e5e7eb; }}
+        30%, 64% {{ content: "ISOLATING RNA"; color: #3b82f6; }}
+        65%, 100% {{ content: "EXTRACTING FRAGMENTS"; color: #9ca3af; }}
     }}
     </style>
-
-    <div class="fragment-loader-card">
-        <div class="strand-container">
-            <div class="bonds"></div>
-            <div class="strand-line"></div>
-            <div class="strand-line bottom"></div>
+    
+    <div class="biopsy-loader-wrapper">
+        <div class="orbit-ring"><div class="orbit-dot"></div></div>
+        <div class="orbit-ring" style="transform: rotate(45deg);"><div class="orbit-dot"></div></div>
+        
+        <div class="dna-geo-container">
+            <div class="central-axis"></div>
+            {rungs_html}
         </div>
-        <div class="loading-text">{message}</div>
+        
+        <div class="status-text"></div>
     </div>
     """
     return st.markdown(html_code, unsafe_allow_html=True)
@@ -355,13 +414,12 @@ if not st.session_state.analyzed:
                     else:
                         st.session_state.data_source_id = "Uploaded Patient Data"
                         
-                        # Target localized container (Prevents full-screen blackouts)
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
-                            render_dna_helix_transition("Isolating Vesicles & Aligning Biomarkers...")
-                            time.sleep(3.0) # Matches exactly one full cycle of the 3s animation
+                            render_dna_fragmentation_sequence()
+                            time.sleep(3.8) # Syncs perfectly with CSS animation timeline
                             
-                        loader_placeholder.empty() # Completely clears the container from the DOM
+                        loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
             else:
@@ -372,8 +430,8 @@ if not st.session_state.analyzed:
                     
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
-                        render_dna_helix_transition(f"Querying SRA {ds['id']} & Assembling Fragments...")
-                        time.sleep(3.0)
+                        render_dna_fragmentation_sequence()
+                        time.sleep(3.8) # Syncs perfectly with CSS animation timeline
                         
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
