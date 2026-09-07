@@ -1,5 +1,5 @@
-pandas
-numpy
+fpdf
+kaleido
 plotly
-requests
-scipy
+pandas
+streamlit
