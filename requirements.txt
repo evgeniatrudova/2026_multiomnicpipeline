@@ -1,5 +1,8 @@
-fpdf
-kaleido
-plotly
-pandas
 streamlit
+pandas
+numpy
+plotly
+requests
+scipy
+fpdf
+kaleido==0.2.1
