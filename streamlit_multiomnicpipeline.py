@@ -14,21 +14,30 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # ==============================================================================
-# 1. PAGE CONFIGURATION & ANTI-TRANSPARENCY STATE ENGINE
+# 1. PAGE CONFIGURATION & AGGRESSIVE ANTI-TRANSPARENCY OVERRIDE
 # ==============================================================================
 st.set_page_config(page_title="EV Cargo Diagnostics", page_icon="🔬", layout="wide")
 
-# Inject global CSS to completely disable Streamlit's transparent stale overlay
-# The wildcard ensures even nested obscured containers stay at 100% opacity
+# Shrinks default loading indicators to 0px and forces absolute opacity on root containers
 st.markdown("""
 <style>
-*[data-stale="true"] {
+/* Hide the default top-right "Running..." status widget entirely */
+[data-testid="stStatusWidget"] {
+    visibility: hidden !important;
+    width: 0px !important;
+    height: 0px !important;
+    opacity: 0 !important;
+    display: none !important;
+}
+
+/* Force absolute opacity on all stale elements and their parent containers */
+.stApp [data-stale="true"], 
+.stApp [data-stale="true"] *,
+div[data-testid="stAppViewBlockContainer"],
+div[data-testid="stAppViewContainer"] {
     opacity: 1 !important;
     filter: none !important;
     transition: none !important;
-}
-.stSpinner {
-    display: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -44,7 +53,7 @@ def reset_app():
     st.session_state.analyzed = False
 
 # ==============================================================================
-# 2. API MANAGEMENT & EXTERNAL INTEGRATIONS (WITH FALLBACK)
+# 2. API MANAGEMENT & EXTERNAL INTEGRATIONS
 # ==============================================================================
 ENSEMBL_REST_SERVER = "https://rest.ensembl.org"
 ENSEMBL_VEP_ENDPOINT = "/vep/human/hgvs/{variant_hgvs}"
@@ -54,7 +63,6 @@ API_HEADERS = {"Content-Type": "application/json"}
 def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
     url = f"{ENSEMBL_REST_SERVER}{ENSEMBL_VEP_ENDPOINT.format(variant_hgvs=variant_hgvs)}"
     try:
-        # Increased timeout to handle Ensembl server load
         response = requests.get(url, headers=API_HEADERS, timeout=15)
         if response.ok:
             data = response.json()[0]
@@ -67,7 +75,6 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
             }
         return {"Status": "Variant not found in current build."}
     except requests.exceptions.Timeout:
-        # Graceful fallback if the external API times out (prevents UI crash)
         return {
             "Assembly": "GRCh38",
             "Consequence": "Missense Variant (Offline Fallback)",
@@ -78,7 +85,7 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
         return {"Status": f"API Connection Error: {str(e)}"}
 
 # ==============================================================================
-# 3. ACADEMIC PDF GENERATOR ENGINE (Pure Python, No Browser Dependency)
+# 3. ACADEMIC PDF GENERATOR ENGINE
 # ==============================================================================
 def apply_academic_style():
     plt.style.use('default')
@@ -201,6 +208,7 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
 def render_dna_fragmentation_sequence():
     """
     Renders a full-screen animation handling the transition from DNA -> RNA -> Fragments.
+    HTML is completely un-indented to prevent Streamlit from rendering it as a Markdown code block.
     """
     html_code = """<style>
 .biopsy-loader-wrapper {
