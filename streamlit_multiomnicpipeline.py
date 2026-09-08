@@ -313,7 +313,7 @@ position: absolute;
 width: 260px;
 height: 260px;
 border-radius: 50%;
-animation: orbitSpin 17.5s linear 2;
+animation: orbitSpin 17.5s linear infinite;
 z-index: 10;
 }
 .blue-ball {
@@ -382,7 +382,7 @@ height: 1.5px;
 background: #a1c4fd;
 border-radius: 2px;
 opacity: 0;
-animation: fragmentFloat 17.5s ease-in-out 2;
+animation: fragmentFloat 17.5s ease-in-out infinite;
 }
 .frag-1 { top: 20%; left: 30%; animation-delay: 2s; background: #ff9a9e; }
 .frag-2 { top: 60%; right: 20%; animation-delay: 5s; }
@@ -453,7 +453,7 @@ animation: pulseText 3s ease-in-out infinite;
 </div>
 <div class="ux-status-container">
 <div class="ux-status-title">Executing Deep Multi-Omics Pipeline</div>
-<div class="ux-status-subtitle">Pipeline run time is around 30-60 seconds...</div>
+<div class="ux-status-subtitle">Pipeline run time is around 45-60 seconds...</div>
 </div>
 </div>"""
     st.markdown(html_code, unsafe_allow_html=True)
@@ -557,8 +557,7 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(35.0) 
-                        loader_placeholder.empty() 
+                            time.sleep(45.0) 
                         st.session_state.analyzed = True
                         st.rerun()
             else:
@@ -569,8 +568,7 @@ if not st.session_state.analyzed:
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(35.0) 
-                    loader_placeholder.empty()
+                        time.sleep(45.0) 
                     st.session_state.analyzed = True
                     st.rerun()
 
