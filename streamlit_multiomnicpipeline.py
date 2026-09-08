@@ -439,17 +439,17 @@ if not st.session_state.analyzed:
     _, col_center, _ = st.columns([1, 3, 1]) 
     with col_center:
         st.write("") 
-        st.markdown("<h1 style='text-align: center;'>🧬 Clinical Liquid Biopsy Platform</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center;'>Clinical Liquid Biopsy Platform</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: gray;'>Translate raw patient sequencing data into actionable clinical intelligence.</p>", unsafe_allow_html=True)
         st.write("")
         
         with st.container(border=True):
             st.session_state.assay = st.radio("Select Target Biomarker Type", ["cfDNA", "mRNA", "miRNA", "siRNA"], horizontal=True)
-            data_source = st.radio("Data Source Selection", ["📤 Upload Patient Sequence", "🧪 Run NCBI Validation Cohort"], horizontal=True, label_visibility="collapsed")
+            data_source = st.radio("Data Source Selection", ["Upload Sequence", "Run NCBI dataset"], horizontal=True, label_visibility="collapsed")
             
-            if data_source == "📤 Upload Patient Sequence":
+            if data_source == "Upload Patient Sequence":
                 uploaded_files = st.file_uploader(f"Securely upload {st.session_state.assay} FASTQ streams", accept_multiple_files=True)
-                if st.button("🚀 Process Patient Data", type="primary", use_container_width=True):
+                if st.button("Process Patient Data", type="primary", use_container_width=True):
                     if not uploaded_files:
                         st.warning("Please upload a file to begin.")
                     else:
@@ -464,7 +464,7 @@ if not st.session_state.analyzed:
             else:
                 ds = NCBI_DATASETS[st.session_state.assay]
                 st.info(f"**Loaded Validation Dataset:** [{ds['id']}] — {ds['desc']}")
-                if st.button(f"🚀 Run Analysis on {ds['id']}", type="primary", use_container_width=True):
+                if st.button(f"Run Analysis on {ds['id']}", type="primary", use_container_width=True):
                     st.session_state.data_source_id = ds['id']
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
@@ -476,7 +476,7 @@ if not st.session_state.analyzed:
 
         st.write("---")
         
-        onboard_tabs = st.tabs(["🏛️ Academic Purpose", "🛡️ Privacy & Architecture", "⚙️ Modular Adjustments (Algorithm Spec)"])
+        onboard_tabs = st.tabs(["Academic Purpose", "Privacy & Architecture", "Pipeline Algorithm"])
         
         with onboard_tabs[0]:
             st.markdown("""
@@ -499,19 +499,19 @@ if not st.session_state.analyzed:
             
             The pipeline breaks the rigid 15-step generic model, deploying assay-specific bioinformatic algorithms tailored to the physical constraints of the target genetic material.
 
-            ### 🧬 cfDNA Engine
+            ###  cfDNA
             *   **Alignment & Consensus Calling:** `BWA-MEM` + `fgbio` (for UMI deduplication). Retains intact double-stranded paired-end read topologies. UMI-aware consensus calling is mathematically required to suppress sequencing error rates for ultra-low VAF (<0.1%).
             *   **Somatic Variant Analytics:** `GATK Mutect2` + Matched Buffy Coat Subtraction. Pipeline robustness mandates a matched leukocyte subtraction to prevent massive false-positive oncogene calling originating from CHIP.
 
-            ### 🧪 EV-mRNA Engine
+            ###  mRNA 
             *   **Alignment & Integrity:** `STAR` (Chimeric-aware mode). Splice-tolerant mapping required to capture fragmented, back-spliced, and 3' UTR enriched EV reads that standard poly-A aligners erroneously discard.
             *   **Somatic Noise Filtration:** `REDItools` / `REDIportal` cross-referencing for A-to-I RNA editing subtraction to prevent ADAR-mediated hyper-mutated transcripts from triggering false-positive tumor somatic calls.
 
-            ### 🔬 miRNA Engine
+            ###  miRNA 
             *   **Alignment Strategy:** `miRge3.0` or `isomiR-SEA`. Probabilistic multi-mapping captures biologically active 5'/3' trimmed variants and non-templated adenylation/uridylation, distinguishing true EV cargo from Argonaute-bound contaminants.
             *   **Deduplication Constraint:** `UMI-tools`. Coordinate-based deduplication is mathematically fatal for 22nt small RNAs. UMI tracking is strictly enforced to prevent catastrophic biological data loss.
             
-            ### 💊 siRNA Engine
+            ###  siRNA 
             *   **Alignment Stringency:** `Bowtie` (configured for `-v 0` exact matching) ensures perfect-match alignment to track synthetic therapeutic payloads accurately without mapping noise against the endogenous transcriptome.
             *   **Off-Target Analytics:** Validates exact 5'-cleavage at the intended target mRNA locus, whilst executing a transcriptome-wide scan of 3' UTRs for heuristic heptamer seed-matches to quantify RNAi toxicity.
             """)
