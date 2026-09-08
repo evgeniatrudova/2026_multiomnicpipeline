@@ -191,209 +191,342 @@ BIOMARKER_FASTA_DATA = {
 def show_pipeline_dialog():
     st.markdown("""
     <style>
-        .ux-table {
+        .table-container {
             width: 100%;
-            border-collapse: collapse;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 13px;
+            overflow-x: auto;
             margin-top: 15px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 6px;
+        }
+        .ux-table {
+            width: 100%;
+            min-width: 1200px;
+            border-collapse: collapse;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 12px;
         }
         .ux-table th {
             background-color: #f1f5f9;
-            color: #1e293b;
+            color: #0f172a;
             text-align: left;
-            padding: 10px 12px;
+            padding: 12px;
             border: 1px solid #cbd5e1;
             font-weight: 700;
             text-transform: uppercase;
             font-size: 11px;
             letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         .ux-table td {
-            padding: 12px;
+            padding: 10px 12px;
             border: 1px solid #e2e8f0;
-            vertical-align: middle;
+            vertical-align: top;
             color: #334155;
             background-color: #ffffff;
         }
-        .ux-table tr:nth-child(even) td {
+        .ux-table tr:hover td {
             background-color: #f8fafc;
         }
         .step-col {
-            font-weight: bold;
+            font-weight: 800;
             color: #0f172a;
+            width: 4%;
             text-align: center;
-            width: 5%;
         }
         .phase-col {
-            font-weight: 600;
-            color: #3b82f6;
-            width: 12%;
-        }
-        .tool-col {
-            font-family: monospace;
-            font-weight: bold;
-            color: #b91c1c;
             width: 15%;
         }
-        .app-col {
-            font-weight: 500;
-            width: 20%;
+        .phase-title {
+            font-weight: 700;
+            color: #2563eb;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 13px;
+        }
+        .phase-tool {
+            font-family: monospace;
+            color: #b91c1c;
+            font-weight: 600;
+            font-size: 11.5px;
         }
         .rationale-col {
-            font-size: 12px;
-            line-height: 1.5;
-            width: 33%;
+            width: 25%;
+            font-style: italic;
+            line-height: 1.4;
         }
-        .biomarker-col {
-            font-size: 11px;
-            font-weight: bold;
-            color: #475569;
-            width: 15%;
+        .bm-col {
+            width: 8%;
+            text-align: center !important;
+            vertical-align: middle !important;
         }
+        .bm-cell {
+            text-align: center;
+            font-weight: 600;
+        }
+        .check-yes { color: #16a34a; font-size: 14px; }
+        .check-no { color: #94a3b8; font-weight: normal; font-size: 11px; }
         .sanity-row td {
-            background-color: #fef9c3 !important; /* light yellow for sanity checks */
+            background-color: #fffbeb !important; /* Soft yellow for sanity checks */
+            border-top: 2px solid #fde047;
+            border-bottom: 2px solid #fde047;
+        }
+        .spec-text {
+            color: #4338ca;
+            font-weight: 700;
+            font-size: 11px;
         }
     </style>
     
-    <h3 style="font-family: Arial, sans-serif; color: #1e293b; margin-bottom: 5px;">Detailed Multi-Omics Pipeline Step-by-Step Execution</h3>
-    <p style="font-family: Arial, sans-serif; color: #475569; font-size: 14px; margin-bottom: 15px;">A granular breakdown of every sequential computational step, critical algorithms applied, and the underlying bioinformatic rationale. Universal steps are marked as Pan-Omics, while divergent structural steps specify their respective biomarkers.</p>
+    <h3 style="font-family: Arial, sans-serif; color: #1e293b; margin-bottom: 5px;">Comprehensive Matrix of Pipeline Execution & Biomarker Routing</h3>
+    <p style="font-family: Arial, sans-serif; color: #475569; font-size: 14px; margin-bottom: 5px;">A unified view of every sequential computational step across all 7 supported molecular biomarkers. Read vertically for the pipeline chronological execution, and horizontally to compare specific tools and routing logic.</p>
 
-    <table class="ux-table">
-        <thead>
-            <tr>
-                <th>Step</th>
-                <th>Phase</th>
-                <th>Critical Tool(s)</th>
-                <th>Bioinformatic Application</th>
-                <th>Computational Rationale & "The Why"</th>
-                <th>Biomarker Specificity</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="step-col">1</td>
-                <td class="phase-col">Trimming</td>
-                <td class="tool-col">Cutadapt / fastp</td>
-                <td class="app-col">Adapter & Quality Removal</td>
-                <td class="rationale-col">Eliminates "read-through" noise in short circulating fragments (e.g., <150bp DNA, <30nt miRNAs) and drops low-quality reads (Q<30) to prevent false mapping.</td>
-                <td class="biomarker-col">Pan-Omics</td>
-            </tr>
-            <tr>
-                <td class="step-col">2</td>
-                <td class="phase-col">Barcoding</td>
-                <td class="tool-col">zUMIs / UMI-tools</td>
-                <td class="app-col">UMI & Barcode Extraction</td>
-                <td class="rationale-col">Extracts Unique Molecular Identifiers (UMIs) and links them to specific reads. Crucial for establishing absolute molecular counting and overcoming amplification bias in low-input EV cargo.</td>
-                <td class="biomarker-col">Pan-Omics</td>
-            </tr>
-            <tr>
-                <td class="step-col">2B</td>
-                <td class="phase-col">Pre-Treatment</td>
-                <td class="tool-col">AlkB Demethylase</td>
-                <td class="app-col">Epitranscriptomic Rescue</td>
-                <td class="rationale-col">Biochemical reversal of heavily modified bases (m1A, m3C) that naturally cause Reverse Transcriptase (RT) stalling/dropout, recovering previously invisible structural fragments.</td>
-                <td class="biomarker-col">tRNA, rRNA</td>
-            </tr>
-            <tr class="sanity-row">
-                <td class="step-col">S1</td>
-                <td class="phase-col">Sanity 1</td>
-                <td class="tool-col">FastQC / MultiQC</td>
-                <td class="app-col">Library Complexity Check</td>
-                <td class="rationale-col"><strong>Visualisation:</strong> GC-content & Duplication plots. Ensures library isn't "over-amplified", confirms total adapter clearance, and validates spike-in presence prior to heavy computation.</td>
-                <td class="biomarker-col">Pan-Omics</td>
-            </tr>
-            <tr>
-                <td class="step-col">3</td>
-                <td class="phase-col">Alignment</td>
-                <td class="tool-col">BWA-MEM / STAR / Bowtie2</td>
-                <td class="app-col">Primary Genomic Mapping</td>
-                <td class="rationale-col">Maps reads to GRCh38. BWA handles fragmented DNA, STAR bridges exonic splice junctions for EV-mRNA, and strict 0-mismatch Bowtie evaluates perfect siRNA complementation.</td>
-                <td class="biomarker-col">cfDNA, mRNA, siRNA</td>
-            </tr>
-            <tr>
-                <td class="step-col">3B</td>
-                <td class="phase-col">Resolution</td>
-                <td class="tool-col">MINTmap / SILVA DB</td>
-                <td class="app-col">Multi-Mapper EM Rescue</td>
-                <td class="rationale-col">Resolves highly conserved paralogous regions where short RNA reads map to hundreds of loci. Uses Expectation-Maximization (EM) fractional allocation to assign reads to likely origins.</td>
-                <td class="biomarker-col">tRNA, rRNA, vaultRNA</td>
-            </tr>
-            <tr>
-                <td class="step-col">4</td>
-                <td class="phase-col">Consensus</td>
-                <td class="tool-col">fgbio / Picard</td>
-                <td class="app-col">Molecular Deduplication</td>
-                <td class="rationale-col">Collapses read families sharing identical UMIs and alignment coordinates into single consensus reads. Eradicates stochastic PCR errors and sequencing machine artifacts.</td>
-                <td class="biomarker-col">Pan-Omics</td>
-            </tr>
-            <tr class="sanity-row">
-                <td class="step-col">S2</td>
-                <td class="phase-col">Sanity 2</td>
-                <td class="tool-col">SAMtools / cfDNAPro</td>
-                <td class="app-col">Structural Integrity Check</td>
-                <td class="rationale-col"><strong>Visualisation:</strong> Insert Size Distribution. Confirms the tumor "short-fragment" (145bp) peak exists for DNA, or validates mature (22nt) vs precursor structural peaks for EV-RNAs.</td>
-                <td class="biomarker-col">cfDNA, miRNA, siRNA</td>
-            </tr>
-            <tr>
-                <td class="step-col">5</td>
-                <td class="phase-col">Fragmentomics</td>
-                <td class="tool-col">Custom R/Python (Biostrings)</td>
-                <td class="app-col">End-Motif Profiling</td>
-                <td class="rationale-col">Analyzes physical cleavage coordinates and 4-mer terminal motifs. Uses biological structure (e.g., nucleosomal footprinting, Argonaute cleavage) as an orthogonal non-mutational signal.</td>
-                <td class="biomarker-col">cfDNA, tRNA, rRNA</td>
-            </tr>
-            <tr>
-                <td class="step-col">6</td>
-                <td class="phase-col">Calling</td>
-                <td class="tool-col">Mutect2 / featureCounts</td>
-                <td class="app-col">Variant & Target Detection</td>
-                <td class="rationale-col">Bayesian probabilistic identification of ultra-low VAF (<0.1%) somatic mutations (Mutect2), or exact quantitative counting of transcriptomic elements against background (featureCounts).</td>
-                <td class="biomarker-col">Pan-Omics</td>
-            </tr>
-            <tr>
-                <td class="step-col">7</td>
-                <td class="phase-col">Bio-Filtering</td>
-                <td class="tool-col">GATK Filter / edgeR</td>
-                <td class="app-col">Noise Subtraction / Scaling</td>
-                <td class="rationale-col">For DNA: Physically subtracts matched White Blood Cell (PBMC) signals to eliminate CHIP noise. For RNA: Applies exogenous Spike-in anchoring and TMM/UQ scaling to correct composition.</td>
-                <td class="biomarker-col">cfDNA (CHIP), RNA (TMM)</td>
-            </tr>
-            <tr class="sanity-row">
-                <td class="step-col">S3</td>
-                <td class="phase-col">Sanity 3</td>
-                <td class="tool-col">Maftools / IGV</td>
-                <td class="app-col">Clonal Logic Check</td>
-                <td class="rationale-col"><strong>Visualisation:</strong> Lollipop & VAF plots (Mutations) or Volcano plots (Expression). Ensures mutations cluster in known kinase hotspots and expression fold-changes follow biological logic.</td>
-                <td class="biomarker-col">Pan-Omics</td>
-            </tr>
-            <tr>
-                <td class="step-col">8</td>
-                <td class="phase-col">Integration</td>
-                <td class="tool-col">Multi-Omic ML Matrix</td>
-                <td class="app-col">Multi-Modal Data Fusion</td>
-                <td class="rationale-col">Fuses disparate variables (DNA mutations, EV-cargo expression, and Fragmentomic topology) into a unified Random Forest / XGBoost model for a final integrated Risk/MRD score.</td>
-                <td class="biomarker-col">Pan-Omics</td>
-            </tr>
-            <tr>
-                <td class="step-col">9</td>
-                <td class="phase-col">Annotation</td>
-                <td class="tool-col">Ensembl VEP / OncoKB</td>
-                <td class="app-col">Library Match (Public)</td>
-                <td class="rationale-col">Cross-references surviving high-confidence variants and overexpressed targets with public actionable drug databases (FDA/NCCN guidelines) for therapeutic clinical translation.</td>
-                <td class="biomarker-col">Pan-Omics</td>
-            </tr>
-            <tr>
-                <td class="step-col">10</td>
-                <td class="phase-col">Evolution</td>
-                <td class="tool-col">PyClone / Phylogic</td>
-                <td class="app-col">Tumor-Informed Tracking</td>
-                <td class="rationale-col">Tracks clonal dynamics, emergence of resistance mutations, and subclonal architectures longitudinally over time by comparing liquid biopsy signals against the patient’s primary baseline.</td>
-                <td class="biomarker-col">cfDNA, mRNA</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="ux-table">
+            <thead>
+                <tr>
+                    <th>Step</th>
+                    <th>Phase & Critical Tool</th>
+                    <th>Computational Rationale & "The Why"</th>
+                    <th class="bm-col">cfDNA</th>
+                    <th class="bm-col">mRNA</th>
+                    <th class="bm-col">miRNA</th>
+                    <th class="bm-col">siRNA</th>
+                    <th class="bm-col">tRNA</th>
+                    <th class="bm-col">rRNA</th>
+                    <th class="bm-col">vaultRNA</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="step-col">1</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Trimming</span>
+                        <span class="phase-tool">Cutadapt / fastp</span>
+                    </td>
+                    <td class="rationale-col">Adapter & Quality removal. Eliminates "read-through" noise in short fragments (<150bp) and drops Q<30 reads.</td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">2</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Barcoding</span>
+                        <span class="phase-tool">zUMIs</span>
+                    </td>
+                    <td class="rationale-col">UMI/Barcode extraction. Links reads to original molecules for absolute quantification against amplification bias.</td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">2B</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Epi-Rescue</span>
+                        <span class="phase-tool">AlkB Demethylase</span>
+                    </td>
+                    <td class="rationale-col">Biochemical reversal of modified bases (m1A, m3C) preventing Reverse Transcriptase (RT) stalling/dropout.</td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="spec-text">Required</span></td>
+                    <td class="bm-cell"><span class="spec-text">Required</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                </tr>
+                <tr class="sanity-row">
+                    <td class="step-col">S1</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Sanity 1</span>
+                        <span class="phase-tool">FastQC</span>
+                    </td>
+                    <td class="rationale-col">Library Complexity Check. Visualisation: GC-content & Duplication plots. Ensures library isn't "over-amplified" and adapter-free.</td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">3</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Alignment</span>
+                        <span class="phase-tool">Varies by Target</span>
+                    </td>
+                    <td class="rationale-col">Primary Genomic Mapping. Establishes structural coordinates against GRCh38 using context-aware algorithms.</td>
+                    <td class="bm-cell"><span class="spec-text">BWA-MEM</span></td>
+                    <td class="bm-cell"><span class="spec-text">STAR (Splice)</span></td>
+                    <td class="bm-cell"><span class="spec-text">Bowtie</span></td>
+                    <td class="bm-cell"><span class="spec-text">Bowtie (0-mm)</span></td>
+                    <td class="bm-cell"><span class="spec-text">Bowtie2</span></td>
+                    <td class="bm-cell"><span class="spec-text">Bowtie2</span></td>
+                    <td class="bm-cell"><span class="spec-text">Bowtie2</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">4</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Consensus</span>
+                        <span class="phase-tool">fgbio</span>
+                    </td>
+                    <td class="rationale-col">Molecular Deduplication. Collapses read families to eliminate stochastic PCR/Sequencing errors.</td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">4B</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Resolution</span>
+                        <span class="phase-tool">MINTmap / SILVA</span>
+                    </td>
+                    <td class="rationale-col">Multi-Mapper EM Rescue. Resolves paralogous families and routes ambiguous transcripts via Expectation-Maximization.</td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="spec-text">MINTmap</span></td>
+                    <td class="bm-cell"><span class="spec-text">SILVA DB</span></td>
+                    <td class="bm-cell"><span class="spec-text">Pol III</span></td>
+                </tr>
+                <tr class="sanity-row">
+                    <td class="step-col">S2</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Sanity 2</span>
+                        <span class="phase-tool">SAMtools</span>
+                    </td>
+                    <td class="rationale-col">Structural Integrity Check. Visualisation: Insert Size Distribution. Confirms peak topologies (e.g. 145bp tumor peak).</td>
+                    <td class="bm-cell"><span class="spec-text">145bp Peak</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="spec-text">22nt Peak</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="spec-text">tRF Peaks</span></td>
+                    <td class="bm-cell"><span class="spec-text">rRF Peaks</span></td>
+                    <td class="bm-cell"><span class="spec-text">vtRNA/svRNA</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">5</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Fragmentomics</span>
+                        <span class="phase-tool">Custom R</span>
+                    </td>
+                    <td class="rationale-col">Structural Profiling. Uses fragment-end motifs and precise cleavage lengths as orthogonal, non-mutational signals.</td>
+                    <td class="bm-cell"><span class="spec-text">Nucleosomal</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="spec-text">End-Motif</span></td>
+                    <td class="bm-cell"><span class="spec-text">End-Motif</span></td>
+                    <td class="bm-cell"><span class="spec-text">End-Motif</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">6</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Quant / Call</span>
+                        <span class="phase-tool">Mutect2 / featureCounts</span>
+                    </td>
+                    <td class="rationale-col">Target Detection. Bayesian identification of ultra-low VAF (<0.1%) variants, or transcriptomic element counting.</td>
+                    <td class="bm-cell"><span class="spec-text">Mutect2</span></td>
+                    <td class="bm-cell"><span class="spec-text">Counts</span></td>
+                    <td class="bm-cell"><span class="spec-text">isomiR-Quant</span></td>
+                    <td class="bm-cell"><span class="spec-text">Counts</span></td>
+                    <td class="bm-cell"><span class="spec-text">Counts</span></td>
+                    <td class="bm-cell"><span class="spec-text">Counts</span></td>
+                    <td class="bm-cell"><span class="spec-text">Counts</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">7</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Bio-Filtering</span>
+                        <span class="phase-tool">GATK Filter / edgeR</span>
+                    </td>
+                    <td class="rationale-col">Noise Subtraction. Eliminates false positives by subtracting matched WBC signals, or scales via synthetic Spike-ins.</td>
+                    <td class="bm-cell"><span class="spec-text">CHIP Filter</span></td>
+                    <td class="bm-cell"><span class="spec-text">TMM Scale</span></td>
+                    <td class="bm-cell"><span class="spec-text">UQ Scale</span></td>
+                    <td class="bm-cell"><span class="spec-text">TMM Scale</span></td>
+                    <td class="bm-cell"><span class="spec-text">TMM Scale</span></td>
+                    <td class="bm-cell"><span class="spec-text">TMM Scale</span></td>
+                    <td class="bm-cell"><span class="spec-text">TMM Scale</span></td>
+                </tr>
+                <tr class="sanity-row">
+                    <td class="step-col">S3</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Sanity 3</span>
+                        <span class="phase-tool">Maftools / IGV</span>
+                    </td>
+                    <td class="rationale-col">Clonal Logic Check. Visualisation: Lollipop & VAF plots. Ensures mutations cluster in known hotspots.</td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">8</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Integration</span>
+                        <span class="phase-tool">Multi-Omic ML</span>
+                    </td>
+                    <td class="rationale-col">Multi-modal Data Fusion. Combines DNA, EV-cargo, and Fragmentomics for a final predictive risk score.</td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">9</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Annotation</span>
+                        <span class="phase-tool">VEP / OncoKB</span>
+                    </td>
+                    <td class="rationale-col">Library Match (Public). Cross-references surviving variants and signatures with actionable drug/trial databases.</td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                </tr>
+                <tr>
+                    <td class="step-col">10</td>
+                    <td class="phase-col">
+                        <span class="phase-title">Evolution</span>
+                        <span class="phase-tool">PyClone</span>
+                    </td>
+                    <td class="rationale-col">Library Match (Private). Tracks clonal dynamics and longitudinal progression against the patient’s own primary tumor.</td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-yes">&#10003;</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                    <td class="bm-cell"><span class="check-no">-</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
     """, unsafe_allow_html=True)
 
 # ==============================================================================
