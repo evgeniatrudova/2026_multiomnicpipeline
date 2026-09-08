@@ -439,17 +439,17 @@ if not st.session_state.analyzed:
     _, col_center, _ = st.columns([1, 3, 1]) 
     with col_center:
         st.write("") 
-        st.markdown("<h1 style='text-align: center;'>Clinical Liquid Biopsy Platform</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center;'>🧬 Clinical Liquid Biopsy Platform</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: gray;'>Translate raw patient sequencing data into actionable clinical intelligence.</p>", unsafe_allow_html=True)
         st.write("")
         
         with st.container(border=True):
             st.session_state.assay = st.radio("Select Target Biomarker Type", ["cfDNA", "mRNA", "miRNA", "siRNA"], horizontal=True)
-            data_source = st.radio("Data Source Selection", ["Upload Sequence", "Run NCBI dataset"], horizontal=True, label_visibility="collapsed")
+            data_source = st.radio("Data Source Selection", ["📤 Upload Patient Sequence", "🧪 Run NCBI Validation Cohort"], horizontal=True, label_visibility="collapsed")
             
-            if data_source == "Upload Patient Sequence":
+            if data_source == "📤 Upload Patient Sequence":
                 uploaded_files = st.file_uploader(f"Securely upload {st.session_state.assay} FASTQ streams", accept_multiple_files=True)
-                if st.button("Process Patient Data", type="primary", use_container_width=True):
+                if st.button("🚀 Process Patient Data", type="primary", use_container_width=True):
                     if not uploaded_files:
                         st.warning("Please upload a file to begin.")
                     else:
@@ -457,26 +457,26 @@ if not st.session_state.analyzed:
                         loader_placeholder = st.empty()
                         with loader_placeholder.container():
                             render_dna_fragmentation_sequence()
-                            time.sleep(35.0) # Matches two complete 17.5s animation orbits
+                            time.sleep(35.0) 
                         loader_placeholder.empty() 
                         st.session_state.analyzed = True
                         st.rerun()
             else:
                 ds = NCBI_DATASETS[st.session_state.assay]
                 st.info(f"**Loaded Validation Dataset:** [{ds['id']}] — {ds['desc']}")
-                if st.button(f"Run Analysis on {ds['id']}", type="primary", use_container_width=True):
+                if st.button(f"🚀 Run Analysis on {ds['id']}", type="primary", use_container_width=True):
                     st.session_state.data_source_id = ds['id']
                     loader_placeholder = st.empty()
                     with loader_placeholder.container():
                         render_dna_fragmentation_sequence()
-                        time.sleep(35.0) # Matches two complete 17.5s animation orbits
+                        time.sleep(35.0) 
                     loader_placeholder.empty()
                     st.session_state.analyzed = True
                     st.rerun()
 
         st.write("---")
         
-        onboard_tabs = st.tabs(["Academic Purpose", "Privacy & Architecture", "Pipeline Algorithm"])
+        onboard_tabs = st.tabs(["🏛️ Academic Purpose", "🛡️ Privacy & Architecture", "⚙️ Modular Adjustments (Algorithm Spec)"])
         
         with onboard_tabs[0]:
             st.markdown("""
@@ -495,26 +495,24 @@ if not st.session_state.analyzed:
             
         with onboard_tabs[2]:
             st.markdown("""
-            **Algorithmic Routing & Robustness Validation**
-            
-            The pipeline breaks the rigid 15-step generic model, deploying assay-specific bioinformatic algorithms tailored to the physical constraints of the target genetic material.
+**Algorithmic Routing & Robustness Validation**
 
-            ###  cfDNA
-            *   **Alignment & Consensus Calling:** `BWA-MEM` + `fgbio` (for UMI deduplication). Retains intact double-stranded paired-end read topologies. UMI-aware consensus calling is mathematically required to suppress sequencing error rates for ultra-low VAF (<0.1%).
-            *   **Somatic Variant Analytics:** `GATK Mutect2` + Matched Buffy Coat Subtraction. Pipeline robustness mandates a matched leukocyte subtraction to prevent massive false-positive oncogene calling originating from CHIP.
-
-            ###  mRNA 
-            *   **Alignment & Integrity:** `STAR` (Chimeric-aware mode). Splice-tolerant mapping required to capture fragmented, back-spliced, and 3' UTR enriched EV reads that standard poly-A aligners erroneously discard.
-            *   **Somatic Noise Filtration:** `REDItools` / `REDIportal` cross-referencing for A-to-I RNA editing subtraction to prevent ADAR-mediated hyper-mutated transcripts from triggering false-positive tumor somatic calls.
-
-            ###  miRNA 
-            *   **Alignment Strategy:** `miRge3.0` or `isomiR-SEA`. Probabilistic multi-mapping captures biologically active 5'/3' trimmed variants and non-templated adenylation/uridylation, distinguishing true EV cargo from Argonaute-bound contaminants.
-            *   **Deduplication Constraint:** `UMI-tools`. Coordinate-based deduplication is mathematically fatal for 22nt small RNAs. UMI tracking is strictly enforced to prevent catastrophic biological data loss.
-            
-            ###  siRNA 
-            *   **Alignment Stringency:** `Bowtie` (configured for `-v 0` exact matching) ensures perfect-match alignment to track synthetic therapeutic payloads accurately without mapping noise against the endogenous transcriptome.
-            *   **Off-Target Analytics:** Validates exact 5'-cleavage at the intended target mRNA locus, whilst executing a transcriptome-wide scan of 3' UTRs for heuristic heptamer seed-matches to quantify RNAi toxicity.
-            """)
+| Step | Phase | cfDNA Engine | EV-mRNA Engine | miRNA Engine | siRNA Engine | QC & Computational Rationale |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **1** | **Trimming** | Cutadapt | Cutadapt | Cutadapt | Cutadapt | Eliminates "read-through" noise in short fragments. |
+| **2** | **Barcoding** | zUMIs | zUMIs | zUMIs | zUMIs | Links reads to original molecules for absolute quantification. |
+| **S1** | **Sanity 1** | FastQC | FastQC | FastQC | FastQC | **QC Check:** Library complexity & duplication plots. |
+| **3** | **Alignment** | BWA-MEM | STAR (Chimeric) | miRge3.0 / isomiR-SEA | Bowtie (-v 0 exact) | Maps EV-RNA splice junctions and DNA coordinates. |
+| **4** | **Consensus** | fgbio | UMI-tools | UMI-tools | UMI-tools | Collapses read families to eliminate stochastic PCR/Seq errors. |
+| **S2** | **Sanity 2** | cfDNAPro | SAMtools | SAMtools | SAMtools | **QC Check:** Structural integrity & fragment length modes. |
+| **5** | **Fragmentomics** | Custom R/Python | Custom R/Python | Custom R/Python | Custom R/Python | Uses fragment-end motifs and lengths as non-mutational signals. |
+| **6** | **Variant Call** | Mutect2 / DeepVariant | REDItools | isomiR Profiler | TargetScan / RACE | Bayesian identification of ultra-low VAF variants/abundance. |
+| **7** | **Bio-Filtering**| CHIP Subtraction | A-to-I Subtraction | Argonaute Filter | Degradome logic | Biological noise subtraction to prevent false positives. |
+| **S3** | **Sanity 3** | Maftools / IGV | IGV | IGV | IGV | **QC Check:** Visualizes mutations in hotspots (Lollipop/VAF). |
+| **8** | **Integration** | Multi-Omic ML | Multi-Omic ML | Multi-Omic ML | Multi-Omic ML | Combines DNA, EV-cargo, and Fragmentomics for a final score. |
+| **9** | **Annotation** | VEP / OncoKB | VEP / OncoKB | miRBase / VEP | Target DB | Cross-references variants with actionable drug/trial databases. |
+| **10** | **Evolution** | PyClone / Phylogic| PyClone | Longitudinal ML | Longitudinal ML | Tracks clonal dynamics against the patient's primary tumor. |
+""")
 
 # ==============================================================================
 # 7. CLINICAL DASHBOARD UX
