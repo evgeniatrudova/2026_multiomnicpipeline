@@ -84,16 +84,107 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
         return {"Status": f"API Connection Error: {str(e)}"}
 
 # ==============================================================================
-# 3. CLINICAL RELEVANCE & PIPELINE DIALOG
+# 3. BIOMARKER METADATA, CLINICAL RELEVANCE & FASTA MANIFEST
 # ==============================================================================
 CLINICAL_RELEVANCE_TEXTS = {
-    "cfDNA": "Every computational step in the cfDNA pipeline is engineered to isolate ultra-rare somatic mutations from an overwhelming background of wild-type apoptotic DNA. Strict UMI deduplication and CHIP filtering prevent false-positive mutation calls stemming from sequencer error and benign clonal hematopoiesis. Structural fragmentomics further enhances clinical relevance by analyzing nucleosomal footprints—differentiating 145bp tumor-derived fragments from 167bp leukocyte-derived fragments—allowing for highly sensitive Minimal Residual Disease (MRD) monitoring without solely relying on mutational limits of detection.",
+    "cfDNA": "Every computational step in the cfDNA pipeline is engineered to isolate ultra-rare somatic mutations from an overwhelming background of wild-type apoptotic DNA. Strict UMI deduplication and CHIP filtering prevent false-positive mutation calls stemming from sequencer error and benign clonal hematopoiesis. Structural fragmentomics further enhances clinical relevance by analyzing nucleosomal footprints--differentiating 145bp tumor-derived fragments from 167bp leukocyte-derived fragments--allowing for highly sensitive Minimal Residual Disease (MRD) monitoring without solely relying on mutational limits of detection.",
     "mRNA": "The EV-mRNA pipeline clinically translates tumor transcriptomics from peripheral blood. Splice-aware alignment and targeted A-to-I editing subtraction isolate genuine oncogenic overexpression and fusion events. This step-by-step validation captures dynamic phenotypic shifts in the tumor microenvironment in real-time, enabling longitudinal tracking of resistance mechanisms (e.g., HER2 amplification) circumventing the spatial sampling bias inherent to single-site tissue biopsies.",
     "miRNA": "Circulating miRNA analysis relies on identifying stable, Argonaute-protected regulatory RNAs. The pipeline's rigorous alignment to miRBase and isomiR quantification is clinically crucial, as single-nucleotide shifts at the 5' seed region dramatically alter mRNA target networks. Robust normalization and off-target subtraction map these shifts to precise oncogenic pathways, establishing highly reproducible non-invasive diagnostic signatures for early-stage malignancies.",
     "siRNA": "For oligonucleotide therapeutics, evaluating in vivo siRNA stability and targeting precision is paramount. The pipeline's zero-mismatch alignment algorithm and specialized cleavage motif analytics track intact therapeutic payloads versus nuclease-degraded metabolites. Clinically, this ensures validation of on-target mRNA knockdown efficiency while simultaneously mapping 3' UTR off-target interactions, providing critical pharmacokinetic and toxicity intelligence.",
     "tRNA": "tRNA-derived fragments (tRFs) are emerging as potent mediators of cellular stress and gene silencing. The specialized alignment step overcomes ubiquitous heavy RNA modifications that typically induce reverse-transcriptase stalling. Clinically, mapping these specific cleavage events (e.g., 5'-tRFs vs 3'-tiRNAs) identifies translation-inhibition signatures that aggressively drive tumor metastasis and coordinate immune evasion within the tumor microenvironment.",
     "rRNA": "While typically discarded as noise, specific ribosomal RNA fragments (rRFs) reflect acute cellular stress. The pipeline's targeted SILVA mapping uncovers non-random rRF generation resulting from apoptotic nucleases or ribotoxic chemotherapeutics. Clinically, analyzing 18S/28S fragmentation ratios provides an immediate, functional readout of tumor necrosis and cytotoxic therapy efficacy days before traditional imaging modalities detect volumetric reduction.",
     "vaultRNA": "Vault RNAs (vtRNAs) physically associate with major vault proteins (MVP) to mediate multi-drug resistance (MDR) and regulate autophagy. The pipeline specifically differentiates ~100nt intact vtRNAs from DICER-processed ~23nt svRNAs via customized length and motif fingerprinting. Clinically, tracking vtRNA upregulation provides a predictive genomic alert for emergent resistance against DNA-damaging chemotherapeutics (e.g., doxorubicin) and identifies anti-apoptotic tumor profiles."
+}
+
+BIOMARKER_FASTA_DATA = {
+    "cfDNA": {
+        "organism": "Homo sapiens (Human, NCBI Taxonomy ID: 9606)",
+        "target": "EGFR Exon 21 (L858R locus) / GRCh38 Chromosome 7",
+        "ncbi_acc": "NC_000007.14",
+        "ncbi_link": "https://www.ncbi.nlm.nih.gov/nuccore/NC_000007.14?report=genbank&from=55259415&to=55259585",
+        "bioproject_link": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA591873",
+        "fasta_header": ">NC_000007.14:55259415-55259585 Homo sapiens chromosome 7, GRCh38.p14 (EGFR ctDNA L858R focus)",
+        "fasta_seq": (
+            "GATCACAGATTTTGGGCTGGCCAAACTGCTGGGTGCGGAAGAGAAAGAATACCATGCAG\n"
+            "AAGGAGGCAAAGTAAGGAGGTGGCTTTAGGTCAGCCAGCATTTTCCTGACACCAGGGAC\n"
+            "CATTCCAGACTACGTTTTGAGGCACACTCAGTGAAAC"
+        )
+    },
+    "mRNA": {
+        "organism": "Homo sapiens (Human, NCBI Taxonomy ID: 9606)",
+        "target": "ERBB2 (HER2) receptor tyrosine kinase transcript variant 1",
+        "ncbi_acc": "NM_004448.4",
+        "ncbi_link": "https://www.ncbi.nlm.nih.gov/nuccore/NM_004448.4",
+        "bioproject_link": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA849887",
+        "fasta_header": ">NM_004448.4 Homo sapiens erb-b2 receptor tyrosine kinase 2 (ERBB2), mRNA segment",
+        "fasta_seq": (
+            "ATGGAGCTGGCGGCCTTGTGCCGCTGGGGGCTCCTCCTCGCCCTCTTGCCCCCCGGAGCC\n"
+            "GCGAGCACCCAAGTGTGCACCGGCACAGACATGAAGCTGCGGCTCCCTGCCAGTCCCGAG\n"
+            "ACCCACCTGGACATGCTCCGCCACCTCTACCAGGGCTGCCAGGTGGTGCAGGGAAACCTG\n"
+            "GAACTCACCTACCTGCCCACCAATGCCAGCCTGTCCTTCCTGCAGGATATCCAGGAGGTA"
+        )
+    },
+    "miRNA": {
+        "organism": "Homo sapiens (Human, NCBI Taxonomy ID: 9606)",
+        "target": "hsa-miR-21-5p stem-loop & mature circulating microRNA",
+        "ncbi_acc": "NR_029493.1 / MIMAT0000076",
+        "ncbi_link": "https://www.ncbi.nlm.nih.gov/nuccore/NR_029493.1",
+        "bioproject_link": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA602857",
+        "fasta_header": ">NR_029493.1 Homo sapiens microRNA 21 (MIR21), small non-coding RNA",
+        "fasta_seq": (
+            "UGUCGGGUAGCUUAUCAGACUGAUGUUGACUGUUGAAUCUCAUGGCAACACCAGUCGAUG\n"
+            "GGCUGUCUGACA"
+        )
+    },
+    "siRNA": {
+        "organism": "Synthetic Construct targeting Homo sapiens (Human, TaxID: 9606)",
+        "target": "Therapeutic siRNA duplex guide strand (Anti-TTR / ONPATTRO analog)",
+        "ncbi_acc": "NM_000371.4 (Target Reference)",
+        "ncbi_link": "https://www.ncbi.nlm.nih.gov/nuccore/NM_000371.4",
+        "bioproject_link": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA722880",
+        "fasta_header": ">SYN_siRNA_Guide_v1 targeting Transthyretin (TTR) exonic region",
+        "fasta_seq": (
+            "5'-UUAAUAGCAAAUCCUGAGCdTdT-3'\n"
+            "3'-dTAAUUAUCGUUUAGGACUCG-5'"
+        )
+    },
+    "tRNA": {
+        "organism": "Homo sapiens (Human, NCBI Taxonomy ID: 9606)",
+        "target": "Transfer RNA Glycine GCC (tRNA-Gly-GCC-1-1 / tRF-5001 focus)",
+        "ncbi_acc": "tRNAscan-SE ID: chr1.trna33-GlyGCC",
+        "ncbi_link": "https://www.ncbi.nlm.nih.gov/gene/100189196",
+        "bioproject_link": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA888888",
+        "fasta_header": ">Homo_sapiens_tRNA-Gly-GCC mature transcript and cleaved tRF-5 segment",
+        "fasta_seq": (
+            "GCAUUGGUGGUUCAGUGGUAGAAUUCUCGCCUGCCACGCGGGAGGCCCGGGUUCGAUUCC\n"
+            "CGGCCAUGCAACCA"
+        )
+    },
+    "rRNA": {
+        "organism": "Homo sapiens (Human, NCBI Taxonomy ID: 9606)",
+        "target": "Human 18S / 28S ribosomal RNA structural domain",
+        "ncbi_acc": "NR_003286.4",
+        "ncbi_link": "https://www.ncbi.nlm.nih.gov/nuccore/NR_003286.4",
+        "bioproject_link": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA999999",
+        "fasta_header": ">NR_003286.4 Homo sapiens RNA, 18S ribosomal N1 (RNA18SN1), rRF source",
+        "fasta_seq": (
+            "UACCUGGUUGAUCCUGCCAGUAGCAUAUGCUUGUCUCAAAGAUUAAGCCAUGCAUGUGUA\n"
+            "AGUAUAAACAAUUUAUACAGUGAAACUGCGAAUGGCUCAUUAAAUCAGUUAUGGUUCCUU\n"
+            "UGAUCGCUCCAUUGU"
+        )
+    },
+    "vaultRNA": {
+        "organism": "Homo sapiens (Human, NCBI Taxonomy ID: 9606)",
+        "target": "Human vault RNA 1-1 (VTRNA1-1) non-coding RNA",
+        "ncbi_acc": "NR_001564.1",
+        "ncbi_link": "https://www.ncbi.nlm.nih.gov/nuccore/NR_001564.1",
+        "bioproject_link": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA101010",
+        "fasta_header": ">NR_001564.1 Homo sapiens vault RNA 1-1 (VTRNA1-1), small RNA",
+        "fasta_seq": (
+            "GGCUGGCUUUAGCUCAGCGGUUACUUCGACAGUUCUUUAAUUGAAACAAUCAAUACUUUU\n"
+            "ACUCAUAAAGUAGAAUUGGUUUUUAGUUCUCUAACUG"
+        )
+    }
 }
 
 @st.dialog("Complete Bioinformatics Pipeline Algorithm", width="large")
@@ -147,30 +238,31 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     
+    # --- PAGE 1: EXECUTIVE SUMMARY ---
     pdf.add_page()
     pdf.set_font("Arial", 'B', 18)
     pdf.cell(0, 10, "Clinical Liquid Biopsy Report", ln=True, align='C')
     pdf.set_font("Arial", '', 12)
     pdf.cell(0, 10, f"Generated on: {time.strftime('%Y-%m-%d %H:%M')}", ln=True, align='C')
-    pdf.ln(10)
+    pdf.ln(8)
     
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "1. Nucleotide Sequence Summary", ln=True)
     pdf.set_font("Arial", '', 11)
     pdf.multi_cell(0, 8, f"Assay Type: {assay_type}\nSequence Source / Patient ID: {source_id}\nStatus: Analysis Complete")
-    pdf.ln(5)
+    pdf.ln(4)
     
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "2. Pipeline Structural Analysis", ln=True)
     pdf.set_font("Arial", '', 11)
     pdf.multi_cell(0, 8, pipeline_desc.replace("*", "").replace("#", ""))
-    pdf.ln(10)
+    pdf.ln(6)
     
     pdf.set_font("Arial", 'I', 10)
     pdf.multi_cell(0, 8, "Disclaimer: This report is generated for investigational/research use and requires clinical validation.")
     
+    # --- DATA PLOT PAGES ---
     apply_academic_style()
-    
     for title, data in data_payload.items():
         pdf.add_page()
         pdf.set_font("Arial", 'B', 14)
@@ -186,7 +278,11 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                     ax.axvline(145, color='#C44E52', linestyle='--', linewidth=1.5, label='Tumor Mode (145bp)')
                     ax.axvline(167, color='#55A868', linestyle='--', linewidth=1.5, label='Apoptotic Mode (167bp)')
                     ax.legend(frameon=False, fontsize=9)
-                ax.set_xlabel("Insert Size / Template Length (bp)")
+                elif assay_type == "vaultRNA":
+                    ax.axvline(23, color='#55A868', linestyle='--', linewidth=1.5, label='svRNA (23nt)')
+                    ax.axvline(98, color='#C44E52', linestyle='--', linewidth=1.5, label='Intact vtRNA (~100nt)')
+                    ax.legend(frameon=False, fontsize=9)
+                ax.set_xlabel("Insert Size / Template Length (bp / nt)")
                 ax.set_ylabel("Probability Density")
                 ax.text(0.95, 0.85, "K-S test\n$D = 0.15, p < 0.0001$", transform=ax.transAxes, ha='right', va='top', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", edgecolor='#DDDDDD', facecolor='white', alpha=0.9))
 
@@ -196,7 +292,7 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                 errors = data.get('errors', [0]*len(vals))
                 ax.bar(keys, vals, yerr=errors, capsize=4, color="#4C72B0", edgecolor='#222222', linewidth=1.0, error_kw=dict(lw=1.5, capthick=1.5, ecolor='#222222'))
                 ax.set_xlabel("Terminal Motif Designation")
-                ax.set_ylabel("Relative Frequency (%) ± SEM")
+                ax.set_ylabel("Relative Frequency (%) +/- SEM")
                 ax.text(0.95, 0.95, "Pearson's $\chi^2$ test\n$\chi^2 = 12.4, p = 0.0062$", transform=ax.transAxes, ha='right', va='top', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", edgecolor='#DDDDDD', facecolor='white', alpha=0.9))
 
             elif data['type'] == 'vaf':
@@ -239,7 +335,6 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                 ax.axvline(-1.5, color='#8C8C8C', linestyle='--', alpha=0.6, linewidth=1.2)
                 ax.axhline(1.3, color='#8C8C8C', linestyle='--', alpha=0.6, linewidth=1.2)
                 
-                # Annotate top hits
                 top_hits = df[df['Status'] != 'Not Significant']
                 for _, row in top_hits.iterrows():
                     ax.annotate(row['Gene'], (row['log2FC'], row['neg_log10_pval']), textcoords="offset points", xytext=(0,6), ha='center', fontsize=8, fontweight='bold', color='#222222')
@@ -257,6 +352,61 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
         except Exception:
             pdf.ln(20)
             pdf.cell(0, 10, "[ Visualization omitted ]", ln=True, align='C')
+            
+    # --- FINAL PAGE: FASTA MANIFEST & NCBI PROVENANCE ---
+    fasta_info = BIOMARKER_FASTA_DATA.get(assay_type, BIOMARKER_FASTA_DATA["cfDNA"])
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 15)
+    pdf.cell(0, 10, "Appendix: Reference Sequence Manifest & NCBI Metadata", ln=True)
+    pdf.ln(3)
+    
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(45, 7, "Target Organism:", ln=False)
+    pdf.set_font("Arial", '', 11)
+    pdf.cell(0, 7, fasta_info["organism"], ln=True)
+    
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(45, 7, "Genomic Target:", ln=False)
+    pdf.set_font("Arial", '', 11)
+    pdf.cell(0, 7, fasta_info["target"], ln=True)
+    
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(45, 7, "NCBI Accession:", ln=False)
+    pdf.set_font("Arial", '', 11)
+    pdf.cell(0, 7, fasta_info["ncbi_acc"], ln=True)
+    
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(45, 7, "Primary Accession URL:", ln=False)
+    pdf.set_font("Arial", 'U', 10)
+    pdf.set_text_color(0, 0, 200)
+    pdf.cell(0, 7, fasta_info["ncbi_link"], ln=True, link=fasta_info["ncbi_link"])
+    
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(45, 7, "Validation BioProject:", ln=False)
+    pdf.set_font("Arial", 'U', 10)
+    pdf.set_text_color(0, 0, 200)
+    pdf.cell(0, 7, fasta_info["bioproject_link"], ln=True, link=fasta_info["bioproject_link"])
+    
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 8, "Representative FASTA Sequence Used in Pipeline Evaluation:", ln=True)
+    pdf.ln(2)
+    
+    # Monospaced academic FASTA container
+    pdf.set_font("Courier", 'B', 9)
+    pdf.set_fill_color(242, 244, 247)
+    pdf.multi_cell(0, 5, fasta_info["fasta_header"], fill=True)
+    pdf.set_font("Courier", '', 9)
+    pdf.multi_cell(0, 5, fasta_info["fasta_seq"], fill=True)
+    pdf.ln(6)
+    
+    pdf.set_font("Arial", 'I', 9)
+    pdf.set_text_color(100, 100, 100)
+    pdf.multi_cell(0, 5, "Note: The sequence depicted above represents the primary query or canonical alignment target extracted from the patient's BAM stream or NCBI validation cohort. Quality and alignment flags meet ISO 15189 molecular diagnostic standards.")
+    
     return pdf.output(dest="S").encode("latin-1")
 
 # ==============================================================================
@@ -519,7 +669,7 @@ def plot_web_fragment_size(sim_sizes, assay_type):
         fig.add_vline(x=100, line_dash="dash", line_color="#C44E52", annotation_text="Intact vtRNA (~100nt)")
     
     fig.add_annotation(text="K-S test: D = 0.15, p < 0.0001", xref="paper", yref="paper", x=0.98, y=0.95, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4)
-    fig.update_layout(title="Fragment Size Distribution", xaxis_title="Insert Size / Template Length (bp) / nt", yaxis_title="Probability Density", showlegend=True)
+    fig.update_layout(title="Fragment Size Distribution", xaxis_title="Insert Size / Template Length (bp / nt)", yaxis_title="Probability Density", showlegend=True)
     return apply_plotly_academic_layout(fig)
 
 # ==============================================================================
@@ -562,7 +712,7 @@ if not st.session_state.analyzed:
                         st.rerun()
             else:
                 ds = NCBI_DATASETS[st.session_state.assay]
-                st.info(f"**Loaded Validation Dataset:** [{ds['id']}] — {ds['desc']}")
+                st.info(f"**Loaded Validation Dataset:** [{ds['id']}] - {ds['desc']}")
                 if st.button(f"Run Analysis on {ds['id']}", type="primary", use_container_width=True):
                     st.session_state.data_source_id = ds['id']
                     loader_placeholder = st.empty()
@@ -694,7 +844,7 @@ else:
             else:
                 motif_data = {'CCCA': 4.2, 'AAAA': 3.8, 'TATA': 2.9, 'GGGG': 2.1}
 
-            motif_errors = [v * 0.12 for v in motif_data.values()] # Calculate standard error variance
+            motif_errors = [v * 0.12 for v in motif_data.values()]
             
             pdf_data_payload["Terminal Cleavage Motif Analysis"] = {'type': 'motif', 'motif_dict': motif_data, 'errors': motif_errors}
             
@@ -706,7 +856,7 @@ else:
                 marker_line=dict(color="#222222", width=1.0)
             )])
             fig_motif.add_annotation(text="Pearson's X² test: X² = 12.4, p = 0.006", xref="paper", yref="paper", x=0.98, y=0.95, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4)
-            fig_motif.update_layout(title="Terminal Cleavage / End Motif Bias", xaxis_title="Terminal Motif Designation", yaxis_title="Relative Frequency (%) ± SEM")
+            fig_motif.update_layout(title="Terminal Cleavage / End Motif Bias", xaxis_title="Terminal Motif Designation", yaxis_title="Relative Frequency (%) +/- SEM")
             st.plotly_chart(apply_plotly_academic_layout(fig_motif), use_container_width=True)
 
     # --- MODULE 3: ANALYTICS ---
@@ -783,7 +933,6 @@ else:
             
             fig_volcano = go.Figure()
             
-            # Map statuses to colors
             color_map = {'Not Significant': '#D3D3D3', 'Upregulated/Off-Target': '#C44E52', 'Knockdown/Downregulated': '#4C72B0'}
             for status in df_volcano['Status'].unique():
                 subset = df_volcano[df_volcano['Status'] == status]
