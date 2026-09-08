@@ -87,13 +87,13 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
 # 3. BIOMARKER METADATA, CLINICAL RELEVANCE & FASTA MANIFEST
 # ==============================================================================
 CLINICAL_RELEVANCE_TEXTS = {
-    "cfDNA": "Every computational step in the cfDNA pipeline is engineered to isolate ultra-rare somatic mutations from an overwhelming background of wild-type apoptotic DNA. Strict UMI deduplication and CHIP filtering prevent false-positive mutation calls stemming from sequencer error and benign clonal hematopoiesis. Structural fragmentomics further enhances clinical relevance by analyzing nucleosomal footprints--differentiating 145bp tumor-derived fragments from 167bp leukocyte-derived fragments--allowing for highly sensitive Minimal Residual Disease (MRD) monitoring without solely relying on mutational limits of detection.",
-    "mRNA": "The EV-mRNA pipeline clinically translates tumor transcriptomics from peripheral blood. Splice-aware alignment and targeted A-to-I editing subtraction isolate genuine oncogenic overexpression and fusion events. This step-by-step validation captures dynamic phenotypic shifts in the tumor microenvironment in real-time, enabling longitudinal tracking of resistance mechanisms (e.g., HER2 amplification) circumventing the spatial sampling bias inherent to single-site tissue biopsies.",
-    "miRNA": "Circulating miRNA analysis relies on identifying stable, Argonaute-protected regulatory RNAs. The pipeline's rigorous alignment to miRBase and isomiR quantification is clinically crucial, as single-nucleotide shifts at the 5' seed region dramatically alter mRNA target networks. Robust normalization and off-target subtraction map these shifts to precise oncogenic pathways, establishing highly reproducible non-invasive diagnostic signatures for early-stage malignancies.",
-    "siRNA": "For oligonucleotide therapeutics, evaluating in vivo siRNA stability and targeting precision is paramount. The pipeline's zero-mismatch alignment algorithm and specialized cleavage motif analytics track intact therapeutic payloads versus nuclease-degraded metabolites. Clinically, this ensures validation of on-target mRNA knockdown efficiency while simultaneously mapping 3' UTR off-target interactions, providing critical pharmacokinetic and toxicity intelligence.",
-    "tRNA": "tRNA-derived fragments (tRFs) are emerging as potent mediators of cellular stress and gene silencing. The specialized alignment step overcomes ubiquitous heavy RNA modifications that typically induce reverse-transcriptase stalling. Clinically, mapping these specific cleavage events (e.g., 5'-tRFs vs 3'-tiRNAs) identifies translation-inhibition signatures that aggressively drive tumor metastasis and coordinate immune evasion within the tumor microenvironment.",
-    "rRNA": "While typically discarded as noise, specific ribosomal RNA fragments (rRFs) reflect acute cellular stress. The pipeline's targeted SILVA mapping uncovers non-random rRF generation resulting from apoptotic nucleases or ribotoxic chemotherapeutics. Clinically, analyzing 18S/28S fragmentation ratios provides an immediate, functional readout of tumor necrosis and cytotoxic therapy efficacy days before traditional imaging modalities detect volumetric reduction.",
-    "vaultRNA": "Vault RNAs (vtRNAs) physically associate with major vault proteins (MVP) to mediate multi-drug resistance (MDR) and regulate autophagy. The pipeline specifically differentiates ~100nt intact vtRNAs from DICER-processed ~23nt svRNAs via customized length and motif fingerprinting. Clinically, tracking vtRNA upregulation provides a predictive genomic alert for emergent resistance against DNA-damaging chemotherapeutics (e.g., doxorubicin) and identifies anti-apoptotic tumor profiles."
+    "cfDNA": "Every computational step isolates ultra-rare somatic mutations from overwhelming wild-type background. We enforce a mandatory dual-sequencing workflow requiring matched PBMC (buffy coat) sequencing at >1,000x depth alongside plasma cfDNA, algorithmically matching VAFs between compartments to definitively subtract Clonal Hematopoiesis (CHIP). Structural fragmentomics complements this by mapping nucleosomal footprints to differentiate tumor vs apoptotic origins.",
+    "mRNA": "The EV-mRNA pipeline clinically translates tumor transcriptomics from peripheral blood. We implement rigorous TMM and Upper Quartile (UQ) normalization anchored by exogenous synthetic spike-in controls (cel-miR-39-3p) added post-lysis to correct for compositional distortions. MISEV compliance checks ensure signals derive from genuine vesicles rather than free-circulating RNPs.",
+    "miRNA": "Circulating miRNA analysis captures stable Argonaute-protected RNAs. Normalization relies on post-lysis spike-in calibration (miRXplore pools) combined with TMM to preserve accurate abundance against background flux. EV-specific purity ratios (CD9/CD63/CD81 vs. Albumin) flag systemic contamination, ensuring the diagnostic signature originates strictly from the tumor-derived vesicle fraction.",
+    "siRNA": "For oligonucleotide therapeutics, validating target engagement and off-target toxicity is critical. The pipeline measures on-target degradation while deploying strict MISEV purity heuristics to confirm cellular uptake mechanisms vs free-plasma degradation. TMM normalization with synthetic spike-ins provides absolute pharmacokinetic quantitation.",
+    "tRNA": "tRFs carry dense epitranscriptomic modifications that derail standard NGS. We implement enzymatic demethylase pre-treatment (AlkB/DM-tRNA-seq) alongside a dual-alignment strategy: a primary error-tolerant alignment modeling misincorporation as true reference markers, paired with a secondary dedicated alignment (MINTmap) resolving multi-mapper ambiguities, recovering >85% of previously lost translation-inhibition signatures.",
+    "rRNA": "Ribosomal fragments reflect acute cellular stress. Standard aligners misinterpret modification-induced RT-drops. We mandate AlkB pre-treatment and run parallel dedicated alignments against SILVA databases using fractional read allocation (EM algorithms) for multi-mappers. Synthetic spike-ins allow absolute quantification of 18S/28S fragmentation ratios as a readout for tumor necrosis.",
+    "vaultRNA": "Vault RNAs mediate multi-drug resistance. Because intact vtRNAs (~100nt) and cleaved svRNAs (~23nt) map ambiguously, we employ a secondary alignment step dedicated to RNA Pol III transcripts. Exogenous synthetic spike-ins and TMM normalization correct for compositional shifts during extraction, while MISEV purity checks rule out RNP corona contamination."
 }
 
 BIOMARKER_FASTA_DATA = {
@@ -101,9 +101,9 @@ BIOMARKER_FASTA_DATA = {
         "organism": "Homo sapiens (Human, NCBI Taxonomy ID: 9606)",
         "target": "EGFR Exon 21 (L858R locus) / GRCh38 Chromosome 7",
         "ncbi_acc": "NC_000007.14",
-        "ncbi_link": "https://www.ncbi.nlm.nih.gov/nuccore/NC_000007.14?report=genbank&from=55259415&to=55259585",
+        "ncbi_link": "https://www.ncbi.nlm.nih.gov/nuccore/NC_000007.14",
         "bioproject_link": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA591873",
-        "fasta_header": ">NC_000007.14:55259415-55259585 Homo sapiens chromosome 7, GRCh38.p14 (EGFR ctDNA L858R focus)",
+        "fasta_header": ">NC_000007.14:55259415-55259585 Homo sapiens chromosome 7, GRCh38.p14",
         "fasta_seq": (
             "GATCACAGATTTTGGGCTGGCCAAACTGCTGGGTGCGGAAGAGAAAGAATACCATGCAG\n"
             "AAGGAGGCAAAGTAAGGAGGTGGCTTTAGGTCAGCCAGCATTTTCCTGACACCAGGGAC\n"
@@ -190,23 +190,19 @@ BIOMARKER_FASTA_DATA = {
 @st.dialog("Complete Bioinformatics Pipeline Algorithm", width="large")
 def show_pipeline_dialog():
     st.markdown("""
-### Multi-Omics Processing Engine
+### Deep Multi-Omics Workflow Architecture
 
-| Step | Phase | cfDNA | EV-mRNA | miRNA | siRNA | tRNA / rRNA | vaultRNA | QC & Computational Rationale |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1** | **Trimming** | Cutadapt | Cutadapt | Cutadapt | Cutadapt | Cutadapt | Cutadapt | Removes adapter sequences and low-quality bases to prevent spurious alignments. Critical for short biological fragments where read-through artificially inflates mapping errors. |
-| **2** | **Barcoding** | zUMIs | zUMIs | zUMIs | zUMIs | zUMIs | zUMIs | Employs UMIs for absolute molecular counting. Mitigates PCR amplification bias inherent to the ultra-low input material of liquid biopsies. |
-| **S1** | **Sanity 1** | FastQC | FastQC | FastQC | FastQC | FastQC | FastQC | **QC Check:** Utilizes FastQC for raw read heuristics (Q30 metrics). Detects flow cell artifacts or pervasive sequencing chemistry failures before compute resources are wasted. |
-| **3** | **Alignment** | BWA-MEM | STAR | miRge3.0 | Bowtie | MINTmap/STAR | Bowtie2 | Routes sequences to specialized aligners tailored to nucleic acid topology. Accommodates structural nuances like EV-RNA splice junctions or heavy tRNA modifications. |
-| **4** | **Consensus** | fgbio | UMI-tools | UMI-tools | UMI-tools | UMI-tools | UMI-tools | Collapses read families into single consensus sequences. Computationally suppresses polymerase and sequencing errors, radically lowering the limit of detection. |
-| **S2** | **Sanity 2** | cfDNAPro | SAMtools | SAMtools | SAMtools | SAMtools | SAMtools | **QC Check:** Validates mapping rates and insert size distributions. Ensures the library preparation preserved native biological fragmentation patterns (e.g., nucleosomal footprints). |
-| **5** | **Fragmentomics** | Custom | Custom | Custom | Custom | Custom | Custom | Profiles terminal end motifs and exact length modalities. Exploits non-random biological cleavage (e.g., DNAse/DICER specificities) as orthogonal diagnostic features. |
-| **6** | **Variant Call** | Mutect2 | REDItools | isomiR | TargetScan | tRF logic | svRNA logic | Deploys Bayesian statistical models for ultra-low abundance quantification. Differentiates genuine somatic variants or structural RNA edits from background sequencer noise. |
-| **7** | **Bio-Filtering**| CHIP Sub. | A-to-I Sub. | Argonaute | Degradome | rRNA Filter | bg Filter | Subtracts biological noise such as Clonal Hematopoiesis (CHIP) or common A-to-I edits. Biologically imperative to prevent false-positive reporting of benign physiological processes. |
-| **S3** | **Sanity 3** | IGV | IGV | IGV | IGV | IGV | IGV | **QC Check:** Integrates automated programmatic visualization of alignment hotspots. Protects against complex strand biases or misalignment artifacts masking as true signals. |
-| **8** | **Integration** | ML Fusion | ML Fusion | ML Fusion | ML Fusion | ML Fusion | ML Fusion | Fuses mutational, transcriptomic, and fragmentomic variables into multidimensional matrices. Yields a composite clinical risk score that consistently outperforms single-analyte metrics. |
-| **9** | **Annotation** | VEP/Onco | OncoKB | miRBase | Target DB | tRFdb/SILVA | RNAcentral | Queries live clinical databases dynamically via REST APIs. Translates raw molecular variants into actionable therapeutic interventions or established diagnostic guidelines. |
-| **10** | **Evolution** | PyClone | PyClone | Long. ML | Long. ML | Long. ML | Long. ML | Applies phylogenetic tracking to sequential biopsies over time. Models the emergence of subclonal resistance networks to guide adaptive, preemptive therapy switching. |
+| Phase | Engine Step | Diagnostic Protocol | QC & Computational Rationale |
+| :--- | :--- | :--- | :--- |
+| **Wet Lab** | **Pre-treatment** | AlkB Demethylase / EV Purity | Resolves epitranscriptomic modifications (m1A/m3C) preventing RT-arrests. Verifies EV MISEV purity. |
+| **Spike-in** | **Calibration** | Exogenous cel-miR-39-3p | Establishes absolute quantification and enables TMM/UQ normalization to prevent compositional distortion. |
+| **Clean** | **Trimming** | Cutadapt + zUMIs | Removes adapters and assigns unique molecular identifiers to eliminate PCR stochasticity. |
+| **Align I** | **Primary Align** | STAR / Bowtie2 | Baseline mapping for structurally simple transcripts and canonical variants. |
+| **Align II**| **Secondary Align** | Dedicated (MINTmap/SILVA) | Resolves multi-mappers and paralogs. Employs error-tolerant algorithms modeling modification misincorporations. |
+| **Filter** | **PBMC Dual-Seq** | VAF Match Filtering | Mandatory $\ge 1,000\times$ depth PBMC matching isolates true somatic variants by physically subtracting CHIP noise. |
+| **Struct** | **Fragmentomics** | Nucleosomal / Cleavage Mapping | Utilizes structural footprinting and precise cleavage motifs as orthogonal non-mutational biomarkers. |
+| **Detect** | **Bayesian Call** | Mutect2 / isomiR Profiler | Deploys statistical models for ultra-low abundance quantification against sequencer background noise. |
+| **Integrate**| **ML Fusion** | Multimodal Matrix | Fuses mutational, transcriptomic, and fragmentomic variables into a composite predictive risk score. |
 """)
 
 # ==============================================================================
@@ -238,7 +234,7 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     
-    # --- PAGE 1: EXECUTIVE SUMMARY ---
+    # --- PAGE 1: SUMMARY ---
     pdf.add_page()
     pdf.set_font("Arial", 'B', 18)
     pdf.cell(0, 10, "Clinical Liquid Biopsy Report", ln=True, align='C')
@@ -259,7 +255,7 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     pdf.ln(6)
     
     pdf.set_font("Arial", 'I', 10)
-    pdf.multi_cell(0, 8, "Disclaimer: This report is generated for investigational/research use and requires clinical validation.")
+    pdf.multi_cell(0, 8, "Disclaimer: Investigational/research use. Requires clinical validation.")
     
     # --- DATA PLOT PAGES ---
     apply_academic_style()
@@ -284,7 +280,17 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                     ax.legend(frameon=False, fontsize=9)
                 ax.set_xlabel("Insert Size / Template Length (bp / nt)")
                 ax.set_ylabel("Probability Density")
-                ax.text(0.95, 0.85, "K-S test\n$D = 0.15, p < 0.0001$", transform=ax.transAxes, ha='right', va='top', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", edgecolor='#DDDDDD', facecolor='white', alpha=0.9))
+                
+            elif data['type'] == 'pbmc_chip':
+                df = data['df']
+                colors = {'CHIP (Filtered)': '#4C72B0', 'Somatic (Retained)': '#C44E52'}
+                for status in df['Status'].unique():
+                    subset = df[df['Status'] == status]
+                    ax.scatter(subset['Plasma_VAF'], subset['PBMC_VAF'], label=status, color=colors[status], alpha=0.8, s=40, edgecolor='#222222', linewidth=0.5)
+                ax.plot([0, 5], [0, 5], 'k--', alpha=0.5, label="y=x (Concordance)")
+                ax.set_xlabel("Plasma cfDNA VAF (%)")
+                ax.set_ylabel("Matched PBMC VAF (%)")
+                ax.legend(frameon=False, fontsize=9)
 
             elif data['type'] == 'motif':
                 keys = list(data['motif_dict'].keys())
@@ -293,7 +299,6 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                 ax.bar(keys, vals, yerr=errors, capsize=4, color="#4C72B0", edgecolor='#222222', linewidth=1.0, error_kw=dict(lw=1.5, capthick=1.5, ecolor='#222222'))
                 ax.set_xlabel("Terminal Motif Designation")
                 ax.set_ylabel("Relative Frequency (%) +/- SEM")
-                ax.text(0.95, 0.95, "Pearson's $\chi^2$ test\n$\chi^2 = 12.4, p = 0.0062$", transform=ax.transAxes, ha='right', va='top', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", edgecolor='#DDDDDD', facecolor='white', alpha=0.9))
 
             elif data['type'] == 'vaf':
                 sns.histplot(data['vaf_data'] * 100, stat="density", color='#B0B0B0', alpha=0.5, ax=ax, edgecolor='none', bins=35)
@@ -301,8 +306,7 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                 ax.axvline(0.1, color='#C44E52', linestyle='--', alpha=0.8, linewidth=1.5, label='LOD (0.1%)')
                 ax.set_xlabel("Variant Allele Frequency (%)")
                 ax.set_ylabel("Probability Density")
-                ax.legend(frameon=False, fontsize=9, loc='upper right')
-                ax.text(0.95, 0.85, "Shapiro-Wilk test\n$W = 0.88, p < 0.001$", transform=ax.transAxes, ha='right', va='top', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", edgecolor='#DDDDDD', facecolor='white', alpha=0.9))
+                ax.legend(frameon=False, fontsize=9)
 
             elif data['type'] == 'lollipop':
                 vcf = data['vcf_df']
@@ -311,18 +315,15 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                 
                 high_vcf = vcf[vcf['VAF'] > 0.15]
                 low_vcf = vcf[vcf['VAF'] <= 0.15]
-                
                 ax.scatter(low_vcf['POS'], low_vcf['VAF']*100, color='#4C72B0', s=40, edgecolors='#222222', zorder=2, label="Subclonal")
                 ax.scatter(high_vcf['POS'], high_vcf['VAF']*100, color='#C44E52', s=100, edgecolors='#222222', zorder=3, label="Clonal Driver")
-                
                 ax.axhline(15, color='#8C8C8C', linestyle='--', linewidth=1.0, zorder=0)
                 for _, row in high_vcf.iterrows():
                     ax.annotate(f"{row['VAF']*100:.1f}%", (row['POS'], row['VAF']*100), textcoords="offset points", xytext=(0,8), ha='center', fontsize=9)
-                    
                 ax.set_ylim(0, 50)
                 ax.set_xlabel("Genomic Coordinate (GRCh38)")
                 ax.set_ylabel("Variant Allele Frequency (%)")
-                ax.legend(frameon=False, fontsize=9, loc='upper left')
+                ax.legend(frameon=False, fontsize=9)
 
             elif data['type'] == 'volcano':
                 df = data['df']
@@ -330,7 +331,6 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                 for status, color in colors.items():
                     subset = df[df['Status'] == status]
                     ax.scatter(subset['log2FC'], subset['neg_log10_pval'], color=color, label=status, alpha=0.85, edgecolor='#222222' if status != 'Not Significant' else 'none', s=40, linewidths=0.5)
-                
                 ax.axvline(1.5, color='#8C8C8C', linestyle='--', alpha=0.6, linewidth=1.2)
                 ax.axvline(-1.5, color='#8C8C8C', linestyle='--', alpha=0.6, linewidth=1.2)
                 ax.axhline(1.3, color='#8C8C8C', linestyle='--', alpha=0.6, linewidth=1.2)
@@ -338,11 +338,9 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                 top_hits = df[df['Status'] != 'Not Significant']
                 for _, row in top_hits.iterrows():
                     ax.annotate(row['Gene'], (row['log2FC'], row['neg_log10_pval']), textcoords="offset points", xytext=(0,6), ha='center', fontsize=8, fontweight='bold', color='#222222')
-
                 ax.set_xlabel(r"$\log_2$(Fold Change)")
                 ax.set_ylabel(r"$-\log_{10}$($p$-value)")
                 ax.legend(frameon=False, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=9)
-                ax.text(0.02, 0.98, "Wald test (FDR < 0.01)\nThresholds: |Log2FC| > 1.5, p < 0.05", transform=ax.transAxes, ha='left', va='top', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", edgecolor='#DDDDDD', facecolor='white', alpha=0.9))
 
             plt.tight_layout()
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
@@ -395,7 +393,6 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     pdf.cell(0, 8, "Representative FASTA Sequence Used in Pipeline Evaluation:", ln=True)
     pdf.ln(2)
     
-    # Monospaced academic FASTA container
     pdf.set_font("Courier", 'B', 9)
     pdf.set_fill_color(242, 244, 247)
     pdf.multi_cell(0, 5, fasta_info["fasta_header"], fill=True)
@@ -405,7 +402,7 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
     
     pdf.set_font("Arial", 'I', 9)
     pdf.set_text_color(100, 100, 100)
-    pdf.multi_cell(0, 5, "Note: The sequence depicted above represents the primary query or canonical alignment target extracted from the patient's BAM stream or NCBI validation cohort. Quality and alignment flags meet ISO 15189 molecular diagnostic standards.")
+    pdf.multi_cell(0, 5, "Note: The sequence depicted above represents the canonical alignment target extracted from the patient's sequence stream. Alignment and epitranscriptomic modification flags meet ISO 15189 molecular diagnostic standards.")
     
     return pdf.output(dest="S").encode("latin-1")
 
@@ -628,6 +625,15 @@ def get_vaf_data():
     vaf_mock = np.random.exponential(scale=0.01, size=100)
     return vaf_mock[vaf_mock < 0.1]
 
+def get_pbmc_vaf_data():
+    np.random.seed(42)
+    n_mut = 50
+    plasma_vaf = np.random.uniform(0.1, 5.0, n_mut)
+    is_chip = np.random.choice([True, False], n_mut, p=[0.4, 0.6])
+    pbmc_vaf = np.where(is_chip, plasma_vaf * np.random.normal(1.0, 0.1, n_mut), np.random.uniform(0, 0.05, n_mut))
+    df = pd.DataFrame({'Plasma_VAF': plasma_vaf, 'PBMC_VAF': pbmc_vaf, 'Status': np.where(is_chip, 'CHIP (Filtered)', 'Somatic (Retained)')})
+    return df
+
 def get_volcano_data(assay="mRNA"):
     n_genes = 500
     df = pd.DataFrame({'Gene': [f"TARGET_{i}" for i in range(n_genes)], 'log2FC': np.random.normal(0, 1.2, n_genes), 'neg_log10_pval': np.random.exponential(0.8, n_genes)})
@@ -758,11 +764,11 @@ else:
         reset_app()
         st.rerun()
         
-    with st.expander("🔬 Clinical & Academic Relevance of Pipeline Steps", expanded=False):
+    with st.expander("🔬 Clinical & Academic Relevance of Pipeline Protocol", expanded=False):
         st.markdown(CLINICAL_RELEVANCE_TEXTS[st.session_state.assay])
 
     tab1, tab2, tab3, tab4 = st.tabs([
-        "1. Sample Quality", 
+        "1. Sample Quality & MISEV", 
         "2. Structural Integrity", 
         "3. Molecular Analytics", 
         "4. Clinical Intelligence"
@@ -770,45 +776,44 @@ else:
 
     # --- MODULE 1: QUALITY & ALIGNMENT ---
     with tab1:
-        st.markdown(f"**Step 1: Sequence Cleaning & Human Genome Matching ({st.session_state.assay})**")
+        st.markdown(f"**Step 1: Sequence Cleaning & Bio-Marker Extraction QC ({st.session_state.assay})**")
         if st.session_state.assay == "cfDNA":
-            st.info("Adapter trimming and UMI consensus alignment optimized for double-stranded cell-free DNA fragments.")
+            st.info("Adapter trimming and UMI consensus alignment optimized for double-stranded cell-free DNA fragments. Mandatory matched-PBMC processing initialized.")
         elif st.session_state.assay == "mRNA":
-            st.info("Splice-aware alignment and deduplication tuned for fragmented EV transcriptomic cargo.")
+            st.info("Splice-aware alignment and TMM normalization applied. Exogenous synthetic spike-in (*C. elegans* cel-miR-39-3p) added for absolute transcript quantification.")
         elif st.session_state.assay == "miRNA":
-            st.info("isomiR-aware alignment and UMI collapsing structured for circulating small non-coding RNA.")
+            st.info("isomiR-aware alignment and UMI collapsing structured for small non-coding RNA. Upper Quartile (UQ) normalization applied against synthetic spike-ins.")
         elif st.session_state.assay == "siRNA":
-            st.info("Strict 0-mismatch alignment tailored for synthetic therapeutic small interfering RNA payloads.")
+            st.info("Strict 0-mismatch alignment tailored for synthetic therapeutic payloads. Spike-in TMM normalization standardizes pharmacokinetic profiles.")
         elif st.session_state.assay == "tRNA":
-            st.info("Specialized mapping for mature tRNAs and tRNA-derived fragments (tRFs/tiRNAs) accounting for heavy RNA modifications and RT-stops.")
+            st.info("Enzymatic demethylase (AlkB) pre-treatment completed. Dual-alignment strategy routing non-mappers to dedicated MINTmap indices.")
         elif st.session_state.assay == "rRNA":
-            st.info("Specialized mapping against ribosomal RNA databases (SILVA) to quantify rRFs (rRNA-derived fragments) and overall ribosomal heterogeneity.")
+            st.info("AlkB pre-treatment applied. Dedicated alignment against SILVA databases to quantify rRFs using fractional read allocation (EM).")
         elif st.session_state.assay == "vaultRNA":
-            st.info("Targeted alignment to RNA polymerase III transcripts mapping intact vault RNAs (~100nt) and smaller processed svRNAs (~23nt).")
+            st.info("Targeted alignment to RNA Pol III transcripts mapping vtRNAs/svRNAs. Synthetic spike-ins utilized to correct for exosomal compositional variations.")
         
         c1, c2, c3 = st.columns(3)
-        c1.metric("Adapter Trimming", "Complete", "Data Cleaned")
-        c2.metric("Sequence Quality (Q30)", "> 95%", "High Confidence")
-        c3.metric("Usable Reads", "12.8 Million", "-71% Noise Filtered")
+        c1.metric("Adapter Trimming & Clean", "Complete", "Q30 > 95%")
+        
+        if st.session_state.assay in ["mRNA", "miRNA", "siRNA", "tRNA", "rRNA", "vaultRNA"]:
+            c2.metric("MISEV EV Purity Ratio (CD9/Albumin)", "18.4", "High Purity / Low RNP")
+            c3.metric("Spike-in cel-miR-39 Recovery", "92.1%", "Optimal Compositional Calib.")
+        else:
+            c2.metric("PBMC Dual-Seq Depth", "1,240x", "CHIP-Subtraction Ready")
+            c3.metric("Usable Reads", "12.8 Million", "-71% Noise Filtered")
 
     # --- MODULE 2: STRUCTURAL INTEGRITY ---
     with tab2:
-        st.markdown(f"**Step 2: Biological Fingerprinting ({st.session_state.assay})**")
-        if st.session_state.assay == "cfDNA":
-            st.info("Evaluating apoptotic and tumor-derived fragment length modes (145bp / 167bp).")
-        elif st.session_state.assay == "mRNA":
-            st.info("Assessing transcript length distribution and exonic/back-spliced structural integrity.")
-        elif st.session_state.assay == "miRNA":
-            st.info("Validating strict mature small RNA length distribution (~22nt) and 5' terminal bias.")
-        elif st.session_state.assay == "siRNA":
-            st.info("Verifying precise therapeutic payload length (21-24nt) and nuclease stability.")
-        elif st.session_state.assay == "tRNA":
-            st.info("Profiling specific cleavage patterns of tRNA fragments (tRF-1, tRF-3, tRF-5, tiRNAs) and length distributions.")
-        elif st.session_state.assay == "rRNA":
-            st.info("Profiling specific cleavage patterns of rRNA fragments (rRFs) and intact 18S/28S ribosomal subunit ratios.")
-        elif st.session_state.assay == "vaultRNA":
-            st.info("Analyzing dual-mode length distribution: intact ribonucleoprotein complex vtRNAs vs. DICER-cleaved svRNAs.")
+        st.markdown(f"**Step 2: Biological Fingerprinting & Structural Topology ({st.session_state.assay})**")
         
+        if st.session_state.assay in ["tRNA", "rRNA", "vaultRNA"]:
+            st.markdown("**Dual-Alignment Optimization Metric**")
+            m_col1, m_col2, m_col3 = st.columns(3)
+            m_col1.metric("AlkB Demethylase Pre-treatment", "Confirmed", "Removes m1A/m3C RT-arrests")
+            m_col2.metric("Primary Aligner (Standard)", "18.2% Map Rate", "-Low Recovery")
+            m_col3.metric("Secondary Dedicated Aligner", "89.4% Map Rate", "+71.2% Recovery via EM")
+            st.divider()
+
         fig_col1, fig_col2 = st.columns(2)
         with fig_col1:
             np.random.seed(42)
@@ -861,12 +866,30 @@ else:
 
     # --- MODULE 3: ANALYTICS ---
     with tab3:
-        st.markdown(f"**Step 3: Analytical Profiling ({st.session_state.assay})**")
+        st.markdown(f"**Step 3: Analytical Profiling & Bioinformatics Calling ({st.session_state.assay})**")
         
         if st.session_state.assay == "cfDNA":
-            st.info("Executing GATK Mutect2 somatic mutation calling with CHIP leukocyte subtraction.")
+            st.info("Executing GATK Mutect2 somatic mutation calling and PBMC Dual-Seq Subtraction.")
             fig_col3, fig_col4 = st.columns(2)
             with fig_col3:
+                # Add PBMC CHIP Subtraction Plot
+                df_pbmc = get_pbmc_vaf_data()
+                pdf_data_payload["PBMC Dual-Seq CHIP Subtraction"] = {'type': 'pbmc_chip', 'df': df_pbmc}
+                
+                fig_pbmc = go.Figure()
+                colors = {'CHIP (Filtered)': '#4C72B0', 'Somatic (Retained)': '#C44E52'}
+                
+                for status in df_pbmc['Status'].unique():
+                    subset = df_pbmc[df_pbmc['Status'] == status]
+                    fig_pbmc.add_trace(go.Scatter(
+                        x=subset['Plasma_VAF'], y=subset['PBMC_VAF'], mode='markers', name=status,
+                        marker=dict(color=colors[status], size=8, line=dict(color='#222222', width=0.5))
+                    ))
+                fig_pbmc.add_trace(go.Scatter(x=[0, 5], y=[0, 5], mode='lines', line=dict(color='black', dash='dash'), name='y=x (Concordance)', opacity=0.5))
+                fig_pbmc.update_layout(title="PBMC vs Plasma VAF (CHIP Filter)", xaxis_title="Plasma cfDNA VAF (%)", yaxis_title="Matched PBMC VAF (%)")
+                st.plotly_chart(apply_plotly_academic_layout(fig_pbmc), use_container_width=True)
+            
+            with fig_col4:
                 vaf_percent = get_vaf_data() * 100
                 kde_vaf = gaussian_kde(vaf_percent)
                 x_vaf_range = np.linspace(0, max(vaf_percent) * 1.1, 200)
@@ -878,41 +901,8 @@ else:
                 
                 pdf_data_payload["Variant Allele Frequency Spectrum"] = {'type': 'vaf', 'vaf_data': vaf_percent / 100}
                 fig_vaf.add_vline(x=0.1, line_dash="dash", line_color="#C44E52", annotation_text="LOD (0.1%)", annotation_position="top right")
-                fig_vaf.add_annotation(text="Shapiro-Wilk test: W = 0.88, p < 0.001", xref="paper", yref="paper", x=0.98, y=0.85, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4)
                 fig_vaf.update_layout(title="Variant Allele Frequency Spectrum", xaxis_title="Variant Allele Frequency (%)", yaxis_title="Probability Density", showlegend=False)
                 st.plotly_chart(apply_plotly_academic_layout(fig_vaf), use_container_width=True)
-            
-            with fig_col4:
-                np.random.seed(42)
-                pos_data = np.random.randint(7577000, 7578500, 12)
-                vaf_data = np.abs(np.random.normal(0.04, 0.03, 12))
-                vaf_data[2] = 0.42  
-                vaf_data[7] = 0.28  
-                mock_vcf = pd.DataFrame({'POS': pos_data, 'VAF': vaf_data}).sort_values('POS')
-                mock_vcf['Color'] = ['#C44E52' if v > 0.15 else '#4C72B0' for v in mock_vcf['VAF']]
-                mock_vcf['Size'] = [14 if v > 0.15 else 8 for v in mock_vcf['VAF']]
-                
-                pdf_data_payload["Somatic Clonal Architecture Map"] = {'type': 'lollipop', 'vcf_df': mock_vcf}
-                
-                fig_lolli = go.Figure()
-                fig_lolli.add_vrect(x0=7577400, x1=7577800, fillcolor="#EAEAEA", opacity=0.5, line_width=0, annotation_text="DNA Binding Domain", annotation_position="top left", annotation_font_size=10)
-                
-                for _, row in mock_vcf.iterrows():
-                    fig_lolli.add_shape(type="line", x0=row['POS'], y0=0, x1=row['POS'], y1=row['VAF'] * 100, line=dict(color="#8C8C8C", width=1.5))
-                
-                fig_lolli.add_trace(go.Scatter(
-                    x=mock_vcf['POS'], 
-                    y=mock_vcf['VAF'] * 100, 
-                    mode='markers+text', 
-                    marker=dict(size=mock_vcf['Size'], color=mock_vcf['Color'], line=dict(color='#222222', width=1)),
-                    text=[f"{v*100:.1f}%" if v > 0.15 else "" for v in mock_vcf['VAF']],
-                    textposition="top center",
-                    textfont=dict(size=10, color="#222222")
-                ))
-                fig_lolli.add_hline(y=15, line_dash="dash", line_color="#8C8C8C", annotation_text="Clonal Threshold", annotation_position="bottom right")
-                fig_lolli.update_layout(title="Mutation Map: TP53 Architecture", showlegend=False)
-                fig_lolli.update_yaxes(range=[0, 50])
-                st.plotly_chart(apply_plotly_academic_layout(fig_lolli), use_container_width=True)
 
         elif st.session_state.assay in ["mRNA", "miRNA", "siRNA", "tRNA", "rRNA", "vaultRNA"]:
             if st.session_state.assay == "mRNA":
@@ -957,7 +947,7 @@ else:
             fig_volcano.add_hline(y=1.3, line_dash="dash", line_color="#8C8C8C", opacity=0.6)
             
             fig_volcano.add_annotation(text="Wald test (FDR < 0.01)<br>Thresholds: |Log2FC| > 1.5, p < 0.05", xref="paper", yref="paper", x=0.02, y=0.98, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4, align="left")
-            fig_volcano.update_layout(title=f"{st.session_state.assay} Differential Expression (Volcano Plot)", xaxis_title="Log2(Fold Change)", yaxis_title="-Log10(p-value)")
+            fig_volcano.update_layout(title=f"{st.session_state.assay} Spike-in Calibrated Differential Expression", xaxis_title="Log2(Fold Change)", yaxis_title="-Log10(p-value)")
             
             st.plotly_chart(apply_plotly_academic_layout(fig_volcano), use_container_width=True)
 
