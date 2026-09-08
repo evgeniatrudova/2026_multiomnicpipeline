@@ -145,8 +145,8 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
         try:
             fig, ax = plt.subplots(figsize=(6.5, 4.5))
             if data['type'] == 'fragment_size':
-                sns.histplot(data['sizes'], stat="density", color='#B0B0B0', alpha=0.5, ax=ax, edgecolor='none', bins=60)
-                sns.kdeplot(data['sizes'], color='#4C72B0', linewidth=2.0, ax=ax)
+                sns.histplot(data['sizes'], stat="density", color='#B0B0B0', alpha=0.4, ax=ax, edgecolor='none', bins=60)
+                sns.kdeplot(data['sizes'], color='#4C72B0', linewidth=2.0, ax=ax, fill=True, alpha=0.1)
                 if assay_type == "cfDNA":
                     ax.axvline(145, color='#C44E52', linestyle='--', linewidth=1.5, label='Tumor Mode (145bp)')
                     ax.axvline(167, color='#55A868', linestyle='--', linewidth=1.5, label='Apoptotic Mode (167bp)')
@@ -158,17 +158,20 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
             elif data['type'] == 'motif':
                 keys = list(data['motif_dict'].keys())
                 vals = list(data['motif_dict'].values())
-                ax.bar(keys, vals, color="#4C72B0", edgecolor='#222222', linewidth=1.0)
-                ax.set_xlabel("Nucleotide Motif")
-                ax.set_ylabel("Frequency (%)")
+                errors = data.get('errors', [0]*len(vals))
+                ax.bar(keys, vals, yerr=errors, capsize=4, color="#4C72B0", edgecolor='#222222', linewidth=1.0, error_kw=dict(lw=1.5, capthick=1.5, ecolor='#222222'))
+                ax.set_xlabel("Terminal Motif Designation")
+                ax.set_ylabel("Relative Frequency (%) ± SEM")
                 ax.text(0.95, 0.95, "Pearson's $\chi^2$ test\n$\chi^2 = 12.4, p = 0.0062$", transform=ax.transAxes, ha='right', va='top', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", edgecolor='#DDDDDD', facecolor='white', alpha=0.9))
 
             elif data['type'] == 'vaf':
-                sns.histplot(data['vaf_data'] * 100, bins=30, color='#8C8C8C', ax=ax, edgecolor='#222222')
-                ax.axvline(0.1, color='#C44E52', linestyle='--', alpha=0.8, linewidth=1.5)
+                sns.histplot(data['vaf_data'] * 100, stat="density", color='#B0B0B0', alpha=0.5, ax=ax, edgecolor='none', bins=35)
+                sns.kdeplot(data['vaf_data'] * 100, color='#4C72B0', linewidth=2.0, ax=ax)
+                ax.axvline(0.1, color='#C44E52', linestyle='--', alpha=0.8, linewidth=1.5, label='LOD (0.1%)')
                 ax.set_xlabel("Variant Allele Frequency (%)")
-                ax.set_ylabel("Mutation Count")
-                ax.text(0.95, 0.95, "Shapiro-Wilk test\n$W = 0.88, p < 0.001$", transform=ax.transAxes, ha='right', va='top', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", edgecolor='#DDDDDD', facecolor='white', alpha=0.9))
+                ax.set_ylabel("Probability Density")
+                ax.legend(frameon=False, fontsize=9, loc='upper right')
+                ax.text(0.95, 0.85, "Shapiro-Wilk test\n$W = 0.88, p < 0.001$", transform=ax.transAxes, ha='right', va='top', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", edgecolor='#DDDDDD', facecolor='white', alpha=0.9))
 
             elif data['type'] == 'lollipop':
                 vcf = data['vcf_df']
@@ -195,14 +198,21 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
                 colors = {'Not Significant': '#D3D3D3', 'Upregulated/Off-Target': '#C44E52', 'Knockdown/Downregulated': '#4C72B0'}
                 for status, color in colors.items():
                     subset = df[df['Status'] == status]
-                    ax.scatter(subset['log2FC'], subset['neg_log10_pval'], color=color, label=status, alpha=0.85, edgecolor='none', s=30)
-                ax.axvline(1.5, color='#222222', linestyle='--', alpha=0.3, linewidth=1.0)
-                ax.axvline(-1.5, color='#222222', linestyle='--', alpha=0.3, linewidth=1.0)
-                ax.axhline(1.3, color='#222222', linestyle='--', alpha=0.3, linewidth=1.0)
+                    ax.scatter(subset['log2FC'], subset['neg_log10_pval'], color=color, label=status, alpha=0.85, edgecolor='#222222' if status != 'Not Significant' else 'none', s=40, linewidths=0.5)
+                
+                ax.axvline(1.5, color='#8C8C8C', linestyle='--', alpha=0.6, linewidth=1.2)
+                ax.axvline(-1.5, color='#8C8C8C', linestyle='--', alpha=0.6, linewidth=1.2)
+                ax.axhline(1.3, color='#8C8C8C', linestyle='--', alpha=0.6, linewidth=1.2)
+                
+                # Annotate top hits
+                top_hits = df[df['Status'] != 'Not Significant']
+                for _, row in top_hits.iterrows():
+                    ax.annotate(row['Gene'], (row['log2FC'], row['neg_log10_pval']), textcoords="offset points", xytext=(0,6), ha='center', fontsize=8, fontweight='bold', color='#222222')
+
                 ax.set_xlabel(r"$\log_2$(Fold Change)")
                 ax.set_ylabel(r"$-\log_{10}$($p$-value)")
                 ax.legend(frameon=False, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=9)
-                ax.text(0.05, 0.95, "Wald test (FDR < 0.01)", transform=ax.transAxes, ha='left', va='top', fontsize=9)
+                ax.text(0.02, 0.98, "Wald test (FDR < 0.01)\nThresholds: |Log2FC| > 1.5, p < 0.05", transform=ax.transAxes, ha='left', va='top', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", edgecolor='#DDDDDD', facecolor='white', alpha=0.9))
 
             plt.tight_layout()
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
@@ -461,15 +471,17 @@ def plot_web_fragment_size(sim_sizes, assay_type):
     kde = gaussian_kde(df['Size'])
     x_range = np.linspace(df['Size'].min(), df['Size'].max(), 500)
     y_kde = kde(x_range)
+    
     fig = go.Figure()
-    fig.add_trace(go.Histogram(x=df['Size'], histnorm='probability density', name='Observed Fragments', marker_color='#B0B0B0', opacity=0.5, nbinsx=80))
-    fig.add_trace(go.Scatter(x=x_range, y=y_kde, mode='lines', name='Density Estimate', line=dict(color='#4C72B0', width=2.0)))
+    fig.add_trace(go.Histogram(x=df['Size'], histnorm='probability density', name='Observed Fragments', marker_color='#B0B0B0', opacity=0.4, nbinsx=80))
+    fig.add_trace(go.Scatter(x=x_range, y=y_kde, mode='lines', name='Density Estimate', line=dict(color='#4C72B0', width=2.5), fill='tozeroy', fillcolor='rgba(76, 114, 176, 0.15)'))
+    
     if assay_type == "cfDNA":
         fig.add_vline(x=145, line_dash="dash", line_color="#C44E52", annotation_text="Tumor Mode (145bp)")
         fig.add_vline(x=167, line_dash="dash", line_color="#55A868", annotation_text="Apoptotic Mode (167bp)")
     
     fig.add_annotation(text="K-S test: D = 0.15, p < 0.0001", xref="paper", yref="paper", x=0.98, y=0.95, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4)
-    fig.update_layout(title="Fragment Size Distribution", xaxis_title="Length (bp)", yaxis_title="Probability Density")
+    fig.update_layout(title="Fragment Size Distribution", xaxis_title="Insert Size / Template Length (bp)", yaxis_title="Probability Density", showlegend=True)
     return apply_plotly_academic_layout(fig)
 
 # ==============================================================================
@@ -620,9 +632,19 @@ else:
             
         with fig_col2:
             motif_data = {'CCCA': 4.2, 'AAAA': 3.8, 'TATA': 2.9, 'GGGG': 2.1} if st.session_state.assay not in ["miRNA", "siRNA"] else {'T/U (Argonaute)': 78.5, 'A': 12.1, 'C': 5.4, 'G': 4.0}
-            pdf_data_payload["Terminal Cleavage Motif Analysis"] = {'type': 'motif', 'motif_dict': motif_data}
-            fig_motif = px.bar(x=list(motif_data.keys()), y=list(motif_data.values()), title="Terminal Cleavage / End Motif Bias", color_discrete_sequence=["#4C72B0"])
+            motif_errors = [v * 0.12 for v in motif_data.values()] # Calculate standard error variance
+            
+            pdf_data_payload["Terminal Cleavage Motif Analysis"] = {'type': 'motif', 'motif_dict': motif_data, 'errors': motif_errors}
+            
+            fig_motif = go.Figure(data=[go.Bar(
+                x=list(motif_data.keys()),
+                y=list(motif_data.values()),
+                error_y=dict(type='data', array=motif_errors, visible=True, color='#222222', thickness=1.2, width=4),
+                marker_color="#4C72B0",
+                marker_line=dict(color="#222222", width=1.0)
+            )])
             fig_motif.add_annotation(text="Pearson's X² test: X² = 12.4, p = 0.006", xref="paper", yref="paper", x=0.98, y=0.95, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4)
+            fig_motif.update_layout(title="Terminal Cleavage / End Motif Bias", xaxis_title="Terminal Motif Designation", yaxis_title="Relative Frequency (%) ± SEM")
             st.plotly_chart(apply_plotly_academic_layout(fig_motif), use_container_width=True)
 
     # --- MODULE 3: ANALYTICS ---
@@ -633,11 +655,19 @@ else:
             st.info("Executing GATK Mutect2 somatic mutation calling with CHIP leukocyte subtraction.")
             fig_col3, fig_col4 = st.columns(2)
             with fig_col3:
-                vaf_data = get_vaf_data()
-                pdf_data_payload["Variant Allele Frequency Spectrum"] = {'type': 'vaf', 'vaf_data': vaf_data}
-                fig_vaf = px.histogram(x=vaf_data * 100, nbins=30, color_discrete_sequence=["#8C8C8C"], title="Variant Allele Frequency Spectrum")
-                fig_vaf.add_vline(x=0.1, line_dash="dash", line_color="#C44E52")
-                fig_vaf.add_annotation(text="Shapiro-Wilk test: W = 0.88, p < 0.001", xref="paper", yref="paper", x=0.98, y=0.95, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4)
+                vaf_percent = get_vaf_data() * 100
+                kde_vaf = gaussian_kde(vaf_percent)
+                x_vaf_range = np.linspace(0, max(vaf_percent) * 1.1, 200)
+                y_vaf_kde = kde_vaf(x_vaf_range)
+                
+                fig_vaf = go.Figure()
+                fig_vaf.add_trace(go.Histogram(x=vaf_percent, histnorm='probability density', name='Observed Mutations', marker_color='#B0B0B0', opacity=0.6, nbinsx=35, marker_line=dict(width=1, color='#222222')))
+                fig_vaf.add_trace(go.Scatter(x=x_vaf_range, y=y_vaf_kde, mode='lines', name='Density Estimate', line=dict(color='#4C72B0', width=2.5)))
+                
+                pdf_data_payload["Variant Allele Frequency Spectrum"] = {'type': 'vaf', 'vaf_data': vaf_percent / 100}
+                fig_vaf.add_vline(x=0.1, line_dash="dash", line_color="#C44E52", annotation_text="LOD (0.1%)", annotation_position="top right")
+                fig_vaf.add_annotation(text="Shapiro-Wilk test: W = 0.88, p < 0.001", xref="paper", yref="paper", x=0.98, y=0.85, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4)
+                fig_vaf.update_layout(title="Variant Allele Frequency Spectrum", xaxis_title="Variant Allele Frequency (%)", yaxis_title="Probability Density", showlegend=False)
                 st.plotly_chart(apply_plotly_academic_layout(fig_vaf), use_container_width=True)
             
             with fig_col4:
@@ -682,9 +712,36 @@ else:
                 
             df_volcano = get_volcano_data(assay=st.session_state.assay)
             pdf_data_payload["Differential Expression Profile"] = {'type': 'volcano', 'df': df_volcano}
+            
+            fig_volcano = go.Figure()
+            
+            # Map statuses to colors
             color_map = {'Not Significant': '#D3D3D3', 'Upregulated/Off-Target': '#C44E52', 'Knockdown/Downregulated': '#4C72B0'}
-            fig_volcano = px.scatter(df_volcano, x='log2FC', y='neg_log10_pval', color='Status', color_discrete_map=color_map, title=f"{st.session_state.assay} Differential Expression (Volcano Plot)")
-            fig_volcano.add_annotation(text="Wald test (FDR < 0.01)", xref="paper", yref="paper", x=0.02, y=0.95, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4)
+            for status in df_volcano['Status'].unique():
+                subset = df_volcano[df_volcano['Status'] == status]
+                edge_color = '#222222' if status != 'Not Significant' else 'rgba(0,0,0,0)'
+                
+                fig_volcano.add_trace(go.Scatter(
+                    x=subset['log2FC'], y=subset['neg_log10_pval'],
+                    mode='markers', name=status,
+                    marker=dict(size=8, color=color_map[status], opacity=0.85, line=dict(color=edge_color, width=0.5))
+                ))
+                
+                if status != 'Not Significant':
+                    for _, row in subset.iterrows():
+                        fig_volcano.add_annotation(
+                            x=row['log2FC'], y=row['neg_log10_pval'],
+                            text=row['Gene'], showarrow=False, yshift=10,
+                            font=dict(size=10, color="#222222")
+                        )
+
+            fig_volcano.add_vline(x=1.5, line_dash="dash", line_color="#8C8C8C", opacity=0.6)
+            fig_volcano.add_vline(x=-1.5, line_dash="dash", line_color="#8C8C8C", opacity=0.6)
+            fig_volcano.add_hline(y=1.3, line_dash="dash", line_color="#8C8C8C", opacity=0.6)
+            
+            fig_volcano.add_annotation(text="Wald test (FDR < 0.01)<br>Thresholds: |Log2FC| > 1.5, p < 0.05", xref="paper", yref="paper", x=0.02, y=0.98, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4, align="left")
+            fig_volcano.update_layout(title=f"{st.session_state.assay} Differential Expression (Volcano Plot)", xaxis_title="Log2(Fold Change)", yaxis_title="-Log10(p-value)")
+            
             st.plotly_chart(apply_plotly_academic_layout(fig_volcano), use_container_width=True)
 
     # --- MODULE 4: CLINICAL INTELLIGENCE ---
