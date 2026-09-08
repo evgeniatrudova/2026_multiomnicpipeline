@@ -16,7 +16,7 @@ import seaborn as sns
 # ==============================================================================
 # 1. PAGE CONFIGURATION & ANTI-TRANSPARENCY OVERRIDE
 # ==============================================================================
-st.set_page_config(page_title="EV Cargo Diagnostics", page_icon="🔬", layout="wide")
+st.set_page_config(page_title="EV Cargo Diagnostics", layout="wide")
 
 st.markdown("""
 <style>
@@ -84,7 +84,7 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
         return {"Status": f"API Connection Error: {str(e)}"}
 
 # ==============================================================================
-# 3. ACADEMIC PDF GENERATOR ENGINE (PUBLICATION READY)
+# 3. ACADEMIC PDF GENERATOR ENGINE
 # ==============================================================================
 def apply_academic_style():
     plt.style.use('default')
@@ -172,10 +172,23 @@ def generate_academic_pdf(assay_type, source_id, pipeline_desc, data_payload):
 
             elif data['type'] == 'lollipop':
                 vcf = data['vcf_df']
-                ax.vlines(vcf['POS'], ymin=0, ymax=vcf['VAF']*100, color='#8C8C8C', linewidth=2.0, zorder=1)
-                ax.scatter(vcf['POS'], vcf['VAF']*100, color='#C44E52', s=80, edgecolors='#222222', zorder=2)
+                ax.axvspan(7577400, 7577800, color='#EAEAEA', alpha=0.5, zorder=0, label="DNA Binding Domain")
+                ax.vlines(vcf['POS'], ymin=0, ymax=vcf['VAF']*100, color='#8C8C8C', linewidth=1.5, zorder=1)
+                
+                high_vcf = vcf[vcf['VAF'] > 0.15]
+                low_vcf = vcf[vcf['VAF'] <= 0.15]
+                
+                ax.scatter(low_vcf['POS'], low_vcf['VAF']*100, color='#4C72B0', s=40, edgecolors='#222222', zorder=2, label="Subclonal")
+                ax.scatter(high_vcf['POS'], high_vcf['VAF']*100, color='#C44E52', s=100, edgecolors='#222222', zorder=3, label="Clonal Driver")
+                
+                ax.axhline(15, color='#8C8C8C', linestyle='--', linewidth=1.0, zorder=0)
+                for _, row in high_vcf.iterrows():
+                    ax.annotate(f"{row['VAF']*100:.1f}%", (row['POS'], row['VAF']*100), textcoords="offset points", xytext=(0,8), ha='center', fontsize=9)
+                    
+                ax.set_ylim(0, 50)
                 ax.set_xlabel("Genomic Coordinate (GRCh38)")
                 ax.set_ylabel("Variant Allele Frequency (%)")
+                ax.legend(frameon=False, fontsize=9, loc='upper left')
 
             elif data['type'] == 'volcano':
                 df = data['df']
@@ -626,13 +639,37 @@ else:
                 fig_vaf.add_vline(x=0.1, line_dash="dash", line_color="#C44E52")
                 fig_vaf.add_annotation(text="Shapiro-Wilk test: W = 0.88, p < 0.001", xref="paper", yref="paper", x=0.98, y=0.95, showarrow=False, font=dict(family="Arial", size=11, color="#222222"), bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDDDDD", borderpad=4)
                 st.plotly_chart(apply_plotly_academic_layout(fig_vaf), use_container_width=True)
+            
             with fig_col4:
-                mock_vcf = pd.DataFrame({'POS': [7577121, 7578406, 7577538], 'VAF': [0.012, 0.005, 0.045]})
+                np.random.seed(42)
+                pos_data = np.random.randint(7577000, 7578500, 12)
+                vaf_data = np.abs(np.random.normal(0.04, 0.03, 12))
+                vaf_data[2] = 0.42  
+                vaf_data[7] = 0.28  
+                mock_vcf = pd.DataFrame({'POS': pos_data, 'VAF': vaf_data}).sort_values('POS')
+                mock_vcf['Color'] = ['#C44E52' if v > 0.15 else '#4C72B0' for v in mock_vcf['VAF']]
+                mock_vcf['Size'] = [14 if v > 0.15 else 8 for v in mock_vcf['VAF']]
+                
                 pdf_data_payload["Somatic Clonal Architecture Map"] = {'type': 'lollipop', 'vcf_df': mock_vcf}
+                
                 fig_lolli = go.Figure()
-                for _, row in mock_vcf.iterrows(): fig_lolli.add_shape(type="line", x0=row['POS'], y0=0, x1=row['POS'], y1=row['VAF'] * 100, line=dict(color="#8C8C8C", width=2.0))
-                fig_lolli.add_trace(go.Scatter(x=mock_vcf['POS'], y=mock_vcf['VAF'] * 100, mode='markers', marker=dict(size=12, color='#C44E52')))
-                fig_lolli.update_layout(title="Mutation Map: TP53", showlegend=False)
+                fig_lolli.add_vrect(x0=7577400, x1=7577800, fillcolor="#EAEAEA", opacity=0.5, line_width=0, annotation_text="DNA Binding Domain", annotation_position="top left", annotation_font_size=10)
+                
+                for _, row in mock_vcf.iterrows():
+                    fig_lolli.add_shape(type="line", x0=row['POS'], y0=0, x1=row['POS'], y1=row['VAF'] * 100, line=dict(color="#8C8C8C", width=1.5))
+                
+                fig_lolli.add_trace(go.Scatter(
+                    x=mock_vcf['POS'], 
+                    y=mock_vcf['VAF'] * 100, 
+                    mode='markers+text', 
+                    marker=dict(size=mock_vcf['Size'], color=mock_vcf['Color'], line=dict(color='#222222', width=1)),
+                    text=[f"{v*100:.1f}%" if v > 0.15 else "" for v in mock_vcf['VAF']],
+                    textposition="top center",
+                    textfont=dict(size=10, color="#222222")
+                ))
+                fig_lolli.add_hline(y=15, line_dash="dash", line_color="#8C8C8C", annotation_text="Clonal Threshold", annotation_position="bottom right")
+                fig_lolli.update_layout(title="Mutation Map: TP53 Architecture", showlegend=False)
+                fig_lolli.update_yaxes(range=[0, 50])
                 st.plotly_chart(apply_plotly_academic_layout(fig_lolli), use_container_width=True)
 
         elif st.session_state.assay in ["mRNA", "miRNA", "siRNA"]:
