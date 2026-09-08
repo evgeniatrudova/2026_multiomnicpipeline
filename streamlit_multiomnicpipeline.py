@@ -250,18 +250,6 @@ def align_and_call_variants(query_seq: str, ref_seq: str) -> pd.DataFrame:
 # ==============================================================================
 # 3. CANONICAL MANIFEST & NCBI PROVENANCE REPOSITORY
 # ==============================================================================
-
-CLINICAL_RELEVANCE_TEXTS = {
-    "cfDNA": "Every computational step isolates ultra-rare somatic mutations from overwhelming wild-type background. We enforce a mandatory dual-sequencing workflow requiring matched PBMC (buffy coat) sequencing at >1,000x depth alongside plasma cfDNA, algorithmically matching VAFs between compartments to definitively subtract Clonal Hematopoiesis (CHIP). Structural fragmentomics complements this by mapping nucleosomal footprints to differentiate tumor vs apoptotic origins.",
-    "mRNA": "The EV-mRNA pipeline clinically translates tumor transcriptomics from peripheral blood. We implement rigorous TMM and Upper Quartile (UQ) normalization anchored by exogenous synthetic spike-in controls (cel-miR-39-3p) added post-lysis to correct for compositional distortions. MISEV compliance checks ensure signals derive from genuine vesicles rather than free-circulating RNPs.",
-    "miRNA": "Circulating miRNA analysis captures stable Argonaute-protected RNAs. Normalization relies on post-lysis spike-in calibration (miRXplore pools) combined with TMM to preserve accurate abundance against background flux. EV-specific purity ratios (CD9/CD63/CD81 vs. Albumin) flag systemic contamination, ensuring the diagnostic signature originates strictly from the tumor-derived vesicle fraction.",
-    "siRNA": "For oligonucleotide therapeutics, validating target engagement and off-target toxicity is critical. The pipeline measures on-target degradation while deploying strict MISEV purity heuristics to confirm cellular uptake mechanisms vs free-plasma degradation. TMM normalization with synthetic spike-ins provides absolute pharmacokinetic quantitation.",
-    "tRNA": "tRFs carry dense epitranscriptomic modifications that derail standard NGS. We implement enzymatic demethylase pre-treatment (AlkB/DM-tRNA-seq) alongside a dual-alignment strategy: a primary error-tolerant alignment modeling misincorporation as true reference markers, paired with a secondary dedicated alignment (MINTmap) resolving multi-mapper ambiguities, recovering >85% of previously lost translation-inhibition signatures.",
-    "rRNA": "Ribosomal fragments reflect acute cellular stress. Standard aligners misinterpret modification-induced RT-drops. We mandate AlkB pre-treatment and run parallel dedicated alignments against SILVA databases using fractional read allocation (EM algorithms) for multi-mappers. Synthetic spike-ins allow absolute quantification of 18S/28S fragmentation ratios as a readout for tumor necrosis.",
-    "vaultRNA": "Vault RNAs mediate multi-drug resistance. Because intact vtRNAs (~100nt) and cleaved svRNAs (~23nt) map ambiguously, we employ a secondary alignment step dedicated to RNA Pol III transcripts. Exogenous synthetic spike-ins and TMM normalization correct for compositional shifts during extraction, while MISEV purity checks rule out RNP corona contamination."
-}
-
-
 BIOMARKER_FASTA_DATA = {
     "cfDNA": {
         "organism": "Homo sapiens (Human, NCBI Taxonomy ID: 9606)",
