@@ -19,7 +19,7 @@ import seaborn as sns
 # ==============================================================================
 # 1. PAGE CONFIGURATION & REPRODUCIBLE UX OVERRIDE
 # ==============================================================================
-st.set_page_config(page_title="EV Cargo Multi-Omics Platform (DIAGNOSTICS AND ADDING NEW DATA until 2026-09-13 00:00, possible crashes when using the platform.)", layout="wide")
+st.set_page_config(page_title="EV Cargo Multi-Omics Platform", layout="wide")
 
 st.markdown("""
 <style>
@@ -767,7 +767,7 @@ if not st.session_state.analyzed:
     _, col_center, _ = st.columns([1, 3, 1])
     with col_center:
         st.write("")
-        st.markdown("<h1 style='text-align: center; font-family: Arial, sans-serif;'>Clinical Liquid Biopsy Platform</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; font-family: Arial, sans-serif;'>Clinical Liquid Biopsy Platform. (DIAGNOSTICS AND ADDING NEW DATA until 2026-09-13 00:00, possible crashes when using the platform.)</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #475569; font-family: Arial, sans-serif; font-size: 14px;'>Deterministic multi-omic extraction, structural topology mapping, and clinical variant profiling.</p>", unsafe_allow_html=True)
         st.write("")
         
