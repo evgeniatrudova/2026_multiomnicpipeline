@@ -9,7 +9,7 @@ import streamlit as st
 import io
 import tempfile
 import math
-import textwrap  # Added to prevent fpdf horizontal space crashes
+import textwrap
 from collections import Counter
 from scipy.stats import binomtest, gaussian_kde
 from fpdf import FPDF
@@ -343,17 +343,6 @@ BIOMARKER_FASTA_DATA = {
         )
     }
 }
-
-@st.cache_data(ttl=86400)
-def fetch_ncbi_live_fasta(accession: str, fallback_seq: str, fallback_header: str) -> tuple[str, str]:
-    url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id={accession}&rettype=fasta&retmode=text"
-    try:
-        resp = requests.get(url, timeout=6)
-        if resp.ok and resp.text.startswith(">"):
-            return parse_raw_fasta(resp.text)
-    except Exception:
-        pass
-    return fallback_header, fallback_seq
 
 ENSEMBL_REST_SERVER = "https://rest.ensembl.org"
 ENSEMBL_VEP_ENDPOINT = "/vep/human/hgvs/{variant_hgvs}"
@@ -795,18 +784,15 @@ if not st.session_state.analyzed:
                             st.rerun()
             else:
                 st.info(f"**Target Genomic Reference:** [{ref_record['ncbi_acc']}] - {ref_record['target']} (BioProject: {ref_record['bioproject_id']})")
-                if st.button(f"Fetch & Ingest Reference Sequence [{ref_record['ncbi_acc']}]", type="primary", use_container_width=True):
-                    with st.spinner("Streaming canonical sequence from NCBI E-Utilities..."):
-                        hdr, clean_seq = fetch_ncbi_live_fasta(
-                            accession=ref_record['ncbi_acc'],
-                            fallback_seq=ref_record['fasta_seq'],
-                            fallback_header=ref_record['fasta_header']
-                        )
-                        st.session_state.current_header = hdr
-                        st.session_state.current_fasta = clean_seq
-                        st.session_state.data_source_id = f"NCBI Accession {ref_record['ncbi_acc']}"
-                        st.session_state.analyzed = True
-                        st.rerun()
+                if st.button(f"Load Canonical Sequence [{ref_record['ncbi_acc']}]", type="primary", use_container_width=True):
+                    hdr = ref_record['fasta_header'].lstrip('>')
+                    clean_seq = ref_record['fasta_seq'].replace('\n', '').replace(' ', '')
+                    
+                    st.session_state.current_header = hdr
+                    st.session_state.current_fasta = clean_seq
+                    st.session_state.data_source_id = f"NCBI Accession {ref_record['ncbi_acc']}"
+                    st.session_state.analyzed = True
+                    st.rerun()
                         
         st.write("---")
         onboard_tabs = st.tabs(["Pipeline Architecture Matrix", "Clinical Score & DB Evaluation", "Stateless Security & Ethics"])
@@ -855,7 +841,7 @@ else:
     sliding_df = compute_sliding_window_metrics(active_seq)
     motif_results = compute_terminal_motifs(active_seq)
     kmer_df = compute_kmer_fold_enrichment(active_seq, k=4)
-    variant_df = align_and_call_variants(active_seq, canonical_ref['fasta_seq'])
+    variant_df = align_and_call_variants(active_seq, canonical_ref['fasta_seq'].replace('\n', '').replace(' ', ''))
     
     col_title, col_btn = st.columns([4, 1])
     col_title.title(f"Clinical Dashboard: {st.session_state.assay} Analysis")
@@ -1031,23 +1017,27 @@ else:
         pdf.cell(0, 7, f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')} | Build: GRCh38 / Ensembl v111", ln=True, align='C')
         pdf.ln(6)
         
-        # Wrap long strings to prevent "Not enough horizontal space" fpdf errors
         safe_header = "\n".join(textwrap.wrap(header, width=80, break_long_words=True))
         safe_source = "\n".join(textwrap.wrap(source_id, width=80, break_long_words=True))
         
         pdf.set_font("Arial", 'B', 12)
         pdf.cell(0, 8, "1. Ingested Specimen & Extraction Metadata", ln=True)
         pdf.set_font("Arial", '', 10)
-        metadata_text = (
-            f"Target Assay: {assay_type}\n"
-            f"Source Identifier: {safe_source}\n"
-            f"Stream Header: {safe_header}\n"
-            f"Contiguous Nucleotide Length: {metrics['Length']} bp/nt\n"
-            f"Global GC Composition: {metrics['GC']}%\n"
-            f"CpG Observed/Expected Ratio: {metrics['CpG_Ratio']}\n"
-            f"Shannon Information Content: {metrics['Shannon_Entropy']} bits/base"
-        )
-        pdf.multi_cell(0, 6, metadata_text)
+        
+        pdf.cell(0, 6, f"Target Assay: {assay_type}", ln=True)
+        
+        for i, line in enumerate(textwrap.wrap(source_id, width=75, break_long_words=True)):
+            prefix = "Source Identifier: " if i == 0 else "                   "
+            pdf.cell(0, 6, prefix + line, ln=True)
+            
+        for i, line in enumerate(textwrap.wrap(header, width=75, break_long_words=True)):
+            prefix = "Stream Header: " if i == 0 else "               "
+            pdf.cell(0, 6, prefix + line, ln=True)
+
+        pdf.cell(0, 6, f"Contiguous Nucleotide Length: {metrics['Length']} bp/nt", ln=True)
+        pdf.cell(0, 6, f"Global GC Composition: {metrics['GC']}%", ln=True)
+        pdf.cell(0, 6, f"CpG Observed/Expected Ratio: {metrics['CpG_Ratio']}", ln=True)
+        pdf.cell(0, 6, f"Shannon Information Content: {metrics['Shannon_Entropy']} bits/base", ln=True)
         pdf.ln(4)
         
         pdf.set_font("Arial", 'B', 12)
@@ -1082,7 +1072,6 @@ else:
         ax.legend(frameon=False, fontsize=8)
         plt.tight_layout()
         
-        # Safely handle page breaks before inserting image
         if pdf.get_y() > 140:
             pdf.add_page()
             
@@ -1099,11 +1088,12 @@ else:
         
         pdf.set_font("Courier", 'B', 8)
         pdf.set_fill_color(241, 245, 249)
-        pdf.multi_cell(0, 4, f">{safe_header}", fill=True)
+        for line in textwrap.wrap(">" + header, width=85, break_long_words=True):
+            pdf.cell(0, 4, line, ln=True, fill=True)
+            
         pdf.set_font("Courier", '', 8)
-        
-        chunked_seq = "\n".join([raw_seq[i:i+60] for i in range(0, len(raw_seq), 60)])
-        pdf.multi_cell(0, 4, chunked_seq, fill=True)
+        for i in range(0, len(raw_seq), 85):
+            pdf.cell(0, 4, raw_seq[i:i+85], ln=True, fill=True)
         pdf.ln(6)
         
         pdf.set_font("Arial", 'I', 8)
