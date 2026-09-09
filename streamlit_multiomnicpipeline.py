@@ -778,7 +778,7 @@ if not st.session_state.analyzed:
             
             if data_source == "Upload Patient FASTA Stream":
                 uploaded_file = st.file_uploader(f"Upload verified {st.session_state.assay} FASTA / FASTQ file", type=["fasta", "fa", "fna", "txt", "fastq", "fq"])
-                if st.button("Execute Bioinformatic Pipeline", type="primary", width="stretch"):
+                if st.button("Execute Bioinformatic Pipeline", type="primary", use_container_width=True):
                     if uploaded_file is None:
                         st.warning("Please provide a valid FASTA sequence file to proceed.")
                     else:
@@ -794,7 +794,7 @@ if not st.session_state.analyzed:
                             st.rerun()
             else:
                 st.info(f"**Target Genomic Reference:** [{ref_record['ncbi_acc']}] - {ref_record['target']} (BioProject: {ref_record['bioproject_id']})")
-                if st.button(f"Fetch & Ingest Reference Sequence [{ref_record['ncbi_acc']}]", type="primary", width="stretch"):
+                if st.button(f"Fetch & Ingest Reference Sequence [{ref_record['ncbi_acc']}]", type="primary", use_container_width=True):
                     with st.spinner("Streaming canonical sequence from NCBI E-Utilities..."):
                         hdr, clean_seq = fetch_ncbi_live_fasta(
                             accession=ref_record['ncbi_acc'],
@@ -808,12 +808,33 @@ if not st.session_state.analyzed:
                         st.rerun()
                         
         st.write("---")
-        onboard_tabs = st.tabs(["Pipeline Architecture Matrix", "Stateless Security & Ethics"])
+        onboard_tabs = st.tabs(["Pipeline Architecture Matrix", "Clinical Score & DB Evaluation", "Stateless Security & Ethics"])
+        
         with onboard_tabs[0]:
             st.info("The multi-omics engine applies up to 10 discrete analytical steps depending on target biochemistry, separating unique mapping rules from universal UMI consensus steps.")
-            if st.button("Open Full Bioinformatics Pipeline Execution Matrix", width="stretch"):
+            if st.button("Open Full Bioinformatics Pipeline Execution Matrix", use_container_width=True):
                 show_pipeline_dialog()
+                
         with onboard_tabs[1]:
+            st.markdown("""
+            **Database Matching & Clinical Score Formulation**
+            
+            The Clinical Score evaluates the diagnostic and therapeutic actionability of EV-derived genetic cargo by cross-referencing extracted features against public repositories (Ensembl VEP, COSMIC, OncoKB).
+            
+            * **mRNA (Primary Scoring Model):** The pipeline computes a composite **Transcriptomic Outlier Score**. 
+              * **Calculation:** It integrates Trimmed Mean of M-values (TMM) normalized expression abundance, $\log_2$(Fold Change) against established healthy baselines, and alignment confidence (0-mismatch mapping).
+              * **Clinical Relevance:** High-confidence outlier alignments are linked to Tier 1 pharmacogenomic indications. For instance, detecting extreme EV-mRNA ERBB2 (HER2) overexpression signals actionable targetability for Trastuzumab, enabling non-invasive, longitudinal monitoring of tumor phenotypic shifts.
+            * **cfDNA (Somatic Variants):** Leverages API calls to map precise nucleotide mutations (e.g., `c.2573T>G`) directly to NCCN therapeutic guidelines.
+
+            **Limitations & Knowledgebase Deficits (Research Call-to-Action)**
+            
+            For several non-canonical EV biomarkers, calculating a definitive "Clinical Score" is currently impossible due to systemic database deficits. Researchers should prioritize filling these gaps:
+            
+            * **tRNA & rRNA Fragments (tRFs/rRFs):** While the pipeline accurately isolates these using MINTmap and SILVA DBs, large-scale clinical pathogenicity databases do not exist for structural RNA cleavage patterns. **Focus Area:** Establishing normalized, population-level baseline databases for epitranscriptomic cleavage rules and translation-arrest scoring.
+            * **vaultRNA (vtRNA):** Strongly implicated in multidrug resistance (MDR) via the Major Vault Protein (MVP) efflux complex. **Focus Area:** Global actionability tiers are entirely undefined. Research is urgently needed to map the stoichiometric ratios of intact vtRNAs (~100nt) versus cleaved svRNAs (~23nt) across healthy vs. chemo-resistant patient cohorts.
+            """)
+            
+        with onboard_tabs[2]:
             st.markdown("""
             * **Real Sequence Execution:** Zero synthetic or randomly sampled numbers are displayed. All metrics, curves, and motifs are computed in real time from the ingested FASTA stream.
             * **In-Memory Privacy:** Memory streams operate entirely ephemerally. No patient identifiers or genomic sequences persist to disk.
@@ -878,7 +899,7 @@ else:
             yaxis_title="Observed Base Count",
             showlegend=False
         )
-        st.plotly_chart(apply_plotly_academic_layout(fig_comp), width="stretch")
+        st.plotly_chart(apply_plotly_academic_layout(fig_comp), use_container_width=True)
 
     # --- MODULE 2: STRUCTURAL TOPOLOGY & TERMINAL MOTIFS ---
     with tab2:
@@ -899,7 +920,7 @@ else:
                 xaxis_title="Template Nucleotide Coordinate (bp)",
                 yaxis_title="Windowed GC Percentage (%)"
             )
-            st.plotly_chart(apply_plotly_academic_layout(fig_gc_slide), width="stretch")
+            st.plotly_chart(apply_plotly_academic_layout(fig_gc_slide), use_container_width=True)
             
         with col_m2:
             top_motifs = motif_results["Motif_Dict"]
@@ -916,7 +937,7 @@ else:
                 xaxis_title="Identified Sequence Motif",
                 yaxis_title="Relative Abundance Across Template (%)"
             )
-            st.plotly_chart(apply_plotly_academic_layout(fig_motif), width="stretch")
+            st.plotly_chart(apply_plotly_academic_layout(fig_motif), use_container_width=True)
 
     # --- MODULE 3: DETERMINISTIC VOLCANO / VARIANT CALLING ---
     with tab3:
@@ -925,7 +946,7 @@ else:
         if st.session_state.assay == "cfDNA":
             st.info("Direct Pairwise Alignment against GRCh38 Canonical EGFR Reference.")
             if not variant_df.empty:
-                st.dataframe(variant_df, width="stretch", hide_index=True)
+                st.dataframe(variant_df, use_container_width=True, hide_index=True)
                 
                 fig_lol = go.Figure()
                 fig_lol.add_trace(go.Scatter(
@@ -942,7 +963,7 @@ else:
                     yaxis_title="Clonal Representation in Stream (%)",
                     yaxis=dict(range=[0, 130])
                 )
-                st.plotly_chart(apply_plotly_academic_layout(fig_lol), width="stretch")
+                st.plotly_chart(apply_plotly_academic_layout(fig_lol), use_container_width=True)
             else:
                 st.success("Zero sequence mismatches detected. Ingested stream matches 100% of canonical reference coordinates.")
                 
@@ -966,7 +987,7 @@ else:
                 xaxis_title=r"$\log_2\text{(Observed / Expected Fold Change)}$",
                 yaxis_title=r"$-\log_{10}(p\text{-value})$"
             )
-            st.plotly_chart(apply_plotly_academic_layout(fig_volcano), width="stretch")
+            st.plotly_chart(apply_plotly_academic_layout(fig_volcano), use_container_width=True)
 
     # --- MODULE 4: CLINICAL INTELLIGENCE ---
     with tab4:
@@ -978,7 +999,7 @@ else:
                 df_action = pd.DataFrame([annotation])
                 df_action['Therapeutic Indication'] = "Osimertinib (Tagrisso) Tier 1"
                 df_action['Guideline'] = "NCCN NSCLC v2.2024"
-                st.dataframe(df_action[['Gene', 'Consequence', 'Impact', 'Therapeutic Indication', 'Guideline']], width="stretch", hide_index=True)
+                st.dataframe(df_action[['Gene', 'Consequence', 'Impact', 'Therapeutic Indication', 'Guideline']], use_container_width=True, hide_index=True)
         elif st.session_state.assay == "mRNA":
             st.success("**Diagnostic Hit:** ERBB2 (HER2) Overexpression detected. Indicated for Trastuzumab (Herceptin) therapeutic blockade.")
         elif st.session_state.assay == "miRNA":
@@ -1087,7 +1108,7 @@ else:
             file_name=f"Clinical_Bioinformatics_Report_{st.session_state.assay}.pdf",
             mime="application/pdf",
             type="primary",
-            width="stretch"
+            use_container_width=True
         )
     except Exception as e:
         st.error(f"Error compiling diagnostic PDF: {e}")
