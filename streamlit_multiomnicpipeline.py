@@ -21,7 +21,7 @@ import seaborn as sns
 # ==============================================================================
 st.set_page_config(page_title="EV Cargo Multi-Omics Platform", layout="wide")
 
-st.markdown("""
+st.markdown('''
 <style>
 [data-testid="stStatusWidget"] {
     visibility: hidden !important;
@@ -41,8 +41,48 @@ div[data-testid="stAppViewContainer"] {
 [data-testid="stSkeleton"] {
     display: none !important;
 }
+/* Enhanced UX: Dynamic colors for matrix table */
+.matrix-table {
+    width: 100%;
+    min-width: 1350px;
+    border-collapse: collapse;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 12px;
+}
+.matrix-table th {
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+    text-align: left;
+    padding: 12px;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.matrix-table td {
+    padding: 10px 12px;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    vertical-align: top;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+.matrix-table tr:hover td {
+    background-color: rgba(128, 128, 128, 0.05);
+}
+.col-step { font-weight: 800; width: 3%; text-align: center; }
+.col-phase { width: 11%; }
+.col-phase-title { font-weight: 700; color: #2563eb; display: block; }
+.col-phase-tool { font-family: monospace; color: #ef4444; font-weight: 600; }
+.col-rationale { width: 22%; font-style: italic; line-height: 1.4; opacity: 0.85; }
+.col-bm { width: 9%; font-weight: 500; }
+.sanity-row td { background-color: rgba(250, 204, 21, 0.1) !important; border-top: 2px solid #facc15; border-bottom: 2px solid #facc15; }
+.highlight-req { color: #ef4444; font-weight: 700; }
+.highlight-opt { color: #10b981; font-weight: 600; }
 </style>
-""", unsafe_allow_html=True)
+''', unsafe_allow_html=True)
 
 if 'analyzed' not in st.session_state:
     st.session_state.analyzed = False
@@ -115,7 +155,6 @@ def calculate_sequence_metrics(seq: str) -> dict:
 
 def compute_sliding_window_metrics(seq: str, window: int = 20, step: int = 2) -> pd.DataFrame:
     n = len(seq)
-    # Dynamic windowing to prevent empty graphs on short sequences (like siRNA/miRNA)
     if n <= 30:
         window = max(3, n // 4)
         step = 1
@@ -315,29 +354,18 @@ def fetch_ensembl_vep_live(variant_hgvs: str) -> dict:
     return {"Assembly": "GRCh38", "Consequence": "Missense Variant (Offline)", "Gene": "EGFR", "Impact": "MODERATE"}
 
 # ==============================================================================
-# 4. MATPLOTLIB & PLOTLY ACADEMIC STYLING
+# 4. PLOTLY ACADEMIC STYLING (THEME-ADAPTIVE)
 # ==============================================================================
-def apply_academic_style():
-    plt.style.use('default')
-    plt.rcParams.update({
-        'font.family': 'sans-serif', 'font.sans-serif': ['Arial', 'Helvetica', 'DejaVu Sans'],
-        'axes.spines.top': False, 'axes.spines.right': False, 'axes.linewidth': 1.0,
-        'axes.labelsize': 10, 'axes.titlesize': 11, 'axes.titleweight': 'bold',
-        'xtick.direction': 'out', 'ytick.direction': 'out', 'xtick.major.width': 1.0,
-        'ytick.major.width': 1.0, 'text.color': '#1e293b', 'axes.labelcolor': '#1e293b',
-        'xtick.color': '#1e293b', 'ytick.color': '#1e293b', 'figure.dpi': 300
-    })
-
 def apply_plotly_academic_layout(fig):
     fig.update_layout(
-        template="simple_white",
-        font=dict(family="Arial, sans-serif", color="#1e293b", size=12),
-        title_font=dict(size=13, family="Arial, sans-serif"),
-        plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(t=45, l=45, r=25, b=45)
+        font=dict(family="Arial, sans-serif", size=12),
+        title_font=dict(size=14, family="Arial, sans-serif"),
+        margin=dict(t=45, l=45, r=25, b=45),
+        hovermode="x unified",
+        # Removed hardcoded white backgrounds to natively support Streamlit Dark Mode
     )
-    fig.update_xaxes(showline=True, linewidth=1, linecolor='#334155', mirror=False, ticks='outside')
-    fig.update_yaxes(showline=True, linewidth=1, linecolor='#334155', mirror=False, ticks='outside')
+    fig.update_xaxes(showline=True, linewidth=1, linecolor='gray', mirror=False, ticks='outside')
+    fig.update_yaxes(showline=True, linewidth=1, linecolor='gray', mirror=False, ticks='outside')
     return fig
 
 # ==============================================================================
@@ -347,8 +375,8 @@ if not st.session_state.analyzed:
     _, col_center, _ = st.columns([1, 3, 1])
     with col_center:
         st.write("")
-        st.markdown("<h1 style='text-align: center; font-family: Arial, sans-serif;'>Clinical Liquid Biopsy Platform.</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #475569; font-family: Arial, sans-serif; font-size: 14px;'>Deterministic multi-omic extraction, structural topology mapping, and clinical variant profiling.</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center;'>Clinical Liquid Biopsy Platform</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 1.1em; opacity: 0.8;'>Deterministic multi-omic extraction, structural topology mapping, and clinical variant profiling.</p>", unsafe_allow_html=True)
         st.write("")
         
         with st.container(border=True):
@@ -389,25 +417,25 @@ if not st.session_state.analyzed:
         onboard_tabs = st.tabs(["Clinical Score & DB Evaluation", "Stateless Security & Ethics"])
                 
         with onboard_tabs[0]:
-            st.markdown("""
-            **Database Matching & Clinical Score Formulation**
+            st.markdown('''
+            ### Database Matching & Clinical Score Formulation
             The Clinical Score translates complex bioinformatic readouts into a single, clinically actionable metric by cross-referencing features against public repositories (Ensembl VEP, NCCN, OncoKB). 
 
             * **cfDNA (Somatic Variants):** The clinical score is driven by **Variant Allele Frequency (VAF)**. Actionability requires a true somatic VAF $\ge$ **0.1%**, verified by filtering out non-tumor CHIP mutations using paired white-blood-cell sequencing.
             * **mRNA (Transcriptomic Outlier Score):** Driven by fold-change. Overexpression $\ge$ **1.5** against healthy baselines flags Tier 1 targetability (e.g., Trastuzumab for HER2).
             * **miRNA (Pleiotropic Risk Index):** Translating miRNA abundance requires establishing fixed diagnostic thresholds ($\ge$ **3.5x** baseline expression) to overcome target ambiguity.
 
-            **Limitations & Knowledgebase Deficits**
+            ### Limitations & Knowledgebase Deficits
             Calculating a definitive Clinical Score for non-canonical EV biomarkers remains challenging due to current public database deficits:
             * **tRNA & rRNA (tRFs/rRFs):** Large-scale clinical pathogenicity databases do not exist for structural RNA cleavage. Researchers must deposit normalized AlkB-RNA-seq inputs to establish baseline translation-arrest scoring.
             * **vaultRNA (MDR Efflux Signaling):** Global actionability tiers for drug resistance remain undefined. Researchers must map intact vtRNAs (~100nt) versus cleaved svRNAs (~23nt) across matched chemo-resistant cohorts.
-            """)
+            ''')
             
         with onboard_tabs[1]:
-            st.markdown("""
+            st.markdown('''
             * **Real Sequence Execution:** Zero synthetic or randomly sampled numbers are displayed. All metrics and motifs are computed mathematically in real time from the ingested FASTA stream.
             * **In-Memory Privacy:** Memory streams operate entirely ephemerally. No patient identifiers persist to disk.
-            """)
+            ''')
 
 # ==============================================================================
 # 6. CLINICAL DASHBOARD (REAL DETERMINISTIC COMPUTATION)
@@ -425,7 +453,7 @@ else:
     
     col_title, col_btn = st.columns([4, 1])
     col_title.title(f"Clinical Diagnostic Dashboard: {st.session_state.assay}")
-    if col_btn.button("Analyze Another Specimen"):
+    if col_btn.button("Analyze Another Specimen", use_container_width=True):
         reset_app()
         st.rerun()
         
@@ -443,14 +471,15 @@ else:
     
     # --- MODULE 1: COMPOSITION & SPECS ---
     with tab1:
-        st.markdown(f"**Step 1: Sequence Integrity & Nucleotide QC**")
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Template Length", f"{seq_metrics['Length']} bp/nt", "100% Contiguous")
-        c2.metric("Overall GC Content", f"{seq_metrics['GC']}%", f"Skew: {seq_metrics['GC_Skew']}")
-        c3.metric("CpG Obs/Exp Ratio", f"{seq_metrics['CpG_Ratio']}", "Methylation Proxy")
-        c4.metric("Shannon Information Entropy", f"{seq_metrics['Shannon_Entropy']} bits", "Complexity Score")
+        st.markdown(f"### Step 1: Sequence Integrity & Nucleotide QC")
         
-        st.divider()
+        with st.container(border=True):
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Template Length", f"{seq_metrics['Length']} bp/nt", "100% Contiguous")
+            c2.metric("Overall GC Content", f"{seq_metrics['GC']}%", f"Skew: {seq_metrics['GC_Skew']}")
+            c3.metric("CpG Obs/Exp Ratio", f"{seq_metrics['CpG_Ratio']}", "Methylation Proxy")
+            c4.metric("Shannon Entropy", f"{seq_metrics['Shannon_Entropy']} bits", "Complexity Score")
+        
         col_qc1, col_qc2 = st.columns(2)
         
         with col_qc1:
@@ -461,30 +490,30 @@ else:
                 x=bases, y=counts,
                 text=[f"{cnt} ({cnt/seq_metrics['Length']*100:.1f}%)" for cnt in counts],
                 textposition='auto',
-                marker_color=['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd'],
-                marker_line=dict(color='#0f172a', width=1)
+                marker_color=['#3b82f6', '#2563eb', '#60a5fa', '#93c5fd'],
+                marker_line=dict(color='rgba(255,255,255,0.2)', width=1)
             ))
             fig_comp.update_layout(title="Exact Nucleotide Distribution", xaxis_title="Nucleotide Base", yaxis_title="Observed Count", showlegend=False, height=350)
             st.plotly_chart(apply_plotly_academic_layout(fig_comp), use_container_width=True)
-            st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Analytical Relevance:</b> Detects extreme GC/AT skews indicating sequencing bias, amplification artifacts, or adapter contamination prior to downstream alignment.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Analytical Relevance:</b> Detects extreme GC/AT skews indicating sequencing bias, amplification artifacts, or adapter contamination prior to downstream alignment.</p>", unsafe_allow_html=True)
 
         with col_qc2:
             fig_ent = go.Figure()
             fig_ent.add_trace(go.Scatter(
                 x=sliding_df['Coordinate'], y=sliding_df['Local_Entropy'],
-                mode='lines+markers', line=dict(color='#b91c1c', width=2),
-                fill='tozeroy', fillcolor='rgba(185, 28, 28, 0.08)'
+                mode='lines+markers', line=dict(color='#ef4444', width=2),
+                fill='tozeroy', fillcolor='rgba(239, 68, 68, 0.1)'
             ))
             fig_ent.update_layout(title="Positional Sequence Complexity (FastQC Proxy)", xaxis_title="Nucleotide Coordinate", yaxis_title="Shannon Entropy (bits)", showlegend=False, height=350)
             st.plotly_chart(apply_plotly_academic_layout(fig_ent), use_container_width=True)
-            st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Analytical Relevance:</b> Identifies low-complexity regions (e.g., poly-A tails or homopolymer runs) that frequently cause false-positive mapping in short-read aligners.</p>", unsafe_allow_html=True)
-
+            st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Analytical Relevance:</b> Identifies low-complexity regions (e.g., poly-A tails or homopolymer runs) that frequently cause false-positive mapping in short-read aligners.</p>", unsafe_allow_html=True)
 
     # --- MODULE 2: STRUCTURAL TOPOLOGY ---
     with tab2:
-        st.markdown(f"**Step 2: Biological Fingerprinting & Structural Architecture**")
+        st.markdown(f"### Step 2: Biological Fingerprinting & Structural Architecture")
         
         if st.session_state.assay == "cfDNA":
+            st.info("**Clinical Score Impact:** The Bimodal Distribution plot ensures the calculated mutational score originates from tumor DNA. Tumor fragments are characteristically shorter (~145bp) than healthy cell shedding (~167bp). High 145bp density increases the validated tumor probability score.")
             col_m1, col_m2 = st.columns(2)
             
             with col_m1:
@@ -498,23 +527,25 @@ else:
                 x_range = np.linspace(min(lengths)-20, max(lengths)+20, 200)
                 
                 fig1 = go.Figure()
-                fig1.add_trace(go.Scatter(x=x_range, y=kde(x_range), fill='tozeroy', fillcolor='rgba(37, 99, 235, 0.2)', line=dict(color='#2563eb', width=2.5), name="Density"))
-                fig1.add_vline(x=145, line_dash="dash", line_color="#b91c1c", annotation_text="145bp (Tumor)", annotation_position="top right")
-                fig1.add_vline(x=167, line_dash="dash", line_color="#15803d", annotation_text="167bp (Healthy)", annotation_position="top right")
-                fig1.update_layout(title="Bimodal Fragment Length Distribution (In-Silico Cleavage)", xaxis_title="Fragment Length (bp)", yaxis_title="Probability Density", height=350)
+                fig1.add_trace(go.Scatter(x=x_range, y=kde(x_range), fill='tozeroy', fillcolor='rgba(59, 130, 246, 0.2)', line=dict(color='#3b82f6', width=2.5), name="Density"))
+                fig1.add_vline(x=145, line_dash="dash", line_color="#ef4444", annotation_text="145bp (Tumor)", annotation_position="top right")
+                fig1.add_vline(x=167, line_dash="dash", line_color="#10b981", annotation_text="167bp (Healthy)", annotation_position="top right")
+                fig1.update_layout(title="Bimodal Fragment Length Distribution", xaxis_title="Fragment Length (bp)", yaxis_title="Probability Density", height=350)
                 st.plotly_chart(apply_plotly_academic_layout(fig1), use_container_width=True)
-                st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Clinical Relevance:</b> Differentiates ~145bp tumor-derived nucleosomal footprints from ~167bp healthy apoptotic shedding. A high 145bp peak validates the presence of tumor-derived cargo, increasing the confidence of the final actionability score.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Clinical Relevance:</b> Differentiates ~145bp tumor-derived nucleosomal footprints from ~167bp healthy apoptotic shedding. A high 145bp peak validates the presence of tumor-derived cargo.</p>", unsafe_allow_html=True)
                 
             with col_m2:
                 fig2 = go.Figure()
-                fig2.add_trace(go.Scatter(x=sliding_df['Coordinate'], y=sliding_df['Local_GC'], mode='lines+markers', fill='tozeroy', fillcolor='rgba(15, 23, 42, 0.08)', line=dict(color='#0f172a', width=2), name='GC Density'))
-                fig2.add_trace(go.Scatter(x=sliding_df['Coordinate'], y=sliding_df['Local_Entropy']*10, mode='lines+markers', line=dict(color='#b91c1c', width=2, dash='dot'), name='Entropy Proxy (x10)'))
+                fig2.add_trace(go.Scatter(x=sliding_df['Coordinate'], y=sliding_df['Local_GC'], mode='lines+markers', fill='tozeroy', fillcolor='rgba(128, 128, 128, 0.1)', line=dict(color='gray', width=2), name='GC Density'))
+                fig2.add_trace(go.Scatter(x=sliding_df['Coordinate'], y=sliding_df['Local_Entropy']*10, mode='lines+markers', line=dict(color='#ef4444', width=2, dash='dot'), name='Entropy Proxy (x10)'))
                 fig2.update_layout(title="WPS Footprint Map (Open-Chromatin Indicator)", xaxis_title="Genomic Coordinate", yaxis_title="Signal Amplitude", showlegend=True, height=350)
                 st.plotly_chart(apply_plotly_academic_layout(fig2), use_container_width=True)
-                st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Clinical Relevance:</b> Maps structural sequence entropy against GC density to model open-chromatin architecture. This computationally proves the tissue-of-origin for cfDNA fragments based on epigenetic structure rather than relying solely on genetic mutations.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Clinical Relevance:</b> Maps structural sequence entropy against GC density to model open-chromatin architecture. This computationally proves the tissue-of-origin for cfDNA fragments.</p>", unsafe_allow_html=True)
                 
         else:
+            st.info(f"**Clinical Context ({st.session_state.assay}):** The length distribution strictly validates the biogenesis pathway (e.g., distinguishing Dicer-cleaved 22nt regulatory fragments from necrotic shedding). The coverage map identifies structural loops resistant to plasma RNase degradation.")
             col_m1, col_m2 = st.columns(2)
+            
             with col_m1:
                 target_len = 22 if st.session_state.assay in ["miRNA", "siRNA"] else (23 if st.session_state.assay == "vaultRNA" else 30)
                 alt_len = 98 if st.session_state.assay == "vaultRNA" else (75 if st.session_state.assay == "tRNA" else 150)
@@ -529,13 +560,13 @@ else:
                 x_range = np.linspace(min(lengths)-5, max(lengths)+10, 200)
                 
                 fig_kde = go.Figure()
-                fig_kde.add_trace(go.Scatter(x=x_range, y=kde(x_range), fill='tozeroy', fillcolor='rgba(185, 28, 28, 0.2)', line=dict(color='#b91c1c', width=2.5)))
-                fig_kde.add_vline(x=target_len, line_dash="dash", line_color="#0f172a", annotation_text=f"Regulatory Peak (~{target_len}nt)", annotation_position="top right")
+                fig_kde.add_trace(go.Scatter(x=x_range, y=kde(x_range), fill='tozeroy', fillcolor='rgba(239, 68, 68, 0.2)', line=dict(color='#ef4444', width=2.5)))
+                fig_kde.add_vline(x=target_len, line_dash="dash", line_color="gray", annotation_text=f"Regulatory Peak (~{target_len}nt)", annotation_position="top right")
                 if st.session_state.assay in ["vaultRNA", "tRNA"]:
-                    fig_kde.add_vline(x=alt_len, line_dash="dash", line_color="#2563eb", annotation_text=f"Intact Precursor (~{alt_len}nt)", annotation_position="top right")
+                    fig_kde.add_vline(x=alt_len, line_dash="dash", line_color="#3b82f6", annotation_text=f"Intact Precursor (~{alt_len}nt)", annotation_position="top right")
                 fig_kde.update_layout(title="High-Resolution Length Distribution (KDE)", xaxis_title="Fragment Length (nt)", yaxis_title="Probability Density", height=350, showlegend=False)
                 st.plotly_chart(apply_plotly_academic_layout(fig_kde), use_container_width=True)
-                st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Clinical Relevance:</b> Strictly validates the biogenesis pathway of the RNA payload. Differentiates actively processed, Dicer-cleaved regulatory fragments (e.g., 22nt) from necrotic cellular shedding or random extracellular RNase degradation.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Clinical Relevance:</b> Strictly validates the biogenesis pathway of the RNA payload. Differentiates actively processed, Dicer-cleaved regulatory fragments from necrotic cellular shedding.</p>", unsafe_allow_html=True)
                 
             with col_m2:
                 fig_pileup = go.Figure()
@@ -543,99 +574,103 @@ else:
                 
                 fig_pileup.add_trace(go.Scatter(
                     x=sliding_df['Coordinate'], y=simulated_coverage,
-                    mode='lines+markers', line=dict(color='#2563eb', width=1.5, shape='hv'),
-                    fill='tozeroy', fillcolor='rgba(37, 99, 235, 0.15)',
+                    mode='lines+markers', line=dict(color='#3b82f6', width=1.5, shape='hv'),
+                    fill='tozeroy', fillcolor='rgba(59, 130, 246, 0.15)',
                     name='Read Depth'
                 ))
                 fig_pileup.update_layout(title=f"{st.session_state.assay} Positional Cleavage Map (Pileup Track)", xaxis_title="Transcript Coordinate (nt)", yaxis_title="Normalized Read Depth", height=350)
                 st.plotly_chart(apply_plotly_academic_layout(fig_pileup), use_container_width=True)
-                st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Analytical Relevance:</b> Maps exact sequence read depth across canonical coordinates. Identifies structural loops that are resistant to systemic degradation and pinpoints active enzymatic cleavage sites governing payload maturation.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Analytical Relevance:</b> Maps exact sequence read depth across canonical coordinates. Identifies structural loops that are resistant to systemic degradation and pinpoints active enzymatic cleavage sites.</p>", unsafe_allow_html=True)
 
 
     # --- MODULE 3: DIFFERENTIAL EXPRESSION & MOTIFS ---
     with tab3:
+        st.markdown(f"### Step 3: Analytical Profiling & Variant Extraction")
+        
         if st.session_state.assay == "cfDNA":
-            st.markdown(f"**Step 3: Somatic Alignment & Clonal Bias**")
             c3, c4 = st.columns(2)
             with c3:
                 fig3 = go.Figure()
                 if not variant_df.empty:
                     for _, row in variant_df.iterrows():
-                        fig3.add_shape(type="line", x0=row['POS'], y0=0, x1=row['POS'], y1=row['Allelic_Depth_Proxy'], line=dict(color="#475569", width=2.5))
+                        fig3.add_shape(type="line", x0=row['POS'], y0=0, x1=row['POS'], y1=row['Allelic_Depth_Proxy'], line=dict(color="gray", width=2.5))
                     fig3.add_trace(go.Scatter(
                         x=variant_df['POS'], y=variant_df['Allelic_Depth_Proxy'], 
                         mode='markers+text', text=[f"{r['REF']}>{r['ALT']}" for _, r in variant_df.iterrows()],
-                        textposition="top center", marker=dict(size=14, color='#b91c1c', line=dict(color='white', width=2.5))
+                        textposition="top center", marker=dict(size=14, color='#ef4444', line=dict(color='white', width=2.5))
                     ))
                 fig3.update_layout(title="Annotated Mutational Lollipop Plot", xaxis_title="Sequence Position (bp)", yaxis_title="Allelic Frequency (VAF %)", showlegend=False, height=350, yaxis=dict(range=[0, 130]))
                 st.plotly_chart(apply_plotly_academic_layout(fig3), use_container_width=True)
-                st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Clinical Relevance:</b> Isolates the exact genomic location of mutated sequences. Variants mapping directly to known oncogenic kinase domains immediately trigger a positive, actionable clinical score for targeted therapies.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Clinical Relevance:</b> Isolates the exact genomic location of mutated sequences. Variants mapping directly to known oncogenic kinase domains instantly trigger an actionable score.</p>", unsafe_allow_html=True)
                 
             with c4:
                 fig4 = go.Figure()
                 if not kmer_df.empty:
-                    color_map = {'Non-Biased': '#94a3b8', 'Over-Represented Motif': '#b91c1c', 'Depleted Motif': '#2563eb'}
+                    color_map = {'Non-Biased': 'gray', 'Over-Represented Motif': '#ef4444', 'Depleted Motif': '#3b82f6'}
                     for stat in kmer_df['Status'].unique():
                         sub = kmer_df[kmer_df['Status'] == stat]
                         fig4.add_trace(go.Scatter(
                             x=sub['log2FC'], y=sub['neg_log10_pval'], mode='markers', name=stat,
-                            marker=dict(size=8, color=color_map.get(stat, '#94a3b8'), opacity=0.85, line=dict(color='white', width=0.5)),
+                            marker=dict(size=8, color=color_map.get(stat, 'gray'), opacity=0.85, line=dict(color='white', width=0.5)),
                             text=sub['Kmer']
                         ))
-                    fig4.add_vline(x=1.0, line_dash="dash", line_color="#64748b", opacity=0.6)
-                    fig4.add_vline(x=-1.0, line_dash="dash", line_color="#64748b", opacity=0.6)
-                    fig4.add_hline(y=1.3, line_dash="dash", line_color="#64748b", opacity=0.6)
+                    fig4.add_vline(x=1.0, line_dash="dash", line_color="gray", opacity=0.6)
+                    fig4.add_vline(x=-1.0, line_dash="dash", line_color="gray", opacity=0.6)
+                    fig4.add_hline(y=1.3, line_dash="dash", line_color="gray", opacity=0.6)
                 fig4.update_layout(title="High-Density Clonal Motif Volcano Plot", xaxis_title="log2(Fold Change)", yaxis_title="-log10(p-value)", height=350)
                 st.plotly_chart(apply_plotly_academic_layout(fig4), use_container_width=True)
-                st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Analytical Relevance:</b> Highlights statistically significant subclonal sequence outliers against the expected wild-type background distribution using exact binomial modeling, verifying early clonal emergence.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Analytical Relevance:</b> Highlights statistically significant subclonal sequence outliers against the expected wild-type background distribution using exact binomial modeling.</p>", unsafe_allow_html=True)
                 
         else:
-            st.markdown(f"**Step 3: Differential Expression & Motif Analytics**")
+            st.info("**Actionability Score Modifier:** The High-Density Volcano plot isolates statistically significant shifts in cargo abundance. The PWM Sequence Logo verifies that EV packaging and cleavage rely on canonical biological motifs (e.g., Pol III termination or Argonaute bias) rather than random degradation.")
             
             c3, c4 = st.columns(2)
             with c3:
                 fig_volcano = go.Figure()
                 if not kmer_df.empty:
-                    color_map = {'Non-Biased': '#94a3b8', 'Over-Represented Motif': '#b91c1c', 'Depleted Motif': '#2563eb'}
+                    color_map = {'Non-Biased': 'gray', 'Over-Represented Motif': '#ef4444', 'Depleted Motif': '#3b82f6'}
                     for stat in kmer_df['Status'].unique():
                         sub = kmer_df[kmer_df['Status'] == stat]
                         fig_volcano.add_trace(go.Scatter(
                             x=sub['log2FC'], y=sub['neg_log10_pval'], mode='markers', name=stat,
-                            marker=dict(size=8, color=color_map.get(stat, '#94a3b8'), opacity=0.85, line=dict(color='white', width=0.5)), text=sub['Kmer']
+                            marker=dict(size=8, color=color_map.get(stat, 'gray'), opacity=0.85, line=dict(color='white', width=0.5)), text=sub['Kmer']
                         ))
-                    fig_volcano.add_vline(x=1.0, line_dash="dash", line_color="#64748b", opacity=0.6)
-                    fig_volcano.add_vline(x=-1.0, line_dash="dash", line_color="#64748b", opacity=0.6)
-                    fig_volcano.add_hline(y=1.3, line_dash="dash", line_color="#64748b", opacity=0.6)
+                    fig_volcano.add_vline(x=1.0, line_dash="dash", line_color="gray", opacity=0.6)
+                    fig_volcano.add_vline(x=-1.0, line_dash="dash", line_color="gray", opacity=0.6)
+                    fig_volcano.add_hline(y=1.3, line_dash="dash", line_color="gray", opacity=0.6)
                 fig_volcano.update_layout(title="High-Density Differential Abundance Volcano Plot", xaxis_title="log2(Fold Change)", yaxis_title="-log10(p-value)", height=350)
                 st.plotly_chart(apply_plotly_academic_layout(fig_volcano), use_container_width=True)
-                st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Clinical Relevance:</b> Isolates statistically significant expression shifts indicating target amplification. Strong clustering on the right (high log2FC) directly flags upregulated oncogenic drivers or prime therapeutic targets.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Clinical Relevance:</b> Isolates statistically significant expression shifts indicating target amplification. Strong clustering on the right directly flags upregulated oncogenic drivers.</p>", unsafe_allow_html=True)
 
             with c4:
                 top_motifs = motif_results["Motif_Dict"]
                 sorted_motifs = dict(sorted(top_motifs.items(), key=lambda item: item[1], reverse=False)) 
                 fig_pwm = go.Figure(data=[go.Bar(
                     y=list(sorted_motifs.keys()), x=list(sorted_motifs.values()), orientation='h',
-                    marker_color="#0f172a", marker_line=dict(color="white", width=1.0),
+                    marker_color="#3b82f6", marker_line=dict(color="white", width=1.0),
                     text=[f"{v}%" for v in sorted_motifs.values()], textposition='auto'
                 )])
                 fig_pwm.update_layout(title="Position-Weight Matrix (PWM) Motif Enrichment", xaxis_title="Relative Abundance (%)", yaxis_title="Terminal Sequence Motif", height=350)
                 st.plotly_chart(apply_plotly_academic_layout(fig_pwm), use_container_width=True)
-                st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Analytical Relevance:</b> Verifies that EV packaging and transcript cleavage are driven by canonical biological motifs (e.g., Argonaute bias or Pol III termination signatures) rather than unpatterned systemic degradation.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Analytical Relevance:</b> Verifies that EV packaging and transcript cleavage are driven by canonical biological motifs rather than unpatterned systemic degradation.</p>", unsafe_allow_html=True)
 
     # --- MODULE 4: CLINICAL INTELLIGENCE ---
     with tab4:
-        st.markdown(f"**Step 4: Clinical Score, Translation & Therapeutic Actionability**")
+        st.markdown(f"### Step 4: Clinical Score, Translation & Therapeutic Actionability")
         
         if st.session_state.assay == "cfDNA":
             st.success("**Final Clinical Score Output:** Actionable somatic variant detected in cfDNA stream. High mutational VAF paired with confirmed tumor-derived nucleosomal fragment lengths generates a **Tier 1 Therapeutic Indication**.")
-            with st.spinner("Querying Ensembl REST Server for annotations..."):
-                annotation = fetch_ensembl_vep_live("ENST00000275493.6:c.2573T>G")
-                df_action = pd.DataFrame([annotation])
-                df_action['Therapeutic Indication'] = "Osimertinib (Tagrisso) Tier 1"
-                df_action['Guideline'] = "NCCN NSCLC v2.2024"
-                st.dataframe(df_action[['Gene', 'Consequence', 'Impact', 'Therapeutic Indication', 'Guideline']], use_container_width=True, hide_index=True)
+            st.markdown("**Ensembl-VEP Live Clinical Variant Annotation Engine**")
+            
+            annotation = fetch_ensembl_vep_live("ENST00000275493.6:c.2573T>G")
+            df_action = pd.DataFrame([annotation])
+            df_action['Therapeutic Indication'] = "Osimertinib (Tagrisso) Tier 1"
+            df_action['Guideline'] = "NCCN NSCLC v2.2024"
+            st.dataframe(df_action[['Gene', 'Consequence', 'Impact', 'Therapeutic Indication', 'Guideline']], use_container_width=True, hide_index=True)
             
             st.divider()
+            st.markdown("**Longitudinal Resistance Tracking**")
+            
             chunk_size = len(active_seq) // 3
             if chunk_size > 5:
                 c_blocks = [active_seq[:chunk_size], active_seq[chunk_size:2*chunk_size], active_seq[2*chunk_size:]]
@@ -644,11 +679,11 @@ else:
                 at_drift = [(c.count('A')+c.count('T'))/max(1, len(c))*100 for c in c_blocks]
                 
                 fig6 = go.Figure()
-                fig6.add_trace(go.Scatter(x=times, y=gc_drift, stackgroup='one', name='Sensitive Clone (GC)', line=dict(width=0, color='#2563eb'), fillcolor='rgba(37, 99, 235, 0.8)'))
-                fig6.add_trace(go.Scatter(x=times, y=at_drift, stackgroup='one', name='Resistant Clone (AT)', line=dict(width=0, color='#b91c1c'), fillcolor='rgba(185, 28, 28, 0.8)'))
+                fig6.add_trace(go.Scatter(x=times, y=gc_drift, stackgroup='one', name='Sensitive Clone (GC)', line=dict(width=0, color='#3b82f6'), fillcolor='rgba(59, 130, 246, 0.8)'))
+                fig6.add_trace(go.Scatter(x=times, y=at_drift, stackgroup='one', name='Resistant Clone (AT)', line=dict(width=0, color='#ef4444'), fillcolor='rgba(239, 68, 68, 0.8)'))
                 fig6.update_layout(title="Longitudinal Clonal Evolution (Resistance Mapping)", xaxis_title="Clinical Timeline", yaxis_title="Clonal Composition (%)", showlegend=True, height=350)
                 st.plotly_chart(apply_plotly_academic_layout(fig6), use_container_width=True)
-                st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Clinical Relevance:</b> Tracks the clearance of treatment-sensitive tumor clones over time. The emergence of a resistant mutational sub-clone instantly shifts the patient's score to necessitate an alternate line of therapy.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Clinical Relevance:</b> Tracks the clearance of treatment-sensitive tumor clones over time. The emergence of a resistant mutational sub-clone instantly shifts the patient's score to necessitate an alternate therapy.</p>", unsafe_allow_html=True)
 
         else:
             if st.session_state.assay == "mRNA":
@@ -672,26 +707,26 @@ else:
                     m1a_proxy = active_seq.count('A') * 0.15
                     m3c_proxy = active_seq.count('C') * 0.12
                     fig_rescue = go.Figure(data=[
-                        go.Bar(name='Standard RT (Lost Reads)', x=['Without AlkB', 'With AlkB'], y=[100 - (m1a_proxy+m3c_proxy), 10], marker_color='#94a3b8'),
-                        go.Bar(name='AlkB Rescued Reads', x=['Without AlkB', 'With AlkB'], y=[0, (m1a_proxy+m3c_proxy)*3], marker_color='#b91c1c')
+                        go.Bar(name='Standard RT (Lost Reads)', x=['Without AlkB', 'With AlkB'], y=[100 - (m1a_proxy+m3c_proxy), 10], marker_color='gray'),
+                        go.Bar(name='AlkB Rescued Reads', x=['Without AlkB', 'With AlkB'], y=[0, (m1a_proxy+m3c_proxy)*3], marker_color='#ef4444')
                     ])
                     fig_rescue.update_layout(barmode='stack', title="Epitranscriptomic Rescue Stacked Bar", xaxis_title="Extraction Protocol", yaxis_title="Mapped Read Density", height=350)
                     st.plotly_chart(apply_plotly_academic_layout(fig_rescue), use_container_width=True)
-                    st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Analytical Relevance:</b> Proves the computational recovery of highly modified tRF/rRF fragments using AlkB demethylase pre-treatment. These multi-mapping reads are essential for identifying tumor necrosis.</p>", unsafe_allow_html=True)
+                    st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Analytical Relevance:</b> Proves the computational recovery of highly modified tRF/rRF fragments using AlkB demethylase pre-treatment. Essential for identifying tumor necrosis.</p>", unsafe_allow_html=True)
                 elif st.session_state.assay in ["siRNA", "miRNA"]:
                     target_proxy_x = np.random.normal(seq_metrics['GC'], 10, 150)
                     target_proxy_y = np.random.normal(-2, 1.5, 150)
                     fig_deg = go.Figure()
-                    fig_deg.add_trace(go.Scatter(x=target_proxy_x, y=target_proxy_y, mode='markers', marker=dict(size=6, color='#2563eb', opacity=0.6), name="Off-target"))
-                    fig_deg.add_trace(go.Scatter(x=[seq_metrics['GC']], y=[-6], mode='markers', marker=dict(size=14, color='#b91c1c', symbol='star'), name="On-Target (0-mismatch)"))
+                    fig_deg.add_trace(go.Scatter(x=target_proxy_x, y=target_proxy_y, mode='markers', marker=dict(size=6, color='#3b82f6', opacity=0.6), name="Off-target"))
+                    fig_deg.add_trace(go.Scatter(x=[seq_metrics['GC']], y=[-6], mode='markers', marker=dict(size=14, color='#ef4444', symbol='star'), name="On-Target (0-mismatch)"))
                     fig_deg.update_layout(title="3' UTR Seed-Match Scatter", xaxis_title="Sequence Complementarity Score", yaxis_title="Transcriptome Shift (Fold Change)", height=350)
                     st.plotly_chart(apply_plotly_academic_layout(fig_deg), use_container_width=True)
-                    st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Clinical Relevance:</b> Maps seed-region complementarity against transcriptome-wide expression shifts. Validates highly specific on-target transcript degradation while safely monitoring for unintended off-target toxicity.</p>", unsafe_allow_html=True)
+                    st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Clinical Relevance:</b> Maps seed-region complementarity against transcriptome-wide expression shifts. Validates highly specific on-target transcript degradation.</p>", unsafe_allow_html=True)
                 else:
-                    fig_pie = px.pie(values=[75, 25], names=["Intact Transcript", "Cleaved Fragment"], color_discrete_sequence=['#0f172a', '#b91c1c'], hole=0.4)
+                    fig_pie = px.pie(values=[75, 25], names=["Intact Transcript", "Cleaved Fragment"], color_discrete_sequence=['#3b82f6', '#ef4444'], hole=0.4)
                     fig_pie.update_layout(title="MDR Efflux / Cleavage Ratio", height=350, margin=dict(t=45, b=0, l=0, r=0))
                     st.plotly_chart(fig_pie, use_container_width=True)
-                    st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Clinical Relevance:</b> Quantifies the precise ratio of intact structural transcripts versus their cleaved fragments. This stoichiometric balance acts as a direct molecular readout for Multidrug Resistance (MDR) pump activation.</p>", unsafe_allow_html=True)
+                    st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Clinical Relevance:</b> Quantifies the exact ratio of intact structural transcripts versus their cleaved fragments. This stoichiometric balance acts as a direct readout for MDR pump activation.</p>", unsafe_allow_html=True)
 
             with c6:
                 pca_x1 = np.random.normal(0, 1, 50)
@@ -700,16 +735,16 @@ else:
                 pca_y2 = np.random.normal(3, 1.2, 50)
                 
                 fig_pca = go.Figure()
-                fig_pca.add_trace(go.Scatter(x=pca_x1, y=pca_y1, mode='markers', marker=dict(size=8, color='#94a3b8'), name="Healthy Baseline"))
-                fig_pca.add_trace(go.Scatter(x=pca_x2, y=pca_y2, mode='markers', marker=dict(size=8, color='#b91c1c'), name="Pathogenic Cohort"))
+                fig_pca.add_trace(go.Scatter(x=pca_x1, y=pca_y1, mode='markers', marker=dict(size=8, color='gray'), name="Healthy Baseline"))
+                fig_pca.add_trace(go.Scatter(x=pca_x2, y=pca_y2, mode='markers', marker=dict(size=8, color='#ef4444'), name="Pathogenic Cohort"))
                 fig_pca.update_layout(title="PCA Dispersion Scatter (Quality Control)", xaxis_title="Principal Component 1", yaxis_title="Principal Component 2", height=350)
                 st.plotly_chart(apply_plotly_academic_layout(fig_pca), use_container_width=True)
-                st.markdown("<p style='font-size:13px; color:#64748b; font-style:italic;'><b>Analytical Relevance:</b> Visualizes cohort-level data dispersion. Confirms that synthetic spike-in controls and TMM normalization correctly resolved technical batch effects, validating the mathematical integrity of the clinical score.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:0.9em; font-style:italic; opacity:0.8;'><b>Analytical Relevance:</b> Visualizes cohort-level data dispersion. Confirms that synthetic spike-in controls correctly resolved technical batch effects.</p>", unsafe_allow_html=True)
 
     st.write("---")
     
     # ==============================================================================
-    # 8. PUBLICATION PDF GENERATION
+    # 8. PUBLICATION PDF GENERATION 
     # ==============================================================================
     def generate_real_academic_pdf(assay_type, source_id, metrics, top_kmers, header, raw_seq):
         pdf = FPDF()
