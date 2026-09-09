@@ -540,7 +540,7 @@ else:
                 
                 fig_pileup.add_trace(go.Scatter(
                     x=sliding_df['Coordinate'], y=simulated_coverage,
-                    mode='lines', line=dict(color='#2563eb', width=1.5, shape='step'),
+                    mode='lines', line=dict(color='#2563eb', width=1.5, shape='hv'),
                     fill='tozeroy', fillcolor='rgba(37, 99, 235, 0.15)',
                     name='Read Depth'
                 ))
@@ -573,7 +573,8 @@ else:
                         sub = kmer_df[kmer_df['Status'] == stat]
                         fig4.add_trace(go.Scatter(
                             x=sub['log2FC'], y=sub['neg_log10_pval'], mode='markers', name=stat,
-                            marker=dict(size=8, color=color_map.get(stat, '#94a3b8'), opacity=0.85, line=dict(color='white', width=0.5)), text=sub['Kmer']
+                            marker=dict(size=8, color=color_map.get(stat, '#94a3b8'), opacity=0.85, line=dict(color='white', width=0.5)),
+                            text=sub['Kmer']
                         ))
                     fig4.add_vline(x=1.0, line_dash="dash", line_color="#64748b", opacity=0.6)
                     fig4.add_vline(x=-1.0, line_dash="dash", line_color="#64748b", opacity=0.6)
