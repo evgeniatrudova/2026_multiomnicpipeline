@@ -19,7 +19,7 @@ import seaborn as sns
 # ==============================================================================
 # 1. PAGE CONFIGURATION & REPRODUCIBLE UX OVERRIDE
 # ==============================================================================
-st.set_page_config(page_title="EV Cargo Multi-Omics Platform", layout="wide")
+st.set_page_config(page_title="EV Cargo Multi-Omics Platform (DIAGNOSTICS AND ADDING NEW DATA until 2026-09-13 00:00, possible crashes when using the platform.)", layout="wide")
 
 st.markdown("""
 <style>
