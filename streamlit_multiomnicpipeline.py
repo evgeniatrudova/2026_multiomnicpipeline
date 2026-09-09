@@ -818,20 +818,19 @@ if not st.session_state.analyzed:
         with onboard_tabs[1]:
             st.markdown("""
             **Database Matching & Clinical Score Formulation**
-            
-            The Clinical Score evaluates the diagnostic and therapeutic actionability of EV-derived genetic cargo by cross-referencing extracted features against public repositories (Ensembl VEP, COSMIC, OncoKB).
-            
-            * **mRNA (Primary Scoring Model):** The pipeline computes a composite **Transcriptomic Outlier Score**. 
-              * **Calculation:** It integrates Trimmed Mean of M-values (TMM) normalized expression abundance, $\log_2$(Fold Change) against established healthy baselines, and alignment confidence (0-mismatch mapping).
-              * **Clinical Relevance:** High-confidence outlier alignments are linked to Tier 1 pharmacogenomic indications. For instance, detecting extreme EV-mRNA ERBB2 (HER2) overexpression signals actionable targetability for Trastuzumab, enabling non-invasive, longitudinal monitoring of tumor phenotypic shifts.
-            * **cfDNA (Somatic Variants):** Leverages API calls to map precise nucleotide mutations (e.g., `c.2573T>G`) directly to NCCN therapeutic guidelines.
+            The Clinical Score evaluates the diagnostic and therapeutic actionability of EV-derived genetic cargo by cross-referencing extracted features against public repositories (Ensembl VEP, COSMIC, OncoKB). 
+
+            * **cfDNA (Somatic Variants):** Computes actionable variant scores by mapping precise nucleotide mutations directly to NCCN guidelines. Actionability requires variant allele frequencies (VAF) $\ge$ **0.1%** confirmed via dual PBMC-matched sequencing to physically subtract clonal hematopoiesis background noise.
+            * **mRNA (Transcriptomic Outlier Score):** Integrates Trimmed Mean of M-values (TMM) normalized expression abundance, $\log_2(\text{Fold Change})$ $\ge$ **1.5** against healthy baselines, and strict 0-mismatch mapping. Detecting top-decile EV-mRNA ERBB2 (HER2) overexpression signals Tier 1 targetability for Trastuzumab.
+            * **miRNA (Pleiotropic Risk Index):** Translating miRNA abundance to a definitive oncological score is fundamentally constrained by biological pleiotropy, as a single miRNA often modulates **>200** distinct target transcripts. Actionability requires establishing fixed diagnostic thresholds (e.g., $\ge$ **3.5x** baseline expression for hsa-miR-21-5p). Researchers must deposit standardized AGO-CLIP-seq validation data and absolute spike-in quantities into miRBase to resolve context-dependent target ambiguity.
+            * **siRNA (Pharmacokinetic Knockdown):** Generates target-engagement metrics rather than oncological risk scores. Therapeutic efficacy requires demonstrating $\ge$ **85%** on-target mRNA degradation. To establish systemic safety databases, researchers must upload 5'-RACE-seq validation of off-target 3' UTR cleavage events.
 
             **Limitations & Knowledgebase Deficits (Research Call-to-Action)**
-            
-            For several non-canonical EV biomarkers, calculating a definitive "Clinical Score" is currently impossible due to systemic database deficits. Researchers should prioritize filling these gaps:
-            
-            * **tRNA & rRNA Fragments (tRFs/rRFs):** While the pipeline accurately isolates these using MINTmap and SILVA DBs, large-scale clinical pathogenicity databases do not exist for structural RNA cleavage patterns. **Focus Area:** Establishing normalized, population-level baseline databases for epitranscriptomic cleavage rules and translation-arrest scoring.
-            * **vaultRNA (vtRNA):** Strongly implicated in multidrug resistance (MDR) via the Major Vault Protein (MVP) efflux complex. **Focus Area:** Global actionability tiers are entirely undefined. Research is urgently needed to map the stoichiometric ratios of intact vtRNAs (~100nt) versus cleaved svRNAs (~23nt) across healthy vs. chemo-resistant patient cohorts.
+            For several non-canonical EV biomarkers, calculating a definitive Clinical Score is currently impossible due to systemic database deficits. Researchers should prioritize filling these computational gaps with targeted wet-lab submissions:
+
+            * **tRNA (tRF Cleavage Topologies):** Large-scale clinical pathogenicity databases do not exist for structural RNA cleavage. The field urgently requires normalized, population-level AlkB-demethylation RNA-seq inputs to establish baseline stoichiometry (e.g., 5'-tRF vs. mature tRNA ratios) for translation-arrest scoring.
+            * **rRNA (Ribosomal Stress Fragments):** Clinical thresholds for rRNA fragmentation (rRFs) are unmapped in public repositories.  Researchers must deposit fractional read allocation data alongside standardized cellular apoptosis assays to officially map acute necrosis signatures.
+            * **vaultRNA (MDR Efflux Signaling):** Strongly implicated in multidrug resistance via the Major Vault Protein (MVP) complex, yet global actionability tiers remain undefined. Researchers must map and upload the exact stoichiometric proportions of intact vtRNAs (~100nt) versus cleaved svRNAs (~23nt) across matched healthy and chemo-resistant cohorts using MVP co-immunoprecipitation sequencing.
             """)
             
         with onboard_tabs[2]:
