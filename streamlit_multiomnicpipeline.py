@@ -9,6 +9,7 @@ import streamlit as st
 import io
 import tempfile
 import math
+import textwrap  # Added to prevent fpdf horizontal space crashes
 from collections import Counter
 from scipy.stats import binomtest, gaussian_kde
 from fpdf import FPDF
@@ -818,19 +819,21 @@ if not st.session_state.analyzed:
         with onboard_tabs[1]:
             st.markdown("""
             **Database Matching & Clinical Score Formulation**
+            
             The Clinical Score evaluates the diagnostic and therapeutic actionability of EV-derived genetic cargo by cross-referencing extracted features against public repositories (Ensembl VEP, COSMIC, OncoKB). 
 
             * **cfDNA (Somatic Variants):** Computes actionable variant scores by mapping precise nucleotide mutations directly to NCCN guidelines. Actionability requires variant allele frequencies (VAF) $\ge$ **0.1%** confirmed via dual PBMC-matched sequencing to physically subtract clonal hematopoiesis background noise.
             * **mRNA (Transcriptomic Outlier Score):** Integrates Trimmed Mean of M-values (TMM) normalized expression abundance, $\log_2(\text{Fold Change})$ $\ge$ **1.5** against healthy baselines, and strict 0-mismatch mapping. Detecting top-decile EV-mRNA ERBB2 (HER2) overexpression signals Tier 1 targetability for Trastuzumab.
-            * **miRNA (Pleiotropic Risk Index):** Translating miRNA abundance to a definitive oncological score is fundamentally constrained by biological pleiotropy, as a single miRNA often modulates **>200** distinct target transcripts. Actionability requires establishing fixed diagnostic thresholds (e.g., $\ge$ **3.5x** baseline expression for hsa-miR-21-5p). Researchers must deposit standardized AGO-CLIP-seq validation data and absolute spike-in quantities into miRBase to resolve context-dependent target ambiguity.
-            * **siRNA (Pharmacokinetic Knockdown):** Generates target-engagement metrics rather than oncological risk scores. Therapeutic efficacy requires demonstrating $\ge$ **85%** on-target mRNA degradation. To establish systemic safety databases, researchers must upload 5'-RACE-seq validation of off-target 3' UTR cleavage events.
+            * **miRNA (Pleiotropic Risk Index):** Translating miRNA abundance to a definitive oncological score is fundamentally constrained by biological pleiotropy, as a single miRNA often modulates **>200** distinct target transcripts. Actionability requires establishing fixed diagnostic thresholds (e.g., $\ge$ **3.5x** baseline expression for hsa-miR-21-5p). **Wet-Lab Action:** Researchers must deposit standardized AGO-CLIP-seq validation data and absolute spike-in quantities into miRBase to resolve context-dependent target ambiguity.
+            * **siRNA (Pharmacokinetic Knockdown):** Generates target-engagement metrics rather than oncological risk scores. Therapeutic efficacy requires demonstrating $\ge$ **85%** on-target mRNA degradation. **Wet-Lab Action:** To establish systemic safety databases, researchers must upload 5'-RACE-seq validation of off-target 3' UTR cleavage events.
 
             **Limitations & Knowledgebase Deficits (Research Call-to-Action)**
+            
             For several non-canonical EV biomarkers, calculating a definitive Clinical Score is currently impossible due to systemic database deficits. Researchers should prioritize filling these computational gaps with targeted wet-lab submissions:
 
-            * **tRNA (tRF Cleavage Topologies):** Large-scale clinical pathogenicity databases do not exist for structural RNA cleavage. The field urgently requires normalized, population-level AlkB-demethylation RNA-seq inputs to establish baseline stoichiometry (e.g., 5'-tRF vs. mature tRNA ratios) for translation-arrest scoring.
-            * **rRNA (Ribosomal Stress Fragments):** Clinical thresholds for rRNA fragmentation (rRFs) are unmapped in public repositories.  Researchers must deposit fractional read allocation data alongside standardized cellular apoptosis assays to officially map acute necrosis signatures.
-            * **vaultRNA (MDR Efflux Signaling):** Strongly implicated in multidrug resistance via the Major Vault Protein (MVP) complex, yet global actionability tiers remain undefined. Researchers must map and upload the exact stoichiometric proportions of intact vtRNAs (~100nt) versus cleaved svRNAs (~23nt) across matched healthy and chemo-resistant cohorts using MVP co-immunoprecipitation sequencing.
+            * **tRNA (tRF Cleavage Topologies):** Large-scale clinical pathogenicity databases do not exist for structural RNA cleavage. **Wet-Lab Action:** The field urgently requires normalized, population-level AlkB-demethylation RNA-seq inputs to establish baseline stoichiometry (e.g., 5'-tRF vs. mature tRNA ratios) for translation-arrest scoring.
+            * **rRNA (Ribosomal Stress Fragments):** Clinical thresholds for rRNA fragmentation (rRFs) are unmapped in public repositories. **Wet-Lab Action:** Researchers must deposit fractional read allocation data alongside standardized cellular apoptosis assays to officially map acute necrosis signatures.
+            * **vaultRNA (MDR Efflux Signaling):** Strongly implicated in multidrug resistance via the Major Vault Protein (MVP) complex, yet global actionability tiers remain undefined. **Wet-Lab Action:** Researchers must map and upload the exact stoichiometric proportions of intact vtRNAs (~100nt) versus cleaved svRNAs (~23nt) across matched healthy and chemo-resistant cohorts using MVP co-immunoprecipitation sequencing.
             """)
             
         with onboard_tabs[2]:
@@ -1028,10 +1031,23 @@ else:
         pdf.cell(0, 7, f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC')} | Build: GRCh38 / Ensembl v111", ln=True, align='C')
         pdf.ln(6)
         
+        # Wrap long strings to prevent "Not enough horizontal space" fpdf errors
+        safe_header = "\n".join(textwrap.wrap(header, width=80, break_long_words=True))
+        safe_source = "\n".join(textwrap.wrap(source_id, width=80, break_long_words=True))
+        
         pdf.set_font("Arial", 'B', 12)
         pdf.cell(0, 8, "1. Ingested Specimen & Extraction Metadata", ln=True)
         pdf.set_font("Arial", '', 10)
-        pdf.multi_cell(0, 6, f"Target Assay: {assay_type}\nSource Identifier: {source_id}\nStream Header: {header}\nContiguous Nucleotide Length: {metrics['Length']} bp/nt\nGlobal GC Composition: {metrics['GC']}%\nCpG Observed/Expected Ratio: {metrics['CpG_Ratio']}\nShannon Information Content: {metrics['Shannon_Entropy']} bits/base")
+        metadata_text = (
+            f"Target Assay: {assay_type}\n"
+            f"Source Identifier: {safe_source}\n"
+            f"Stream Header: {safe_header}\n"
+            f"Contiguous Nucleotide Length: {metrics['Length']} bp/nt\n"
+            f"Global GC Composition: {metrics['GC']}%\n"
+            f"CpG Observed/Expected Ratio: {metrics['CpG_Ratio']}\n"
+            f"Shannon Information Content: {metrics['Shannon_Entropy']} bits/base"
+        )
+        pdf.multi_cell(0, 6, metadata_text)
         pdf.ln(4)
         
         pdf.set_font("Arial", 'B', 12)
@@ -1066,11 +1082,15 @@ else:
         ax.legend(frameon=False, fontsize=8)
         plt.tight_layout()
         
+        # Safely handle page breaks before inserting image
+        if pdf.get_y() > 140:
+            pdf.add_page()
+            
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
             fig_pdf.savefig(tmp.name, dpi=300, bbox_inches='tight')
             pdf.image(tmp.name, x=15, y=pdf.get_y(), w=180)
         plt.close(fig_pdf)
-        pdf.ln(85)
+        pdf.ln(110)
         
         pdf.add_page()
         pdf.set_font("Arial", 'B', 12)
@@ -1079,7 +1099,7 @@ else:
         
         pdf.set_font("Courier", 'B', 8)
         pdf.set_fill_color(241, 245, 249)
-        pdf.multi_cell(0, 4, f">{header}", fill=True)
+        pdf.multi_cell(0, 4, f">{safe_header}", fill=True)
         pdf.set_font("Courier", '', 8)
         
         chunked_seq = "\n".join([raw_seq[i:i+60] for i in range(0, len(raw_seq), 60)])
